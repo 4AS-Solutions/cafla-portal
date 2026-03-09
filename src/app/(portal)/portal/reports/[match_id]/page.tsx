@@ -29,12 +29,6 @@ export default async function ReportPage({
         Match Report
       </h1>
 
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-4">Match Timeline</h2>
-
-        <MatchTimeline events={timeline} />
-      </div>
-
       <div className="text-sm text-muted-foreground">
         {match.home_team} vs {match.away_team}
       </div>
