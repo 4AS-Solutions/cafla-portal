@@ -6,10 +6,16 @@ export default function MatchCard({ match }: { match: any }) {
 
   const status = getMatchStatus(match)
 
-  return (
-    <Link href={`/portal/matches/${match.id}`}>
+  let href = `/portal/matches/${match.id}`
 
-      <div className="border rounded-lg p-4 hover:bg-gray-50 transition">
+  if (status === "pending_report") {
+    href = `/portal/reports/${match.id}`
+  }
+
+  return (
+    <Link href={href}>
+
+      <div className="border rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer">
 
         <div className="flex justify-between items-center">
 
@@ -26,7 +32,13 @@ export default function MatchCard({ match }: { match: any }) {
         </p>
 
         <p className="text-sm mt-1">
-          {new Date(match.kickoff_at).toLocaleString()}
+          {new Date(match.kickoff_at).toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </p>
 
         <p className="text-xs text-gray-400">

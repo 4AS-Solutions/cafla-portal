@@ -1,6 +1,12 @@
+import { User } from "@supabase/supabase-js"
 import { createClient } from "../supabase/server"
 
-export async function getProfile() {
+type ProfileResult = {
+  user: User
+  profile: any
+} | null;
+
+export async function getProfile(): Promise<ProfileResult> {
 
   const supabase = await createClient()
 
