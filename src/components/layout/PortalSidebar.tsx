@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { LayoutDashboard, Users, Calendar, FileText, ClipboardList, BookOpen, Settings } from "lucide-react"
+import { LayoutDashboard, Users, FileText, ClipboardList, CalendarDays, BookOpenText, ChartLine, FileUser, Import, SquareLibrary, FolderClock, ClipboardType, SquareStar } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/src/components/providers/AuthProvider"
 
@@ -14,18 +14,21 @@ type NavItem = {
 
 const memberItems: NavItem[] = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
-  { name: "Matches", href: "/portal/matches", icon: Calendar },
+  { name: "Matches", href: "/portal/matches", icon: CalendarDays },
   { name: "Reports", href: "/portal/reports", icon: FileText },
   { name: "Attendance", href: "/portal/attendance", icon: ClipboardList },
-  { name: "Quizzes", href: "/portal/quizzes", icon: BookOpen },
+  { name: "Quizzes", href: "/portal/quizzes", icon: BookOpenText },
+  { name: "Development", href: "/portal/development", icon: ChartLine },
+  { name: "Evaluations", href: "/portal/evaluations", icon: FileUser },
 ]
 
 const boardItems: NavItem[] = [
   { name: "Members", href: "/portal/members", icon: Users },
-  { name: "Admin Import", href: "/admin/import-arbiter", icon: Settings },
-  { name: "Reports Management", href: "/admin/reports", icon: FileText },
-  { name: "Attendance Management", href: "/admin/attendance", icon: ClipboardList },
-  { name: "Quiz Management", href: "/admin/quizzes", icon: BookOpen },
+  { name: "Arbiter Import", href: "/admin/import-arbiter", icon: Import },
+  { name: "Reports Management", href: "/admin/reports", icon: SquareLibrary },
+  { name: "Attendance Management", href: "/admin/attendance", icon: FolderClock },
+  { name: "Quiz Management", href: "/admin/quizzes", icon: ClipboardType },
+  { name: "Ranking Referees", href: "/admin/ranking", icon: SquareStar },
 ]
 
 export function PortalSidebar() {

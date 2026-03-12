@@ -35,6 +35,7 @@ export async function getRefereeRanking() {
   const { data, error } = await supabase
     .from("dashboard_referee_ranking")
     .select("*")
+    .order("ranking_position", { ascending: true })
     .limit(5)
 
   if (error) throw error
@@ -50,6 +51,21 @@ export async function getPendingEvaluations() {
     .from("dashboard_pending_evaluations")
     .select("*")
     .limit(5)
+
+  if (error) throw error
+
+  return data
+}
+
+export async function getMyDevelopment(memberId: string) {
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("dashboard_referee_ranking")
+    .select("*")
+    .eq("member_id", memberId)
+    .single()
 
   if (error) throw error
 
