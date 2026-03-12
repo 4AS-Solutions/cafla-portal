@@ -52,7 +52,7 @@ export function DevelopmentPlan() {
 
   useEffect(() => {
     let start = 0
-    const duration = 1200
+    const duration = 800
     const increment = developmentScore / (duration / 16)
 
     const counter = setInterval(() => {

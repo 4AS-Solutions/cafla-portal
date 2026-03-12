@@ -2,211 +2,232 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Menu, X } from "lucide-react"
+import Link from "next/link"
+import { Menu, X, ArrowRight } from "lucide-react"
+
+const navLinks = [
+  { name: "Home", id: "home" },
+  { name: "About CAFLA", id: "about" },
+  { name: "Values", id: "values" },
+  { name: "Development Plan", id: "development" },
+  { name: "Calendar", id: "calendar" },
+  { name: "Links", id: "resources" },
+  { name: "Macron", id: "partnership" },
+  { name: "Become CAFLA", id: "join" },
+  { name: "Board", id: "board" },
+  { name: "Contact", id: "contact" }
+]
 
 export function Navbar() {
-  const [open, setOpen] = useState(false)
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState("")
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
+
     const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setScrolled(true)
-      } else {
-        setScrolled(false)
-      }
+
+      setScrolled(window.scrollY > 40)
+
+      navLinks.forEach(link => {
+
+        const el = document.getElementById(link.id)
+
+        if (!el) return
+
+        const rect = el.getBoundingClientRect()
+
+        if (rect.top <= 120 && rect.bottom >= 120) {
+          setActiveSection(link.id)
+        }
+
+      })
+
     }
 
     window.addEventListener("scroll", handleScroll)
+
     return () => window.removeEventListener("scroll", handleScroll)
+
   }, [])
 
-  const navItems = [
-    { name: "Home", href: "#home" },
-    { name: "About CAFLA", href: "#about" },
-    { name: "Values", href: "#values" },
-    { name: "Development Plan", href: "#development" },
-    { name: "Calendar", href: "#calendar" },
-    { name: "Links", href: "#resources" },
-    { name: "Macron", href: "#partnership" },
-    { name: "Become CAFLA", href: "#become" },
-    { name: "Board", href: "#board" },
-    { name: "Contact", href: "#contact" },
-  ]
+  const scrollToSection = (id: string) => {
 
-  const handleNav = (href: string) => {
-    setOpen(false)
-    const el = document.querySelector(href)
-    el?.scrollIntoView({ behavior: "smooth" })
+    const el = document.getElementById(id)
+
+    if (!el) return
+
+    el.scrollIntoView({
+      behavior: "smooth"
+    })
+
+    setMenuOpen(false)
   }
 
   return (
     <>
-      <nav
-        className={`fixed top-0 z-50 w-full transition-all duration-500
-        ${
+      {/* NAVBAR */}
+
+      <header
+        className={`fixed w-full z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-black/80 backdrop-blur-xl border-b border-white/10 shadow-lg"
-            : "bg-transparent"
+            ? "bg-black/80 backdrop-blur border-b border-white/10 h-16"
+            : "bg-transparent h-20"
         }`}
       >
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
-          <div
-            className={`flex items-center justify-between transition-all duration-300
-            ${scrolled ? "h-16" : "h-20"}`}
-          >
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-full">
 
-            {/* Logo */}
-            <div className="flex items-center gap-4">
+          {/* LOGO */}
 
-              <Image
-                src="/logo/cafla-logo.png"
-                alt="CAFLA"
-                width={scrolled ? 36 : 42}
-                height={scrolled ? 36 : 42}
-                className="rounded-full transition-all duration-300"
-              />
+          <div className="flex items-center gap-3">
 
-              <div className="hidden sm:block leading-tight">
+            <Image
+              src="/logo/cafla-logo.png"
+              alt="CAFLA"
+              width={scrolled ? 30 : 36}
+              height={scrolled ? 30 : 36}
+              className="transition-all duration-300"
+            />
 
-                <p
-                  className={`font-heading text-yellow-400 transition-all
-                  ${scrolled ? "text-base" : "text-lg"}`}
-                >
-                  CAFLA
-                </p>
-
-              </div>
-            </div>
-
-            {/* Desktop menu */}
-            <div className="hidden md:flex items-center gap-10">
-
-              {navItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleNav(item.href)}
-                  className="relative text-sm text-gray-300 hover:text-yellow-400 transition"
-                >
-                  {item.name}
-
-                  {/* hover underline */}
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
-                </button>
-              ))}
-
-            </div>
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setOpen(true)}
-              className="md:hidden text-white"
-            >
-              <Menu size={26} />
-            </button>
+            <span className="text-yellow-400 font-semibold text-lg">
+              CAFLA
+            </span>
 
           </div>
+
+          {/* DESKTOP MENU */}
+
+          <nav className="hidden xl:flex items-center gap-8 text-sm">
+
+            {navLinks.map(link => (
+
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                className="relative text-gray-300 hover:text-white transition"
+              >
+
+                {link.name}
+
+                <span
+                  className={`absolute -bottom-2 left-0 h-[2px] bg-yellow-400 transition-all duration-300 ${
+                    activeSection === link.id
+                      ? "w-full opacity-100"
+                      : "w-0 opacity-0"
+                  }`}
+                />
+
+              </button>
+
+            ))}
+
+          </nav>
+
+          {/* MOBILE BUTTON */}
+
+          <button
+            className="xl:hidden text-white"
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu size={28} />
+          </button>
+
         </div>
-      </nav>
 
-      {/* ================= */}
+      </header>
+
       {/* MOBILE SIDEBAR */}
-      {/* ================= */}
 
-      {open && (
-        <div className="fixed inset-0 z-50">
+      {menuOpen && (
 
-          {/* background blur */}
+        <div className="fixed inset-0 z-50 flex">
+
+          {/* OVERLAY */}
+
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            onClick={() => setOpen(false)}
+            className="flex-1 bg-black/70"
+            onClick={() => setMenuOpen(false)}
           />
 
-          {/* sidebar */}
-          <div className="absolute right-0 top-0 h-full w-[75%] max-w-sm bg-[#0B0F0F] border-r border-white/10 shadow-2xl p-8 flex flex-col animate-slideInLeft">
+          {/* SIDEBAR */}
+
+          <div className="w-[300px] bg-[#020B0A] border-r border-white/10 flex flex-col">
 
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-10">
+
+            <div className="flex items-center justify-between px-6 h-20 border-b border-white/10">
 
               <div className="flex items-center gap-3">
 
                 <Image
                   src="/logo/cafla-logo.png"
                   alt="CAFLA"
-                  width={36}
-                  height={36}
+                  width={34}
+                  height={34}
                 />
 
-                <span className="font-heading text-yellow-400 text-lg">
+                <span className="text-yellow-400 font-semibold">
                   CAFLA
                 </span>
 
               </div>
 
-              <button onClick={() => setOpen(false)}>
-                <X className="text-white" />
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={26} />
               </button>
 
             </div>
 
+            {/* LINKS */}
 
-            {/* NAVIGATION */}
-            <div className="flex flex-col gap-6">
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
 
-              {navItems.map((item) => (
+              {navLinks.map(link => (
+
                 <button
-                  key={item.name}
-                  onClick={() => handleNav(item.href)}
-                  className="sidebar-link text-left text-lg text-gray-300 hover:text-yellow-400 transition"
+                  key={link.id}
+                  onClick={() => scrollToSection(link.id)}
+                  className="block text-lg text-left w-full text-gray-300 hover:text-white transition"
                 >
-                  {item.name}
+                  {link.name}
                 </button>
+
               ))}
 
             </div>
 
+            {/* ACTION BUTTONS */}
 
-            {/* FOOTER CTA */}
-            <div className="mt-auto pt-10 border-t border-white/10">
+            <div className="p-6 border-t border-white/10 space-y-4">
 
-              {/* Become referee */}
               <button
-                onClick={() => handleNav("#contacto")}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition"
+                onClick={() => scrollToSection("join")}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
               >
                 Become a Referee
+                <ArrowRight size={18} />
               </button>
 
-              {/* Member login */}
-              <button
-                className="w-full mt-4 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold py-3 rounded-lg transition"
+              <Link
+                href="/portal"
+                className="block text-center w-full border border-yellow-400 text-yellow-400 py-3 rounded-lg font-semibold hover:bg-yellow-400 hover:text-black transition"
               >
                 Member Login
-              </button>
-
-              {/* Social icons */}
-              <div className="flex justify-center gap-6 mt-6 text-gray-400">
-
-                <a href="#" className="hover:text-yellow-400 transition">
-                  Instagram
-                </a>
-
-                <a href="#" className="hover:text-yellow-400 transition">
-                  Facebook
-                </a>
-
-                <a href="#" className="hover:text-yellow-400 transition">
-                  Twitter
-                </a>
-
-              </div>
+              </Link>
 
             </div>
 
           </div>
+
         </div>
+
       )}
+
     </>
   )
 }
