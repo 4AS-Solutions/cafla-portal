@@ -22,13 +22,16 @@ export function Navbar() {
   }, [])
 
   const navItems = [
-    { name: "Inicio", href: "#home" },
-    { name: "Conoce CAFLA", href: "#about" },
-    { name: "Valores", href: "#values" },
-    { name: "Plan de Desarrollo", href: "#development" },
-    { name: "Calendario", href: "#calendario" },
-    { name: "Links", href: "#links" },
-    { name: "Contacto", href: "#contacto" },
+    { name: "Home", href: "#home" },
+    { name: "About CAFLA", href: "#about" },
+    { name: "Values", href: "#values" },
+    { name: "Development Plan", href: "#development" },
+    { name: "Calendar", href: "#calendar" },
+    { name: "Links", href: "#resources" },
+    { name: "Macron", href: "#partnership" },
+    { name: "Become CAFLA", href: "#become" },
+    { name: "Board", href: "#board" },
+    { name: "Contact", href: "#contact" },
   ]
 
   const handleNav = (href: string) => {

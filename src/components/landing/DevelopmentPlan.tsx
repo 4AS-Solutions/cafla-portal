@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import {
   ClipboardCheck,
   BookOpen,
@@ -8,10 +10,12 @@ import {
   Target,
   Trophy,
 } from "lucide-react"
+
 import PerformanceRadar from "../charts/PerformanceRadar"
 import DevelopmentChart from "../charts/DevelopmentChart"
 
 export function DevelopmentPlan() {
+
   const features = [
     {
       icon: ClipboardCheck,
@@ -35,6 +39,35 @@ export function DevelopmentPlan() {
     },
   ]
 
+  const developmentScore = 92
+
+  const metrics = [
+    { label: "Matches Officiated", value: 40, color: "text-emerald-400" },
+    { label: "Peer Evaluations", value: 25, color: "text-yellow-400" },
+    { label: "Attendance", value: 20, color: "text-blue-400" },
+    { label: "Exam Scores", value: 7, color: "text-purple-400" },
+  ]
+
+  const [score, setScore] = useState(0)
+
+  useEffect(() => {
+    let start = 0
+    const duration = 1200
+    const increment = developmentScore / (duration / 16)
+
+    const counter = setInterval(() => {
+      start += increment
+      if (start >= developmentScore) {
+        setScore(developmentScore)
+        clearInterval(counter)
+      } else {
+        setScore(Math.floor(start))
+      }
+    }, 16)
+
+    return () => clearInterval(counter)
+  }, [])
+
   return (
     <section
       id="development"
@@ -42,7 +75,7 @@ export function DevelopmentPlan() {
     >
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* header */}
+        {/* HEADER */}
 
         <div className="text-center mb-20">
 
@@ -59,7 +92,7 @@ export function DevelopmentPlan() {
         </div>
 
 
-        {/* feature cards */}
+        {/* FEATURE CARDS */}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
 
@@ -69,7 +102,7 @@ export function DevelopmentPlan() {
             return (
               <div
                 key={i}
-                className="cafla-card p-8 rounded-xl hover:scale-[1.03] transition"
+                className="cafla-card p-8 rounded-xl hover:scale-[1.04] hover:shadow-xl transition-all duration-300"
               >
                 <div className="mb-5 text-yellow-400">
                   <Icon size={32} />
@@ -88,6 +121,53 @@ export function DevelopmentPlan() {
         </div>
 
 
+        {/* DEVELOPMENT SCORE */}
+
+        <div className="text-center mb-24">
+
+          <div className="inline-flex flex-col items-center">
+
+            <div className="text-6xl md:text-7xl font-bold text-emerald-400 mb-4 tracking-tight">
+              {score}
+            </div>
+
+            <p className="text-white text-lg font-semibold mb-3">
+              Referee Development Score
+            </p>
+
+            <p className="text-gray-400 text-sm max-w-md mb-10">
+              Calculated from referee evaluations, match activity,
+              meeting attendance, and knowledge assessments.
+            </p>
+
+            {/* METRICS */}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-xl">
+
+              {metrics.map((m, i) => (
+                <div
+                  key={i}
+                  className="text-center"
+                >
+                  <div className={`text-2xl font-bold ${m.color}`}>
+                    {m.value}
+                  </div>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    {m.label}
+                  </p>
+                </div>
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* CHARTS */}
+
         <div className="grid lg:grid-cols-2 gap-16 mb-24">
 
           <DevelopmentChart />
@@ -97,7 +177,7 @@ export function DevelopmentPlan() {
         </div>
 
 
-        {/* development journey */}
+        {/* DEVELOPMENT JOURNEY */}
 
         <div className="cafla-card p-10 rounded-2xl mb-20">
 
@@ -121,6 +201,7 @@ export function DevelopmentPlan() {
               </p>
             </div>
 
+
             <div>
               <div className="w-14 h-14 rounded-full bg-yellow-500 flex items-center justify-center mx-auto mb-4 text-black font-bold">
                 2
@@ -135,6 +216,7 @@ export function DevelopmentPlan() {
               </p>
             </div>
 
+
             <div>
               <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4 text-white font-bold">
                 3
@@ -148,6 +230,7 @@ export function DevelopmentPlan() {
                 Strengthen your understanding of the Laws of the Game.
               </p>
             </div>
+
 
             <div>
               <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center mx-auto mb-4 text-white font-bold">
@@ -168,11 +251,11 @@ export function DevelopmentPlan() {
         </div>
 
 
-        {/* benefits */}
+        {/* BENEFITS */}
 
         <div className="grid md:grid-cols-3 gap-8">
 
-          <div className="cafla-card p-10 rounded-xl text-center">
+          <div className="cafla-card p-10 rounded-xl text-center hover:scale-[1.03] transition">
 
             <Trophy className="mx-auto text-yellow-400 mb-4" size={40} />
 
@@ -181,14 +264,14 @@ export function DevelopmentPlan() {
             </h4>
 
             <p className="text-gray-400">
-              Objective metrics help referees understand their strengths
-              and development areas.
+              Objective metrics help referees understand strengths and
+              development areas.
             </p>
 
           </div>
 
 
-          <div className="cafla-card p-10 rounded-xl text-center">
+          <div className="cafla-card p-10 rounded-xl text-center hover:scale-[1.03] transition">
 
             <Target className="mx-auto text-emerald-400 mb-4" size={40} />
 
@@ -203,7 +286,7 @@ export function DevelopmentPlan() {
           </div>
 
 
-          <div className="cafla-card p-10 rounded-xl text-center">
+          <div className="cafla-card p-10 rounded-xl text-center hover:scale-[1.03] transition">
 
             <BarChart3 className="mx-auto text-blue-400 mb-4" size={40} />
 

@@ -2,11 +2,12 @@
 
 import { Award, CalendarDays, Globe, Users } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function Hero() {
   return (
     <section
-      id="inicio"
+      id="home"
       className="relative min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden"
       style={{
         backgroundImage: "url('/images/soccer_ground.png')",
@@ -64,9 +65,11 @@ export function Hero() {
             Become a Referee
           </button>
 
-          <button className="border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
-            Member Login
-          </button>
+          <Link href={'/login'}>
+            <button className="border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
+              Member Login
+            </button>
+          </Link>
 
         </div>
 
