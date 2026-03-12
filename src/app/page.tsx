@@ -1,16 +1,17 @@
-import Link from "next/link"
+import { Navbar } from "@/src/components/landing/Navbar"
+import { Hero } from "@/src/components/landing/Hero"
+import { About } from "../components/landing/About"
+import { Values } from "../components/landing/Values"
+import { DevelopmentPlan } from "../components/landing/DevelopmentPlan"
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="p-10 space-y-4">
-      <h1 className="text-3xl font-bold">CAFLA Platform</h1>
-
-      <Link
-        href="/portal"
-        className="inline-block bg-primary text-primary-foreground px-4 py-2 rounded"
-      >
-        Enter Portal
-      </Link>
-    </div>
+    <main className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <Hero />
+      <About />
+      <Values />
+      <DevelopmentPlan />
+    </main>
   )
 }
