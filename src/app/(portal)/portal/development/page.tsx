@@ -1,6 +1,7 @@
 import { DashboardCard } from "@/src/components/dashboard/DashboardCard"
 import { QuizStatsCard } from "@/src/components/development/QuizStatsCard"
 import { AttendanceStatsCard } from "@/src/components/development/AttendanceStatsCard"
+import { DevelopmentProgressChart } from "@/src/components/development/DevelopmentProgressChart"
 
 import {
   getMyQuizStats,
@@ -11,17 +12,19 @@ import {
 
 import { getProfile } from "@/src/lib/queries/get-profile"
 import { getMyDevelopment } from "@/src/lib/queries/dashboard"
-import { RefereeDevelopmentCard } from "@/src/components/development/DevelopmentSummaryCard"
+import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
+import { DevelopmentOverview } from "@/src/components/development/DevelopmentOverview"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function DevelopmentPage() {
 
   const profile = await getProfile()
 
-  const memberId = profile?.profile?.id;
+  const memberId = profile?.profile?.id
 
   const developmentSummary = memberId
-  ? await getMyDevelopment(memberId)
-  : null
+    ? await getMyDevelopment(memberId)
+    : null
 
   const quizStats = memberId
     ? await getMyQuizStats(memberId)
@@ -40,27 +43,77 @@ export default async function DevelopmentPage() {
     : null
 
 
-  return (
-    <div className="space-y-6">
+  const radarData = [
+    {
+      skill: "Attendance",
+      score: Number(attendanceStats?.attendance_percentage ?? 0)
+    },
+    {
+      skill: "Reports",
+      score: Number(reportStats?.report_score ?? 0)
+    },
+    {
+      skill: "Peer Feedback",
+      score: Number(feedbackStats?.peer_feedback_score ?? 0)
+    },
+    {
+      skill: "Quizzes",
+      score: Number(quizStats?.avg_quiz_score ?? 0)
+    }
+  ]
 
-      <h1 className="text-2xl font-bold">
-        Development
-      </h1>
+
+  // mock monthly progress (future DB)
+
+  const monthlyProgress = [
+    { month: "Jan", score: 42 },
+    { month: "Feb", score: 48 },
+    { month: "Mar", score: Number(developmentSummary?.development_score ?? 50) }
+  ]
+
+
+  const lastUpdated = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  })
+
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <PortalPageHeader
+          title="Development"
+          subtitle="Track your referee growth and performance metrics."
+        />
+
+        <p className="text-xs text-gray-500 mt-1">
+          Data last updated: {lastUpdated}
+        </p>
+      </div>
 
       {developmentSummary && (
-          <DashboardCard title="Your Development Summary">
+        <DashboardCard title="Development Overview">
+          <DevelopmentOverview
+            ranking_position={developmentSummary.ranking_position}
+            development_score={developmentSummary.development_score}
+            referee_level={developmentSummary.referee_level}
+          />
+        </DashboardCard>
+      )}
 
-            <RefereeDevelopmentCard
-              ranking_position={developmentSummary.ranking_position}
-              development_score={developmentSummary.development_score}
-              referee_level={developmentSummary.referee_level}
-            />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <DashboardCard title="Performance Breakdown">
+          <DevelopmentRadar data={radarData} />
+        </DashboardCard>
 
-          </DashboardCard>
-        )}
+        <DashboardCard title="Development Progress">
+          <DevelopmentProgressChart data={monthlyProgress} />
+        </DashboardCard>
+      </div>
+
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
         {quizStats && (
           <DashboardCard title="Quiz Performance">
             <QuizStatsCard {...quizStats} />
@@ -75,31 +128,41 @@ export default async function DevelopmentPage() {
 
         {feedbackStats && (
           <DashboardCard title="Peer Feedback">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Communication</span>
+                <span>{Number(feedbackStats.avg_communication).toFixed(1)}</span>
+              </div>
 
-            <pre className="text-xs">
-              {JSON.stringify(feedbackStats, null, 2)}
-            </pre>
+              <div className="flex justify-between">
+                <span>Teamwork</span>
+                <span>{Number(feedbackStats.avg_teamwork).toFixed(1)}</span>
+              </div>
 
+              <div className="flex justify-between">
+                <span>Fitness</span>
+                <span>{Number(feedbackStats.avg_fitness).toFixed(1)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Professionalism</span>
+                <span>{Number(feedbackStats.avg_professionalism).toFixed(1)}</span>
+              </div>
+            </div>
           </DashboardCard>
         )}
 
         {reportStats && (
           <DashboardCard title="Report Discipline">
-
-            <pre className="text-xs">
-              {JSON.stringify(reportStats, null, 2)}
-            </pre>
-
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Report Score</span>
+                <span>{Number(reportStats.report_score).toFixed(0)}%</span>
+              </div>
+            </div>
           </DashboardCard>
         )}
-
-        {!quizStats && !attendanceStats && !feedbackStats && !reportStats && (
-            <div className="text-sm text-muted-foreground">
-              No development data available yet.
-            </div>
-          )}
       </div>
-
     </div>
   )
 }
