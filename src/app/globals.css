@@ -293,3 +293,95 @@
 .animate-fadeIn {
   animation: fadeIn 0.8s ease forwards;
 }
+
+/* =========================
+   CAFla Dark Scrollbars
+========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212,169,58,0.6);
+}
+
+/* =====================================================
+   PORTAL UI SYSTEM (EXCLUSIVE)
+   ===================================================== */
+
+.portal-layout {
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(212,169,58,0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      #061e1b 0%,
+      #041412 100%
+    );
+}
+
+/* Glass cards for portal */
+
+.portal-card {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  transition: all 0.35s ease;
+}
+
+/* hover elevation */
+
+.portal-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+  border-color: rgba(212,169,58,0.25);
+}
+
+/* subtle gold glow */
+
+.portal-glow:hover {
+  box-shadow:
+    0 10px 40px rgba(212,169,58,0.18),
+    0 2px 12px rgba(0,0,0,0.35);
+}
+
+/* animated progress */
+
+.portal-progress-bar {
+  transition: width 0.8s ease;
+}
+
+/* smoother scrollbars */
+
+.portal-layout ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.portal-layout ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portal-layout ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
+}
+
+.portal-layout ::-webkit-scrollbar-thumb:hover {
+  background: rgba(212,169,58,0.6);
+}
