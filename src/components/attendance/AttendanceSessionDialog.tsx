@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/src/components/ui/dialog"
+
+import AttendanceStatusBadge from "./AttendanceStatusBadge"
 
 export default function AttendanceSessionDialog({
   sessionId,
@@ -30,26 +33,31 @@ export default function AttendanceSessionDialog({
 
     <Dialog open={open} onOpenChange={onClose}>
 
-      <DialogContent>
+      <DialogContent className="max-w-md">
 
         <DialogHeader>
+
           <DialogTitle>
             Session Attendance
           </DialogTitle>
+
         </DialogHeader>
 
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
 
           {list.map((m, i) => (
 
             <div
               key={i}
-              className="flex justify-between border-b pb-1"
+              className="flex justify-between items-center border-b border-white/10 pb-2"
             >
-              <span>{m.name}</span>
-              <span className="capitalize text-sm">
-                {m.status}
+
+              <span className="text-sm">
+                {m.name}
               </span>
+
+              <AttendanceStatusBadge status={m.status} />
+
             </div>
 
           ))}

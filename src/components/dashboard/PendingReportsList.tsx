@@ -5,11 +5,16 @@ type Report = {
   match_id: string
   home_team: string
   away_team: string
-  match_date: string
+  kickoff_at: string
+  center_referee: string | null
 }
 
-export function PendingReportsList({ reports }: { reports: Report[] }) {
+type Props = {
+  reports: Report[]
+  userName: string
+}
 
+export function PendingReportsList({ reports, userName }: Props) {
   if (!reports || reports.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
@@ -18,37 +23,78 @@ export function PendingReportsList({ reports }: { reports: Report[] }) {
     )
   }
 
+  const now = new Date()
+
   return (
     <div className="space-y-3">
 
-      {reports.map((report) => (
+      {reports.map((report) => {
 
-        <div
-          key={report.match_id}
-          className="flex items-center justify-between border rounded-lg p-3"
-        >
+        const kickoff = new Date(report.kickoff_at)
+        const isMatchPlayed = kickoff < now
+        const isCenterReferee = report.center_referee === userName
 
-          <div className="text-sm">
+        let action: React.ReactNode = null
 
-            <div className="font-medium">
-              {report.home_team} vs {report.away_team}
+        /*
+        -------------------------
+        Decide action
+        -------------------------
+        */
+
+        if (!isMatchPlayed) {
+
+          action = (
+            <span className="text-xs text-muted-foreground">
+              Wait for this match to be played
+            </span>
+          )
+
+        } else if (!isCenterReferee) {
+
+          action = (
+            <span className="text-xs text-muted-foreground">
+              Waiting for Center Referee
+            </span>
+          )
+
+        } else {
+
+          action = (
+            <Link href={`/portal/reports/${report.match_id}`}>
+              <Button size="sm">
+                Submit Report
+              </Button>
+            </Link>
+          )
+
+        }
+
+        return (
+
+          <div
+            key={report.match_id}
+            className="flex items-center justify-between border rounded-lg p-3"
+          >
+
+            <div className="text-sm">
+
+              <div className="font-medium">
+                {report.home_team} vs {report.away_team}
+              </div>
+
+              <div className="text-muted-foreground text-xs">
+                {new Date(report.kickoff_at).toLocaleString()}
+              </div>
+
             </div>
 
-            <div className="text-muted-foreground text-xs">
-              {new Date(report.match_date).toLocaleString()}
-            </div>
+            {action}
 
           </div>
 
-          <Link href={`/portal/reports/${report.match_id}`}>
-            <Button size="sm">
-              Submit Report
-            </Button>
-          </Link>
-
-        </div>
-
-      ))}
+        )
+      })}
 
     </div>
   )

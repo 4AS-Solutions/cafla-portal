@@ -1,22 +1,43 @@
 import { getReports } from "@/src/lib/queries/get-reports"
-import ReportsTable from "@/src/components/reports/ReportsTable"
+import ReportsList from "@/src/components/reports/ReportsList"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function ReportsPage() {
+
   const reports = await getReports()
 
+  const pending = reports.filter((r) => r.status !== "submitted")
+  const submitted = reports.filter((r) => r.status === "submitted")
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Match Reports
-        </h1>
 
-        <p className="text-sm text-muted-foreground">
-          Submitted match reports
-        </p>
-      </div>
+    <div className="space-y-8">
 
-      <ReportsTable reports={reports} />
+      {/* Header */}
+
+      <PortalPageHeader
+        title="Match Reports"
+        subtitle="Manage and review your match reports"
+      />
+
+      {/* Pending */}
+
+      <ReportsList
+        title="Pending Reports"
+        reports={pending}
+        type="pending"
+      />
+
+
+      {/* Submitted */}
+
+      <ReportsList
+        title="Submitted Reports"
+        reports={submitted}
+        type="submitted"
+      />
+
     </div>
+
   )
 }

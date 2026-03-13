@@ -5,25 +5,71 @@ import { getMatchStatus } from "@/src/lib/matches/get-match-status"
 import {
   CalendarDays,
   MapPin,
-  Users
+  Users,
 } from "lucide-react"
 
 export default function MatchCard({ match }: { match: any }) {
 
   const status = getMatchStatus(match)
 
-  let href = `/portal/matches/${match.id}`
+  const kickoffDate = new Date(match.kickoff_at)
+  const now = new Date()
 
-  if (status === "pending_report") {
-    href = `/portal/reports/${match.id}`
-  }
-
-  const kickoff = new Date(match.kickoff_at).toLocaleString("en-US", {
+  const kickoff = kickoffDate.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   })
+
+  const isFuture = kickoffDate > now
+
+  const isCR = match.role === "CR"
+
+  let href = `/portal/matches/${match.id}`
+  let actionLabel = null
+
+  /*
+  -----------------------------
+  Action Logic
+  -----------------------------
+  */
+
+  if (isFuture) {
+
+    actionLabel = (
+      <span className="text-xs text-gray-400">
+        Report not available yet
+      </span>
+    )
+
+  } else if (!isCR) {
+
+    actionLabel = (
+      <span className="text-xs text-gray-400">
+        Waiting for Center Referee
+      </span>
+    )
+
+  } else if (status === "pending_report") {
+
+    href = `/portal/reports/${match.id}`
+
+    actionLabel = (
+      <span className="text-xs text-yellow-400">
+        Submit match report
+      </span>
+    )
+
+  } else {
+
+    actionLabel = (
+      <span className="text-xs text-emerald-400">
+        Report submitted
+      </span>
+    )
+
+  }
 
   const isPending = status === "pending_report"
 
@@ -124,6 +170,19 @@ export default function MatchCard({ match }: { match: any }) {
             </div>
 
           </div>
+
+        </div>
+
+
+        {/* ACTION FOOTER */}
+
+        <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
+
+          <span className="text-[11px] text-yellow-400 font-semibold">
+            {match.role}
+          </span>
+
+          {actionLabel}
 
         </div>
 

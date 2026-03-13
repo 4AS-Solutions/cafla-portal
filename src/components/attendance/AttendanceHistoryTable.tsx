@@ -12,6 +12,7 @@ import {
 } from "@/src/components/ui/table"
 
 import AttendanceSessionDialog from "./AttendanceSessionDialog"
+import AttendanceStatusBadge from "./AttendanceStatusBadge"
 
 export default function AttendanceHistoryTable({ records }: any) {
 
@@ -23,7 +24,7 @@ export default function AttendanceHistoryTable({ records }: any) {
 
   return (
 
-    <div className="border rounded-lg overflow-hidden">
+    <div className="rounded-xl border border-white/10 overflow-hidden bg-[#0B0F0F]/80">
 
       <Table>
 
@@ -35,7 +36,7 @@ export default function AttendanceHistoryTable({ records }: any) {
             <TableHead>Session</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Attendance</TableHead>
+            <TableHead className="text-right">Details</TableHead>
 
           </TableRow>
 
@@ -55,28 +56,28 @@ export default function AttendanceHistoryTable({ records }: any) {
 
               </TableCell>
 
-              <TableCell>
+              <TableCell className="font-medium">
 
                 {r.attendance_sessions.title}
 
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-gray-400">
 
                 {r.attendance_sessions.location}
 
               </TableCell>
 
-              <TableCell className="capitalize">
+              <TableCell>
 
-                {r.status}
+                <AttendanceStatusBadge status={r.status} />
 
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-right">
 
                 <button
-                  className="text-blue-600 text-sm hover:underline"
+                  className="text-sm text-yellow-400 hover:underline"
                   onClick={() =>
                     setSessionId(r.attendance_sessions.id)
                   }
