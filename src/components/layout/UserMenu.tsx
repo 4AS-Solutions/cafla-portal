@@ -22,27 +22,27 @@ export function UserMenu({
   }
 
   return (
-    <div className="flex items-center gap-4 text-sm">
+    <div className="flex items-center gap-4">
 
-      <div className="text-right">
+      <div className="text-right leading-tight">
 
-        <div className="font-medium">
+        <div className="text-sm font-semibold text-white">
           {name}
         </div>
 
-        <div className="text-muted-foreground text-xs">
+        <div className="text-xs text-gray-400">
           {email}
         </div>
 
       </div>
 
-      <span className="px-2 py-1 text-xs rounded bg-muted">
-        {role}
+      <span className="px-2 py-1 text-xs rounded-md bg-emerald-500/20 text-emerald-400">
+        {role.toUpperCase()}
       </span>
 
       <button
         onClick={logout}
-        className="text-xs text-muted-foreground hover:underline"
+        className="text-xs text-gray-400 hover:text-white transition"
       >
         Logout
       </button>

@@ -1,4 +1,3 @@
-
 import { PortalSidebar } from "./PortalSidebar"
 import { PortalTopbar } from "./PortalTopbar"
 
@@ -8,7 +7,7 @@ export function PortalShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-gradient-to-br from-[#071f1c] to-[#021312] text-white">
 
       <PortalSidebar />
 
@@ -16,7 +15,7 @@ export function PortalShell({
 
         <PortalTopbar />
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-8">
           {children}
         </main>
 

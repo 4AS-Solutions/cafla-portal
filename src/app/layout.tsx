@@ -18,9 +18,12 @@ const spaceGrotesk = Space_Grotesk({
 
 
 export const metadata: Metadata = {
-  title: "CAFLA Portal",
+  title: "CAFLA",
   description: "Colegio de Árbitros de Fútbol de Los Ángeles",
-  manifest: "/manifest.json"
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/apple-touch-icon.png",
+  }
 }
 
 

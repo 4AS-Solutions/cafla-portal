@@ -2,7 +2,22 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { LayoutDashboard, Users, FileText, ClipboardList, CalendarDays, BookOpenText, ChartLine, FileUser, Import, SquareLibrary, FolderClock, ClipboardType, SquareStar } from "lucide-react"
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  ClipboardList,
+  CalendarDays,
+  BookOpenText,
+  ChartLine,
+  FileUser,
+  Import,
+  SquareLibrary,
+  FolderClock,
+  ClipboardType,
+  SquareStar
+} from "lucide-react"
+
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/src/components/providers/AuthProvider"
 
@@ -39,22 +54,18 @@ export function PortalSidebar() {
   const isBoard = profile?.role === "board"
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r bg-card">
+    <aside className="hidden md:flex flex-col w-64 bg-[#0B0F0F] border-r border-white/10">
 
-      {/* Logo */}
+      {/* Sidebar Header */}
 
-      <div className="flex items-center gap-3 p-4 border-b">
+      <div className="h-16 flex items-center justify-center border-b border-white/10">
 
         <Image
           src="/logo/cafla-logo.png"
           alt="CAFLA"
-          width={32}
-          height={32}
+          width={60}
+          height={60}
         />
-
-        <span className="font-bold text-lg">
-          CAFLA
-        </span>
 
       </div>
 
@@ -71,8 +82,10 @@ export function PortalSidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted ${
-                active ? "bg-muted font-medium" : ""
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                active
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "hover:bg-white/5 text-gray-300"
               }`}
             >
               <Icon size={18} />
@@ -83,11 +96,9 @@ export function PortalSidebar() {
 
       </nav>
 
-      {/* Board Section */}
-
       {isBoard && (
         <>
-          <div className="px-4 pt-2 text-xs text-muted-foreground uppercase">
+          <div className="px-4 pt-4 text-xs text-gray-400 uppercase">
             Admin
           </div>
 
@@ -102,8 +113,10 @@ export function PortalSidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted ${
-                    active ? "bg-muted font-medium" : ""
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                    active
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : "hover:bg-white/5 text-gray-300"
                   }`}
                 >
                   <Icon size={18} />
