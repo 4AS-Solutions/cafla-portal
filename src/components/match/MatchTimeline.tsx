@@ -10,79 +10,95 @@ type Event = {
 }
 
 export function MatchTimeline({ events }: { events: Event[] }) {
+
   if (!events.length) {
     return (
-      <div className="text-sm text-muted-foreground">
+      <div className="rounded-xl border border-white/10 bg-black/30 p-6 text-sm text-gray-400">
         No events recorded.
       </div>
     )
   }
 
   return (
-    <div className="relative max-w-xl mx-auto">
+    <div className="rounded-xl border border-white/10 bg-black/30 p-6">
 
-      {/* vertical center line */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2" />
+      <h2 className="text-sm font-semibold text-gray-300 mb-6">
+        Match Timeline
+      </h2>
 
-      <div className="space-y-6">
+      <div className="relative max-w-xl mx-auto">
 
-        {events.map((e, i) => {
-          let Icon = Volleyball
-          let iconStyle = "text-gray-600"
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 -translate-x-1/2" />
 
-          if (e.card_type === "yellow") {
-            Icon = RectangleVertical
-            iconStyle = "text-yellow-500 fill-yellow-400"
-          }
+        <div className="space-y-6">
 
-          if (e.card_type === "red") {
-            Icon = RectangleVertical
-            iconStyle = "text-red-600 fill-red-500"
-          }
+          {events.map((e, i) => {
 
-          const isHome = e.team === "home"
+            let Icon = Volleyball
+            let iconStyle = "text-green-400"
 
-          return (
-            <div key={i} className="grid grid-cols-2 items-center gap-4">
+            if (e.card_type === "yellow") {
+              Icon = RectangleVertical
+              iconStyle = "text-yellow-400 fill-yellow-400"
+            }
 
-              {/* HOME SIDE */}
-              <div className={`flex items-center gap-2 justify-end pr-4 ${!isHome && "opacity-0"}`}>
-                <span className="text-sm">
-                  {e.player} #{e.number}
-                </span>
+            if (e.card_type === "red") {
+              Icon = RectangleVertical
+              iconStyle = "text-red-500 fill-red-500"
+            }
 
-                <Icon
-                  size={18}
-                  className={iconStyle}
-                  strokeWidth={1.8}
-                />
-              </div>
+            const isHome = e.team === "home"
 
-              {/* AWAY SIDE */}
-              <div className={`flex items-center gap-2 pl-4 ${isHome && "opacity-0"}`}>
-                <Icon
-                  size={18}
-                  className={iconStyle}
-                  strokeWidth={1.8}
-                />
+            return (
+              <div key={i} className="grid grid-cols-2 items-center gap-4">
 
-                <span className="text-sm">
-                  {e.player} #{e.number}
-                </span>
-              </div>
+                {/* HOME */}
+                <div className={`flex items-center gap-2 justify-end pr-4 ${!isHome && "opacity-0"}`}>
 
-              {/* minute indicator */}
-              <div className="col-span-2 flex justify-center -mt-3">
-                <div className="text-xs bg-background px-2 text-muted-foreground">
-                  {e.minute}'
+                  <span className="text-sm text-white">
+                    {e.player} #{e.number}
+                  </span>
+
+                  <Icon
+                    size={18}
+                    className={iconStyle}
+                    strokeWidth={1.8}
+                  />
+
                 </div>
-              </div>
 
-            </div>
-          )
-        })}
+                {/* AWAY */}
+                <div className={`flex items-center gap-2 pl-4 ${isHome && "opacity-0"}`}>
+
+                  <Icon
+                    size={18}
+                    className={iconStyle}
+                    strokeWidth={1.8}
+                  />
+
+                  <span className="text-sm text-white">
+                    {e.player} #{e.number}
+                  </span>
+
+                </div>
+
+                {/* minute */}
+                <div className="col-span-2 flex justify-center -mt-3">
+
+                  <div className="text-xs bg-white/10 border border-white/10 px-2 py-[2px] rounded text-gray-300">
+                    {e.minute}'
+                  </div>
+
+                </div>
+
+              </div>
+            )
+          })}
+
+        </div>
 
       </div>
+
     </div>
   )
 }

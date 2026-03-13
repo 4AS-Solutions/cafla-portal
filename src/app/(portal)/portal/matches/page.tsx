@@ -1,6 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server"
 import { getUserMatches } from "@/src/lib/matches/get-user-matches"
 import MatchList from "@/src/components/match/MatchList"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function page() {
 
@@ -17,14 +18,13 @@ export default async function page() {
   const matches = await getUserMatches(user.id)
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-
-      <h1 className="text-2xl font-bold">
-        My Matches
-      </h1>
+    <div className="space-y-6">
+      <PortalPageHeader
+        title="My Matches"
+        subtitle="View your assignments and submit match reports."
+      />
 
       <MatchList matches={matches} />
-
     </div>
   )
 }

@@ -14,6 +14,7 @@ import { getProfile } from "@/src/lib/queries/get-profile"
 import { getMyDevelopment } from "@/src/lib/queries/dashboard"
 import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
 import { DevelopmentOverview } from "@/src/components/development/DevelopmentOverview"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function DevelopmentPage() {
 
@@ -81,13 +82,10 @@ export default async function DevelopmentPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white">
-          Development
-        </h1>
-
-        <p className="text-sm text-gray-400 mt-1">
-          Track your referee growth and performance metrics
-        </p>
+        <PortalPageHeader
+          title="Development"
+          subtitle="Track your referee growth and performance metrics."
+        />
 
         <p className="text-xs text-gray-500 mt-1">
           Data last updated: {lastUpdated}

@@ -5,6 +5,7 @@ import { PendingReportsList } from "@/src/components/dashboard/PendingReportsLis
 import { QuickActions } from "@/src/components/dashboard/QuickActions"
 import { UpcomingMatchesTable } from "@/src/components/dashboard/UpcomingMatchesTable"
 import { RefereeDevelopmentCard } from "@/src/components/development/DevelopmentSummaryCard"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 import {
   getUpcomingMatches,
@@ -40,19 +41,11 @@ export default async function PortalDashboard() {
     <div className="space-y-8">
 
       {/* Header */}
-      <div>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-yellow-400/90">
-          CAFLA Portal
-        </p>
-
-        <h1 className="text-2xl font-bold text-white sm:text-3xl">
-          Dashboard
-        </h1>
-
-        <p className="mt-1 max-w-2xl text-sm text-gray-400 sm:text-base">
-          Overview of your referee activity and development
-        </p>
-      </div>
+      <PortalPageHeader
+        eyebrow="CAFLA PORTAL"
+        title="Dashboard"
+        subtitle="Overview of your referee activity and development progress."
+      />
 
       {myDevelopment && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
