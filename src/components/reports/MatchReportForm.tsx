@@ -7,17 +7,20 @@ import { createClient } from "@/src/lib/supabase/client"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Textarea } from "@/src/components/ui/textarea"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/src/components/ui/table"
+
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { MatchTimeline } from "../match/MatchTimeline"
+import {
+  Plus,
+  Trash2,
+  Goal,
+  RectangleVertical,
+  FileImage,
+  MessageSquare,
+  Trophy,
+  Clock3,
+} from "lucide-react"
 
 type GoalFormRow = {
   team: "home" | "away"
@@ -75,12 +78,127 @@ const CARD_REASONS = [
   "SPITTING",
 ]
 
+function GoalRow({ index, register, remove }: any) {
+  return (
+    <div className="grid grid-cols-6 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
+
+      <select
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm"
+        {...register(`goals.${index}.team`)}
+      >
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+
+      <Input
+        placeholder="#"
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`goals.${index}.player_number`)}
+      />
+
+      <Input
+        placeholder="Player"
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`goals.${index}.player_name`)}
+      />
+
+      <Input
+        type="number"
+        placeholder="Min"
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`goals.${index}.minute`, { valueAsNumber: true })}
+      />
+
+      <select
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm"
+        {...register(`goals.${index}.goal_type`)}
+      >
+        <option value="normal">Goal</option>
+        <option value="penalty">Penalty</option>
+        <option value="own_goal">Own Goal</option>
+      </select>
+
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        onClick={() => remove(index)}
+      >
+        <Trash2 size={16} />
+      </Button>
+
+    </div>
+  )
+}
+
+
+function CardRow({ index, register, remove }: any) {
+  return (
+    <div className="grid grid-cols-7 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
+
+      <select
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3"
+        {...register(`cards.${index}.team`)}
+      >
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+
+      <Input
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`cards.${index}.player_number`)}
+      />
+
+      <Input
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`cards.${index}.player_name`)}
+      />
+
+      <Input
+        type="number"
+        className="h-10 bg-[#0B0F0F]"
+        {...register(`cards.${index}.minute`, { valueAsNumber: true })}
+      />
+
+      <select
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
+        {...register(`cards.${index}.card_type`)}
+      >
+        <option value="yellow">Yellow</option>
+        <option value="red">Red</option>
+      </select>
+
+      <select
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
+        {...register(`cards.${index}.reason_code`)}
+      >
+        {CARD_REASONS.map((r: any) => (
+          <option key={r}>{r}</option>
+        ))}
+      </select>
+
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        onClick={() => remove(index)}
+      >
+        <Trash2 size={16} />
+      </Button>
+
+    </div>
+  )
+}
+
+const darkSelectClass =
+  "h-10 w-full rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm text-white outline-none transition focus:border-yellow-400/40"
+
 export function MatchReportForm({ match }: MatchReportFormProps) {
-  const supabase = createClient();
-  const router = useRouter();
+  const supabase = createClient()
+  const router = useRouter()
 
   const [submitting, setSubmitting] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [, setMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [homeRosterFile, setHomeRosterFile] = useState<File | null>(null)
@@ -149,12 +267,6 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
       let homeRosterPath: string | null = null
       let awayRosterPath: string | null = null
 
-      /*
-      -----------------------------
-      Upload HOME roster
-      -----------------------------
-      */
-
       if (homeRosterFile) {
         homeRosterPath = `${match.id}/home-${Date.now()}-${homeRosterFile.name}`
 
@@ -170,12 +282,6 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         }
       }
 
-      /*
-      -----------------------------
-      Upload AWAY roster
-      -----------------------------
-      */
-
       if (awayRosterFile) {
         awayRosterPath = `${match.id}/away-${Date.now()}-${awayRosterFile.name}`
 
@@ -190,12 +296,6 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
           throw new Error("Failed to upload away roster.")
         }
       }
-
-      /*
-      -----------------------------
-      Send report to API
-      -----------------------------
-      */
 
       const res = await fetch("/api/reports/submit", {
         method: "POST",
@@ -226,12 +326,6 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         throw new Error(data?.error || "Failed to submit report.")
       }
 
-      /*
-      -----------------------------
-      SUCCESS
-      -----------------------------
-      */
-
       toast.success("Match report submitted successfully")
 
       setHomeRosterFile(null)
@@ -248,350 +342,221 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
           : "An unexpected error occurred."
 
       toast.error(message)
-
       setErrorMessage(message)
     } finally {
       setSubmitting(false)
     }
   }
 
-
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      {/* Score */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Score</h2>
+      {/* SCOREBOARD */}
+      <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 sm:p-8 backdrop-blur-md">
+        <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
+          <Trophy size={18} className="text-yellow-400" />
+          Score
+        </h2>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:items-center md:text-center">
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              {match.home_team} Score
-            </label>
+            <div className="mb-2 text-sm text-gray-400">{match.home_team}</div>
             <Input
               type="number"
               min={0}
+              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold"
               {...form.register("home_score", { valueAsNumber: true })}
             />
           </div>
 
+          <div className="hidden text-3xl font-bold text-gray-500 md:block">
+            -
+          </div>
+
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              {match.away_team} Score
-            </label>
+            <div className="mb-2 text-sm text-gray-400">{match.away_team}</div>
             <Input
               type="number"
               min={0}
+              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold"
               {...form.register("away_score", { valueAsNumber: true })}
             />
           </div>
         </div>
       </section>
 
-      {/* Goals */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Goals</h2>
+      {/* GOALS + CARDS */}
+      <div className="space-y-6">
+        {/* GOALS */}
+        <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+              <Goal size={18} className="text-yellow-400" />
+              Goals
+            </h2>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() =>
-              goalsArray.append({
-                team: "home",
-                player_name: "",
-                player_number: "",
-                minute: 0,
-                half: "first",
-                goal_type: "normal",
-              })
-            }
-          >
-            + Add Goal
-          </Button>
-        </div>
-
-        {goalsArray.fields.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            No goals added.
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
+              onClick={() =>
+                goalsArray.append({
+                  team: "home",
+                  player_name: "",
+                  player_number: "",
+                  minute: 0,
+                  half: "first",
+                  goal_type: "normal",
+                })
+              }
+            >
+              <Plus size={16} />
+              Add Goal
+            </Button>
           </div>
-        ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team</TableHead>
-                  <TableHead>#</TableHead>
-                  <TableHead>Player</TableHead>
-                  <TableHead>Minute</TableHead>
-                  <TableHead>Half</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="w-[90px]">Action</TableHead>
-                </TableRow>
-              </TableHeader>
 
-              <TableBody>
-                {goalsArray.fields.map((field, index) => (
-                  <TableRow key={field.id}>
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`goals.${index}.team`)}
-                      >
-                        <option value="home">Home</option>
-                        <option value="away">Away</option>
-                      </select>
-                    </TableCell>
+          {goalsArray.fields.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-gray-500">
+              No goals added.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {goalsArray.fields.map((field, index) => (
+                <GoalRow
+                  key={field.id}
+                  index={index}
+                  register={form.register}
+                  remove={goalsArray.remove}
+                />
+              ))}
+              </div>
+          )}
+        </section>
 
-                    <TableCell>
-                      <Input {...form.register(`goals.${index}.player_number`)} />
-                    </TableCell>
+        {/* CARDS */}
+        <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+              <RectangleVertical size={18} className="text-yellow-400" />
+              Cards
+            </h2>
 
-                    <TableCell>
-                      <Input {...form.register(`goals.${index}.player_name`)} />
-                    </TableCell>
-
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...form.register(`goals.${index}.minute`, {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`goals.${index}.half`)}
-                      >
-                        <option value="first">1st</option>
-                        <option value="second">2nd</option>
-                      </select>
-                    </TableCell>
-
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`goals.${index}.goal_type`)}
-                      >
-                        <option value="normal">Goal</option>
-                        <option value="penalty">Penalty</option>
-                        <option value="own_goal">Own Goal</option>
-                      </select>
-                    </TableCell>
-
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => goalsArray.remove(index)}
-                      >
-                        Remove
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
+              onClick={() =>
+                cardsArray.append({
+                  team: "home",
+                  player_name: "",
+                  player_number: "",
+                  minute: 0,
+                  card_type: "yellow",
+                  reason_code: "USB",
+                  notes: "",
+                })
+              }
+            >
+              <Plus size={16} />
+              Add Card
+            </Button>
           </div>
-        )}
-      </section>
 
-      {/* Cards */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Cards</h2>
+          {cardsArray.fields.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-gray-500">
+              No cards added.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {cardsArray.fields.map((field, index) => (
+                <CardRow
+                  key={field.id}
+                  index={index}
+                  register={form.register}
+                  remove={cardsArray.remove}
+                />
+              ))}
+              </div>
+          )}
+        </section>
+      </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() =>
-              cardsArray.append({
-                team: "home",
-                player_name: "",
-                player_number: "",
-                minute: 0,
-                card_type: "yellow",
-                reason_code: "USB",
-                notes: "",
-              })
-            }
-          >
-            + Add Card
-          </Button>
-        </div>
-
-        {cardsArray.fields.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            No cards added.
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team</TableHead>
-                  <TableHead>#</TableHead>
-                  <TableHead>Player</TableHead>
-                  <TableHead>Minute</TableHead>
-                  <TableHead>Card</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="w-[90px]">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {cardsArray.fields.map((field, index) => (
-                  <TableRow key={field.id}>
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`cards.${index}.team`)}
-                      >
-                        <option value="home">Home</option>
-                        <option value="away">Away</option>
-                      </select>
-                    </TableCell>
-
-                    <TableCell>
-                      <Input {...form.register(`cards.${index}.player_number`)} />
-                    </TableCell>
-
-                    <TableCell>
-                      <Input {...form.register(`cards.${index}.player_name`)} />
-                    </TableCell>
-
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...form.register(`cards.${index}.minute`, {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`cards.${index}.card_type`)}
-                      >
-                        <option value="yellow">Yellow</option>
-                        <option value="red">Red</option>
-                      </select>
-                    </TableCell>
-
-                    <TableCell>
-                      <select
-                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                        {...form.register(`cards.${index}.reason_code`)}
-                      >
-                        {CARD_REASONS.map((reason) => (
-                          <option key={reason} value={reason}>
-                            {reason}
-                          </option>
-                        ))}
-                      </select>
-                    </TableCell>
-
-                    <TableCell>
-                      <Input {...form.register(`cards.${index}.notes`)} />
-                    </TableCell>
-
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => cardsArray.remove(index)}
-                      >
-                        Remove
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </section>
-
-      {/* Match Info */}
-
-
-      {/* Timeline Preview */}
-      <div className="mt-10">
-        <h2 className="text-lg font-semibold mb-4">
+      {/* TIMELINE */}
+      <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+          <Clock3 size={18} className="text-yellow-400" />
           Timeline Preview
-        </h2><hr className="mb-4" />
+        </h2>
 
-        <div className="flex justify-around text-sm font-semibold mb-4">
+        <div className="mb-4 flex justify-between text-sm text-gray-400">
           <span>{match.home_team}</span>
           <span>{match.away_team}</span>
         </div>
 
         <MatchTimeline events={timelinePreview} />
-      </div>
+      </section>
 
-      {/* Rosters */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Roster Photos</h2>
+      {/* DOCUMENTS */}
+      <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+          <FileImage size={18} className="text-yellow-400" />
+          Match Documents
+        </h2>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
               Home Roster
             </label>
             <Input
               type="file"
               accept="image/*"
+              className="border-white/10 bg-[#0B0F0F] cursor-pointer"
               onChange={(e) => setHomeRosterFile(e.target.files?.[0] ?? null)}
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
               Away Roster
             </label>
             <Input
               type="file"
               accept="image/*"
+              className="border-white/10 bg-[#0B0F0F] cursor-pointer"
               onChange={(e) => setAwayRosterFile(e.target.files?.[0] ?? null)}
             />
           </div>
         </div>
       </section>
 
-      {/* Comments */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Comments</h2>
+      {/* COMMENTS */}
+      <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+          <MessageSquare size={18} className="text-yellow-400" />
+          Comments
+        </h2>
 
         <Textarea
           rows={5}
+          className="border-white/10 bg-[#0B0F0F]"
           placeholder="Additional match notes..."
           {...form.register("comments")}
         />
       </section>
 
-      {/* Messages */}
-      {message && (
-        <div className="rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
-          {message}
-        </div>
-      )}
-
+      {/* ERROR */}
       {errorMessage && (
-        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {errorMessage}
         </div>
       )}
 
-      <Button type="submit" disabled={submitting}>
-        {submitting ? "Submitting..." : "Submit Report"}
-      </Button>
+      {/* SUBMIT */}
+      <div className="flex justify-end">
+        <Button size="lg" className="px-10" type="submit" disabled={submitting}>
+          {submitting ? "Submitting..." : "Submit Match Report"}
+        </Button>
+      </div>
     </form>
   )
 }

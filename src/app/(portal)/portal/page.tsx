@@ -98,7 +98,7 @@ export default async function PortalDashboard() {
             title="Pending Reports"
             icon={<ClipboardList size={18} />}
           >
-            <PendingReportsList reports={pendingReports ?? []} />
+            <PendingReportsList reports={pendingReports ?? []} userName={profileData?.profile?.full_name ?? ""} />
           </DashboardCard>
         </div>
 

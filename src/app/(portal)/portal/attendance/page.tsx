@@ -2,8 +2,10 @@ import { createClient } from "@/src/lib/supabase/server"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
 import { calculateAttendanceScore } from "@/src/lib/attendance/calculate-score"
 
+
 import AttendanceScoreCard from "@/src/components/attendance/AttendanceScoreCard"
 import AttendanceHistoryTable from "@/src/components/attendance/AttendanceHistoryTable"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function AttendancePage() {
 
@@ -23,13 +25,16 @@ export default async function AttendancePage() {
 
   return (
 
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        My Attendance
-      </h1>
+      <PortalPageHeader
+        title="Attendance"
+        subtitle="Track your attendance for referee training sessions and meetings."
+      />
 
-      <AttendanceScoreCard score={score} />
+      <div className="max-w-md">
+        <AttendanceScoreCard score={score} />
+      </div>
 
       <div>
 
@@ -42,5 +47,6 @@ export default async function AttendancePage() {
       </div>
 
     </div>
+
   )
 }

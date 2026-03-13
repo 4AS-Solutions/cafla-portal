@@ -1,14 +1,14 @@
 import { createClient } from "@/src/lib/supabase/server"
 import { getUserMatches } from "@/src/lib/matches/get-user-matches"
 import MatchList from "@/src/components/match/MatchList"
+import MatchSummaryBar from "@/src/components/match/MatchSummaryBar"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function page() {
-
   const supabase = await createClient()
 
   const {
-    data: { user }
+    data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
@@ -17,11 +17,42 @@ export default async function page() {
 
   const matches = await getUserMatches(user.id)
 
+  const now = new Date()
+
+  const upcomingCount = matches.filter((match) => {
+    const kickoff = new Date(match.kickoff_at)
+    return kickoff > now
+  }).length
+
+  const pendingReportsCount = matches.filter((match) => {
+    const kickoff = new Date(match.kickoff_at)
+    const isPlayed = kickoff <= now
+    const isCenterRef = match.role === "CR"
+    const isPending =
+      !match.report_status || match.report_status === "pending"
+
+    return isPlayed && isCenterRef && isPending
+  }).length
+
+  const submittedReportsCount = matches.filter((match) => {
+    return (
+      match.report_status === "submitted" ||
+      match.report_status === "approved" ||
+      match.report_status === "revision_required"
+    )
+  }).length
+
   return (
     <div className="space-y-6">
       <PortalPageHeader
         title="My Matches"
         subtitle="View your assignments and submit match reports."
+      />
+
+      <MatchSummaryBar
+        upcomingCount={upcomingCount}
+        pendingReportsCount={pendingReportsCount}
+        submittedReportsCount={submittedReportsCount}
       />
 
       <MatchList matches={matches} />
