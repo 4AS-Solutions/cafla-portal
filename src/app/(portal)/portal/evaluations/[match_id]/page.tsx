@@ -1,4 +1,5 @@
 import { EvaluationForm } from "@/src/components/evaluations/EvaluationForm"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function EvaluationPage({ params, searchParams }: any) {
 
@@ -6,11 +7,14 @@ export default async function EvaluationPage({ params, searchParams }: any) {
   const evaluatedId = searchParams.referee
 
   return (
-    <div className="space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        Submit Evaluation
-      </h1>
+    <div className="max-w-3xl space-y-6">
+
+      <PortalPageHeader
+        title="Submit Evaluation"
+        subtitle="Rate the referee performance for this match."
+      />
+
 
       <EvaluationForm
         matchId={matchId}
@@ -18,5 +22,6 @@ export default async function EvaluationPage({ params, searchParams }: any) {
       />
 
     </div>
+
   )
 }

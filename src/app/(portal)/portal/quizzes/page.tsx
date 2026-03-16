@@ -1,6 +1,8 @@
 import { getQuizzes } from "@/src/lib/queries/get-quizzes"
 import QuizList from "@/src/components/quizzes/QuizList"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import Link from "next/link"
+import { Button } from "@/src/components/ui/button"
 
 export default async function QuizzesPage() {
 
@@ -8,19 +10,22 @@ export default async function QuizzesPage() {
 
   return (
 
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="space-y-6">
 
-      <div className="flex justify-between items-center">
+      <PortalPageHeader
+        title="Quizzes"
+        subtitle="Test your knowledge of the Laws of the Game."
+      />
 
-        <h1 className="text-2xl font-bold">
-          Quizzes
-        </h1>
+      <div className="flex justify-end">
 
-        <Link
-          href="/portal/quizzes/history"
-          className="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded"
-        >
-          Quiz History
+        <Link href="/portal/quizzes/history">
+          <Button
+            size="sm"
+            className="bg-[#0B0F0F] border border-white/10 hover:border-yellow-400/40"
+          >
+            Quiz History
+          </Button>
         </Link>
 
       </div>

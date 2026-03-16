@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table"
+import { Button } from "@/src/components/ui/button"
 
 export function EvaluationList({ evaluations }: { evaluations: any[] }) {
 
@@ -19,43 +20,58 @@ export function EvaluationList({ evaluations }: { evaluations: any[] }) {
   }
 
   return (
-    <Table>
 
-      <TableHeader>
-        <TableRow>
-          <TableHead>Match</TableHead>
-          <TableHead>Referee</TableHead>
-          <TableHead></TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="border rounded-lg overflow-hidden">
 
-      <TableBody>
+      <Table>
 
-        {evaluations.map((e, i) => (
-          <TableRow key={i}>
+        <TableHeader>
 
-            <TableCell>
-              {e.home_team} vs {e.away_team}
-            </TableCell>
-
-            <TableCell>
-              {e.referee_name}
-            </TableCell>
-
-            <TableCell>
-              <Link
-                href={`/portal/evaluations/${e.match_id}?referee=${e.referee_id}`}
-                className="text-primary underline text-sm"
-              >
-                Evaluate
-              </Link>
-            </TableCell>
-
+          <TableRow>
+            <TableHead>Match</TableHead>
+            <TableHead>Referee</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
-        ))}
 
-      </TableBody>
+        </TableHeader>
 
-    </Table>
+        <TableBody>
+
+          {evaluations.map((e, i) => (
+
+            <TableRow key={i}>
+
+              <TableCell>
+                {e.home_team} vs {e.away_team}
+              </TableCell>
+
+              <TableCell>
+                {e.referee_name}
+              </TableCell>
+
+              <TableCell className="text-right">
+
+                <Link
+                  href={`/portal/evaluations/${e.match_id}?referee=${e.referee_id}`}
+                >
+
+                  <Button size="sm">
+                    Evaluate
+                  </Button>
+
+                </Link>
+
+              </TableCell>
+
+            </TableRow>
+
+          ))}
+
+        </TableBody>
+
+      </Table>
+
+    </div>
+
   )
 }

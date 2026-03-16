@@ -1,4 +1,6 @@
 import { getQuizReview } from "@/src/lib/queries/get-quiz-review"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import { CheckCircle, XCircle } from "lucide-react"
 
 export default async function QuizReviewPage({
   params
@@ -13,51 +15,81 @@ export default async function QuizReviewPage({
 
   return (
 
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        {attempt.quizzes.title}
-      </h1>
+      <PortalPageHeader
+        title={attempt.quizzes.title}
+        subtitle="Review your answers and learn from the correct ones."
+      />
 
-      <p className="text-lg">
-        Score: {attempt.score}%
-      </p>
+      <div className="rounded-xl border border-white/10 p-6 bg-[#0B0F0F]/80 backdrop-blur-md">
 
-      {questions.map((q: any, index: number) => {
+        <p className="text-lg font-semibold">
+          Score: {attempt.score}%
+        </p>
 
-        const userAnswer =
-          answers.find((a: any) => a.question_id === q.id)?.selected_answer
+      </div>
 
-        const correct = q.correct_answer
+      <div className="space-y-4">
 
-        return (
+        {questions.map((q: any, index: number) => {
 
-          <div
-            key={q.id}
-            className="border rounded-lg p-4 space-y-3"
-          >
+          const userAnswer =
+            answers.find((a: any) => a.question_id === q.id)?.selected_answer
 
-            <p className="font-medium">
-              {index + 1}. {q.question_text}
-            </p>
+          const correct = q.correct_answer
 
-            <p>
-              Your answer: <b>{userAnswer?.toUpperCase()}</b>
-            </p>
+          const isCorrect = userAnswer === correct
 
-            <p>
-              Correct answer: <b>{correct.toUpperCase()}</b>
-            </p>
+          return (
 
-            <p className="text-gray-600">
-              Explanation: {q.explanation}
-            </p>
+            <div
+              key={q.id}
+              className="rounded-xl border border-white/10 p-5 bg-[#0B0F0F]/80 backdrop-blur-md space-y-3"
+            >
 
-          </div>
+              <div className="flex items-center gap-2 text-white font-medium">
 
-        )
+                {isCorrect
+                  ? <CheckCircle size={16} className="text-green-400"/>
+                  : <XCircle size={16} className="text-red-400"/>
+                }
 
-      })}
+                {index + 1}. {q.question_text}
+
+              </div>
+
+              <p className="text-sm text-gray-300">
+
+                Your answer:{" "}
+                <b>{userAnswer?.toUpperCase() ?? "No answer"}</b>
+
+              </p>
+
+              <p className="text-sm text-gray-300">
+
+                Correct answer:{" "}
+                <b>{correct.toUpperCase()}</b>
+
+              </p>
+
+              {q.explanation && (
+
+                <p className="text-sm text-gray-400">
+
+                  {q.explanation}
+
+                </p>
+
+              )}
+
+            </div>
+
+          )
+
+        })}
+
+      </div>
 
     </div>
 

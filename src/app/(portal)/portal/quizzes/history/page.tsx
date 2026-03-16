@@ -1,5 +1,6 @@
 import { getQuizHistory } from "@/src/lib/queries/get-quiz-history"
-import Link from "next/link"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import QuizHistoryCard from "@/src/components/quizzes/QuizHistoryCard"
 
 export default async function QuizHistoryPage() {
 
@@ -7,14 +8,15 @@ export default async function QuizHistoryPage() {
 
   return (
 
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        Quiz History
-      </h1>
+      <PortalPageHeader
+        title="Quiz History"
+        subtitle="Review your completed quizzes."
+      />
 
       {attempts.length === 0 && (
-        <p className="text-gray-500">
+        <p className="text-muted-foreground">
           No quizzes completed yet.
         </p>
       )}
@@ -23,31 +25,10 @@ export default async function QuizHistoryPage() {
 
         {attempts.map((attempt: any) => (
 
-          <div
+          <QuizHistoryCard
             key={attempt.id}
-            className="border rounded-lg p-4 flex justify-between items-center"
-          >
-
-            <div>
-
-              <p className="font-semibold">
-                {attempt.quizzes.title}
-              </p>
-
-              <p className="text-sm text-gray-500">
-                Score: {attempt.score}%
-              </p>
-
-            </div>
-
-            <Link
-              href={`/portal/quizzes/review/${attempt.id}`}
-              className="text-blue-600 text-sm"
-            >
-              Review
-            </Link>
-
-          </div>
+            attempt={attempt}
+          />
 
         ))}
 
