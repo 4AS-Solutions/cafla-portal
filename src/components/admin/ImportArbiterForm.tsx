@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
 
 type ArbiterGame = {
@@ -25,6 +25,8 @@ type Member = {
 
 export default function ImportArbiterForm() {
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ArbiterGame[] | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -35,7 +37,6 @@ export default function ImportArbiterForm() {
   const [message, setMessage] = useState<string | null>(null)
 
   async function handlePreview() {
-
     if (!file) {
       setMessage("Please select a file first.")
       return
@@ -45,7 +46,6 @@ export default function ImportArbiterForm() {
     setMessage(null)
 
     try {
-
       const form = new FormData()
       form.append("file", file)
 
@@ -68,9 +68,7 @@ export default function ImportArbiterForm() {
       setMembers(membersData.members)
 
     } catch (err: any) {
-
       setMessage(err.message)
-
     }
 
     setLoadingPreview(false)
@@ -109,73 +107,128 @@ export default function ImportArbiterForm() {
       setPreview(null)
       setFile(null)
 
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+
     } catch (err: any) {
-
       setMessage(err.message)
-
     }
 
     setLoadingImport(false)
   }
 
   function updateRow(index: number, field: keyof ArbiterGame, value: string) {
-
     if (!preview) return
 
     const updated = [...preview]
-
-    updated[index] = {
-      ...updated[index],
-      [field]: value
-    }
-
+    updated[index] = { ...updated[index], [field]: value }
     setPreview(updated)
   }
 
   function deleteRow(index: number) {
-
     if (!preview) return
-
-    const updated = preview.filter((_, i) => i !== index)
-
-    setPreview(updated)
+    setPreview(preview.filter((_, i) => i !== index))
   }
 
   function renderStatus(status?: string) {
 
     if (status === "duplicate_db") {
-      return <span className="text-red-600 text-xs">Already Imported</span>
+      return (
+        <span className="text-red-400 text-xs font-medium">
+          Already Imported
+        </span>
+      )
     }
 
     if (status === "duplicate_file") {
-      return <span className="text-yellow-600 text-xs">Duplicate in file</span>
+      return (
+        <span className="text-yellow-400 text-xs font-medium">
+          Duplicate
+        </span>
+      )
     }
 
-    return <span className="text-green-600 text-xs">OK</span>
+    return (
+      <span className="text-emerald-400 text-xs font-medium">
+        OK
+      </span>
+    )
   }
 
   return (
 
     <div className="max-w-6xl space-y-6">
 
+      {/* FILE INPUT */}
       <div className="space-y-3">
 
-        <input
-          type="file"
-          accept=".xls,.xlsx"
-          onChange={(e) => {
-            const selected = e.target.files?.[0] || null
-            setFile(selected)
-            setPreview(null)
-          }}
-        />
+        <label className="text-sm text-gray-400">
+          Upload Arbiter File
+        </label>
+
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="
+            flex items-center justify-between
+            bg-[#0B0F0F]/80
+            border border-white/10
+            rounded-xl
+            px-4 py-3
+            hover:border-emerald-500/30
+            transition
+            cursor-pointer
+          "
+        >
+          <div className="flex flex-col">
+
+            <span className={`text-sm ${file ? "text-emerald-400" : "text-white"}`}>
+              {file ? file.name : "Select .xls or .xlsx file"}
+            </span>
+
+            <span className="text-xs text-gray-500">
+              Arbiter export only
+            </span>
+
+          </div>
+
+          <span className="
+            text-xs px-3 py-1 rounded-lg
+            bg-emerald-500/10
+            text-emerald-400
+            border border-emerald-500/20
+          ">
+            Browse
+          </span>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xls,.xlsx"
+            onChange={(e) => {
+              const selected = e.target.files?.[0] || null
+              setFile(selected)
+              setPreview(null)
+            }}
+            className="hidden"
+          />
+
+        </div>
 
         <button
           onClick={handlePreview}
           disabled={loadingPreview}
-          className="bg-black text-white px-4 py-2 rounded"
+          className="
+            px-4 py-2 rounded-lg
+            bg-[#0B0F0F]
+            border border-white/10
+            text-white text-sm
+            hover:border-yellow-400/40
+            hover:text-yellow-300
+            transition
+          "
         >
-          {loadingPreview ? "Parsing file..." : "Preview File"}
+          {loadingPreview ? "Parsing file..." : "Preview Matches"}
         </button>
 
       </div>
@@ -184,185 +237,155 @@ export default function ImportArbiterForm() {
         <p className="text-sm text-red-500">{message}</p>
       )}
 
+      {/* PREVIEW */}
       {preview && (
 
-        <div className="space-y-4">
+        <div className="space-y-6">
 
-          <h2 className="text-lg font-semibold">
-            Preview ({preview.length} games detected)
-          </h2>
+          <div className="flex items-center justify-between">
 
-          <div className="border rounded-lg overflow-x-auto">
+            <h2 className="text-lg font-semibold text-white">
+              Preview ({preview.length} matches)
+            </h2>
 
-            <table className="min-w-[1300px] text-sm">
+            <button
+              onClick={() => {
+                setPreview(null)
+                setFile(null)
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = ""
+                }
+              }}
+              className="
+                text-xs px-3 py-1.5 rounded-lg
+                border border-red-500/20
+                text-red-400
+                hover:bg-red-500/10
+                transition
+              "
+            >
+              Reset Import
+            </button>
 
-              <thead className="bg-gray-100 sticky top-0">
+          </div>
 
-                <tr>
-                  <th className="p-2 text-left">Game</th>
-                  <th className="p-2 text-left">Kickoff</th>
-                  <th className="p-2 text-left">Site</th>
-                  <th className="p-2 text-left">Division</th>
-                  <th className="p-2 text-left">Home</th>
-                  <th className="p-2 text-left">Away</th>
-                  <th className="p-2 text-left">Center</th>
-                  <th className="p-2 text-left">AR1</th>
-                  <th className="p-2 text-left">AR2</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Actions</th>
-                </tr>
+          <div className="
+            grid gap-4
+            grid-cols-1
+            md:grid-cols-2
+            xl:grid-cols-3
+          ">
 
-              </thead>
+            {preview.map((g, index) => (
 
-              <tbody>
+              <div
+                key={g.game_id + index}
+                className="
+                  bg-[#0B0F0F]/80
+                  border border-white/10
+                  rounded-2xl
+                  p-4
+                  space-y-3
+                  hover:border-emerald-500/30
+                  transition
+                "
+              >
 
-                {preview.map((g, index) => (
+                <div className="flex justify-between items-start">
 
-                  <tr key={g.game_id + index} className="border-t">
+                  <div>
+                    <p className="text-white text-sm font-semibold">
+                      {g.home} vs {g.away}
+                    </p>
 
-                    <td className="p-2">{g.game_id}</td>
+                    <p className="text-xs text-gray-400">
+                      {g.division}
+                    </p>
+                  </div>
 
-                    <td className="p-2">
-                      <input
-                        value={g.kickoff}
-                        onChange={(e) => updateRow(index, "kickoff", e.target.value)}
-                        className="border px-2 py-1 rounded min-w-[170px]"
-                      />
-                    </td>
+                  {renderStatus(g.status)}
 
-                    <td className="p-2">
-                      <input
-                        value={g.site}
-                        onChange={(e) => updateRow(index, "site", e.target.value)}
-                        className="border px-2 py-1 rounded min-w-[230px]"
-                      />
-                    </td>
+                </div>
 
-                    <td className="p-2">
-                      <input
-                        value={g.division}
-                        onChange={(e) => updateRow(index, "division", e.target.value)}
-                        className="border px-2 py-1 rounded min-w-[150px]"
-                      />
-                    </td>
+                <div className="space-y-2 text-xs">
 
-                    <td className="p-2">
-                      <input
-                        value={g.home}
-                        onChange={(e) => updateRow(index, "home", e.target.value)}
-                        className="border px-2 py-1 rounded min-w-[220px]"
-                      />
-                    </td>
+                  <input
+                    value={g.kickoff}
+                    onChange={(e) => updateRow(index, "kickoff", e.target.value)}
+                    className="w-full bg-[#071f1c] border border-white/10 rounded px-2 py-1 text-white"
+                  />
 
-                    <td className="p-2">
-                      <input
-                        value={g.away}
-                        onChange={(e) => updateRow(index, "away", e.target.value)}
-                        className="border px-2 py-1 rounded min-w-[220px]"
-                      />
-                    </td>
+                  <input
+                    value={g.site}
+                    onChange={(e) => updateRow(index, "site", e.target.value)}
+                    className="w-full bg-[#071f1c] border border-white/10 rounded px-2 py-1 text-white"
+                  />
 
-                    <td className="p-2">
+                </div>
 
-                      <select
-                        value={g.center_referee}
-                        onChange={(e) =>
-                          updateRow(index, "center_referee", e.target.value)
-                        }
-                        className="border rounded px-2 py-1 min-w-[200px]"
-                      >
+                <div className="space-y-2">
 
-                        <option value={g.center_referee}>
-                          {g.center_referee}
+                  {[["center_referee", g.center_referee],
+                    ["ar1", g.ar1],
+                    ["ar2", g.ar2]].map(([field, value]) => (
+
+                    <select
+                      key={field}
+                      value={value}
+                      onChange={(e) =>
+                        updateRow(index, field as keyof ArbiterGame, e.target.value)
+                      }
+                      className="w-full bg-[#071f1c] border border-white/10 rounded px-2 py-1 text-xs text-white"
+                    >
+                      <option value={value}>{value}</option>
+                      {members.map(m => (
+                        <option key={m.id} value={m.full_name}>
+                          {m.full_name}
                         </option>
+                      ))}
+                    </select>
 
-                        {members.map(m => (
-                          <option key={m.id} value={m.full_name}>
-                            {m.full_name}
-                          </option>
-                        ))}
+                  ))}
 
-                      </select>
+                </div>
 
-                    </td>
+                <div className="flex justify-between items-center pt-2">
 
-                    <td className="p-2">
+                  <span className="text-xs text-gray-500">
+                    ID: {g.game_id}
+                  </span>
 
-                      <select
-                        value={g.ar1}
-                        onChange={(e) =>
-                          updateRow(index, "ar1", e.target.value)
-                        }
-                        className="border rounded px-2 py-1 min-w-[200px]"
-                      >
+                  <button
+                    onClick={() => deleteRow(index)}
+                    className="
+                      text-xs px-2 py-1 rounded
+                      border border-red-500/20
+                      text-red-400
+                      hover:bg-red-500/10
+                    "
+                  >
+                    Delete
+                  </button>
 
-                        <option value={g.ar1}>
-                          {g.ar1}
-                        </option>
+                </div>
 
-                        {members.map(m => (
-                          <option key={m.id} value={m.full_name}>
-                            {m.full_name}
-                          </option>
-                        ))}
+              </div>
 
-                      </select>
-
-                    </td>
-
-                    <td className="p-2">
-
-                      <select
-                        value={g.ar2}
-                        onChange={(e) =>
-                          updateRow(index, "ar2", e.target.value)
-                        }
-                        className="border rounded px-2 py-1 min-w-[200px]"
-                      >
-
-                        <option value={g.ar2}>
-                          {g.ar2}
-                        </option>
-
-                        {members.map(m => (
-                          <option key={m.id} value={m.full_name}>
-                            {m.full_name}
-                          </option>
-                        ))}
-
-                      </select>
-
-                    </td>
-
-                    <td className="p-2">
-                      {renderStatus(g.status)}
-                    </td>
-
-                    <td className="p-2">
-
-                      <button
-                        onClick={() => deleteRow(index)}
-                        className="text-red-600 text-xs"
-                      >
-                        Delete
-                      </button>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
+            ))}
 
           </div>
 
           <button
             onClick={handleImport}
             disabled={loadingImport}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            className="
+              px-5 py-2 rounded-lg
+              bg-emerald-500
+              hover:bg-emerald-400
+              text-black font-semibold
+              transition
+              shadow-lg hover:shadow-emerald-500/30
+            "
           >
             {loadingImport ? "Importing..." : "Import Matches"}
           </button>
@@ -372,6 +395,5 @@ export default function ImportArbiterForm() {
       )}
 
     </div>
-
   )
 }

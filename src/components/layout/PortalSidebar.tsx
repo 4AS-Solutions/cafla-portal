@@ -40,8 +40,9 @@ const memberItems: NavItem[] = [
 ]
 
 const boardItems: NavItem[] = [
-  { name: "Members", href: "/portal/members", icon: Users },
+  { name: "Members", href: "/admin/members", icon: Users },
   { name: "Arbiter Import", href: "/admin/import-arbiter", icon: Import },
+  { name: "Matches Management", href: "/admin/matches", icon: CalendarDays },
   { name: "Reports Management", href: "/admin/reports", icon: SquareLibrary },
   { name: "Attendance Management", href: "/admin/attendance", icon: FolderClock },
   { name: "Quiz Management", href: "/admin/quizzes", icon: ClipboardType },

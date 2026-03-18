@@ -385,3 +385,15 @@
 .portal-layout ::-webkit-scrollbar-thumb:hover {
   background: rgba(212,169,58,0.6);
 }
+
+.card-pro {
+  @apply rounded-xl bg-[#0b1513]/70 border border-emerald-900/40 backdrop-blur shadow-lg shadow-black/30;
+}
+
+.section-title {
+  @apply text-base font-semibold tracking-tight;
+}
+
+.input-dark {
+  @apply bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-white/30;
+}

@@ -3,6 +3,7 @@ import { getAttendanceSessions } from "@/src/lib/queries/get-attendance-sessions
 
 import CreateSessionForm from "@/src/components/attendance/CreateSessionForm"
 import AttendanceSessionsTable from "@/src/components/attendance/AttendanceSessionsTable"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function AdminAttendancePage() {
 
@@ -12,21 +13,21 @@ export default async function AdminAttendancePage() {
 
   return (
 
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6 px-6">
 
-      <div>
+      <PortalPageHeader 
+        title="Attendance Management"
+        subtitle="Track referee participation and session performance."
+      />
 
-        <h1 className="text-2xl font-bold">
-          Attendance Sessions
-        </h1>
-
-        <p className="text-sm text-muted-foreground">
-          Manage training sessions and attendance
-        </p>
-
+      <div className="
+          bg-[#080F0F]
+          border border-white/10 
+          rounded-2xl
+          p-6"
+        >
+        <CreateSessionForm />
       </div>
-
-      <CreateSessionForm />
 
       <AttendanceSessionsTable sessions={sessions} />
 

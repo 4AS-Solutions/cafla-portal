@@ -1,5 +1,6 @@
 import { requireBoard } from "@/src/lib/auth/require-board"
 import CreateQuizForm from "@/src/components/admin/CreateQuizForm"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function AdminQuizzesPage() {
 
@@ -7,11 +8,12 @@ export default async function AdminQuizzesPage() {
 
   return (
 
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6 px-6">
 
-      <h1 className="text-2xl font-bold">
-        Create Quiz
-      </h1>
+      <PortalPageHeader 
+        title="Quizzes"
+        subtitle="Manage and create quizzes for your board members."
+      />
 
       <CreateQuizForm />
 

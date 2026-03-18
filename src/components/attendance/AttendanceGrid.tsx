@@ -17,16 +17,26 @@ export default function AttendanceGrid({
 
   return (
 
-    <div className="space-y-4">
+    <div className="space-y-6">
 
+      {/* SEARCH */}
       <input
-        placeholder="Search member..."
-        className="border p-2 rounded w-full"
+        placeholder="Search referee..."
+        className="
+          w-full
+          bg-black/40
+          border border-white/10
+          rounded-xl
+          px-4 py-2.5
+          text-sm text-white placeholder-gray-500
+          focus:outline-none focus:border-white/30
+        "
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <div className="grid md:grid-cols-3 gap-4">
+      {/* GRID */}
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
 
         {filtered.map((member: any) => (
 

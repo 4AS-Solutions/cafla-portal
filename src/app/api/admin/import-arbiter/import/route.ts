@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/src/lib/supabase/server"
 import { matchReferee } from "@/src/lib/importers/referee-matcher"
 import { getProfile } from "@/src/lib/queries/get-profile"
+import { parseKickoff } from "@/src/lib/utils/format-date"
 
 type ArbiterRow = {
   game_id: string
@@ -30,7 +31,8 @@ export async function POST(req: Request) {
   let rows: ArbiterRow[] = []
 
   try {
-    rows = await req.json()
+    const body = await req.json()
+    rows = body.rows
   } catch {
     return NextResponse.json(
       { error: "Invalid import payload." },
@@ -52,9 +54,17 @@ export async function POST(req: Request) {
     try {
 
       // Resolver árbitros (mapping automático)
-      const center = await matchReferee(row.center_referee, supabase)
-      const ar1 = await matchReferee(row.ar1, supabase)
-      const ar2 = await matchReferee(row.ar2, supabase)
+      const members = (await supabase.from("members").select("id, full_name")).data ?? []
+      
+      const center = await matchReferee(row.center_referee, supabase, members)
+      const ar1 = await matchReferee(row.ar1, supabase, members)
+      const ar2 = await matchReferee(row.ar2, supabase, members)
+
+      const kickoff_at = parseKickoff(row.kickoff)
+      
+      const parts = row.site.split(",")
+      const locationName = parts[0]?.trim() || null
+      const fieldName = parts[1]?.trim() || null
 
       const { error } = await supabase
         .from("matches")
@@ -65,7 +75,11 @@ export async function POST(req: Request) {
             away_team: row.away,
             league: row.league,
             division: row.division,
-            location: row.site,
+
+            location: locationName,
+            field: fieldName,
+            kickoff_at: kickoff_at,
+            
             arbiter_comments: row.comments,
 
             center_referee_id: center,

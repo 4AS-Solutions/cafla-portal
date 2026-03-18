@@ -10,7 +10,6 @@ import { Textarea } from "@/src/components/ui/textarea"
 
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { MatchTimeline } from "../match/MatchTimeline"
 import {
   Plus,
   Trash2,
@@ -21,6 +20,7 @@ import {
   Trophy,
   Clock3,
 } from "lucide-react"
+import { MatchTimeline } from "../match/MatchTimeline"
 
 type GoalFormRow = {
   team: "home" | "away"

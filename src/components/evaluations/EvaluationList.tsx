@@ -21,7 +21,14 @@ export function EvaluationList({ evaluations }: { evaluations: any[] }) {
 
   return (
 
-    <div className="border rounded-lg overflow-hidden">
+    <div className="
+      rounded-xl
+      bg-[#0b1513]/70
+      border border-emerald-900/40
+      backdrop-blur
+      shadow-lg shadow-black/30
+      overflow-hidden
+      ">
 
       <Table>
 

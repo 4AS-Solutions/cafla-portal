@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Calendar, MapPin, ArrowRight } from "lucide-react"
 import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
 
 export default function AttendanceSessionsTable({
@@ -6,63 +7,98 @@ export default function AttendanceSessionsTable({
 }: {
   sessions: AttendanceSession[]
 }) {
-
+  
   if (!sessions.length) {
-    return <p>No attendance sessions yet.</p>
+    return (
+      <div className="text-sm text-gray-400">
+        No attendance sessions yet.
+      </div>
+    )
   }
 
   return (
 
-    <div className="border rounded-lg overflow-hidden">
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
 
-      <table className="w-full text-sm">
+      {sessions.map((session) => (
 
-        <thead className="bg-gray-100">
+        <div
+          key={session.id}
+          className="
+            group
+            bg-[#0D1111]
+            border border-white/10
+            rounded-2xl
+            p-5
+            flex flex-col justify-between
+            hover:border-emerald-400/40
+            hover:shadow-lg hover:shadow-emerald-500/10
+            transition
+          "
+        >
 
-          <tr>
-            <th className="p-2 text-left">Title</th>
-            <th className="p-2 text-left">Type</th>
-            <th className="p-2 text-left">Date</th>
-            <th className="p-2 text-left">Location</th>
-            <th className="p-2 text-left"></th>
-          </tr>
+          {/* TOP */}
+          <div className="space-y-3">
 
-        </thead>
+            {/* TITLE */}
+            <div>
+              <p className="text-white font-semibold">
+                {session.title}
+              </p>
+              <p className="text-xs text-emerald-400">
+                {session.session_type}
+              </p>
+              <p className="text-xs text-gray-500">
+                Created by:{" "}
+                {session.created_by_user?.full_name || "Unknown"}
+              </p>
+            </div>
 
-        <tbody>
+            {/* META */}
+            <div className="space-y-2 text-xs text-gray-400">
 
-          {sessions.map((session) => (
+              <div className="flex items-center gap-2">
+                <Calendar size={14} />
+                <span>
+                  {new Date(session.session_date).toLocaleString("en-US")}
+                </span>
+              </div>
 
-            <tr key={session.id} className="border-t">
+              {session.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} />
+                  <span>{session.location}</span>
+                </div>
+              )}
 
-              <td className="p-2">{session.title}</td>
+            </div>
 
-              <td className="p-2">{session.session_type}</td>
+          </div>
 
-              <td className="p-2">
-                {new Date(session.session_date).toLocaleString("en-US")}
-              </td>
+          {/* ACTION */}
+          <Link
+            href={`/admin/attendance/${session.id}`}
+            className="
+              mt-5
+              flex items-center justify-between
+              text-sm font-medium
+              px-4 py-2
+              rounded-xl
+              bg-white/5
+              border border-white/10
+              text-white
+              group-hover:bg-emerald-500
+              group-hover:text-black
+              transition
+            "
+          >
+            Manage Session
+            <ArrowRight size={16} />
+          </Link>
 
-              <td className="p-2">{session.location}</td>
+        </div>
 
-              <td className="p-2">
-
-                <Link
-                  href={`/admin/attendance/${session.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Manage
-                </Link>
-
-              </td>
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
+      ))}
 
     </div>
   )
