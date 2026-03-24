@@ -37,3 +37,22 @@ export function parseKickoff(dateStr: string) {
     return null
   }
 }
+
+export function formatDate(dateString: string) {
+
+  const date = new Date(dateString)
+
+  const day = date.getDate()
+  const month = date.toLocaleString("en-US", { month: "short" }) // Mar
+  const year = date.getFullYear()
+
+  let hours = date.getHours()
+  const minutes = date.getMinutes().toString().padStart(2, "0")
+
+  const ampm = hours >= 12 ? "PM" : "AM"
+
+  hours = hours % 12
+  hours = hours === 0 ? 12 : hours
+
+  return `${month} ${day}, ${year} • ${hours}:${minutes} ${ampm}`
+}

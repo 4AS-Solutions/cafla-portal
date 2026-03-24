@@ -24,7 +24,6 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode
 }) {
-
   const supabase = createClient()
 
   const [user, setUser] = useState<any>(null)
@@ -32,7 +31,6 @@ export default function AuthProvider({
   const [loading, setLoading] = useState(true)
 
   async function loadProfile(userId: string) {
-
     const { data } = await supabase
       .from("members")
       .select("*")
@@ -43,12 +41,27 @@ export default function AuthProvider({
   }
 
   useEffect(() => {
+    let isMounted = true
+
+    // 🔥 DETECTAR INVITE FLOW
+    const isInviteFlow =
+      typeof window !== "undefined" &&
+      window.location.pathname === "/complete-profile" &&
+      window.location.hash.includes("access_token")
+
+    // 🚫 BLOQUEAR AUTH PROVIDER EN INVITE FLOW
+    if (isInviteFlow) {
+      console.log("🚫 Skipping AuthProvider (invite flow)")
+      setLoading(false)
+      return
+    }
 
     async function init() {
-
       const {
         data: { user },
       } = await supabase.auth.getUser()
+
+      if (!isMounted) return
 
       setUser(user)
 
@@ -64,26 +77,37 @@ export default function AuthProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event)
 
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        fetch("/auth/refresh")
+      if (!isMounted) return
+
+      if (event === "SIGNED_OUT") {
+        setUser(null)
+        setProfile(null)
+        window.location.href = "/login"
+        return
       }
 
-      const user = session?.user ?? null
-      setUser(user)
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        const user = session?.user ?? null
 
-      if (user) {
-        await loadProfile(user.id)
-      } else {
-        setProfile(null)
+        setUser(user)
+
+        if (user) {
+          await loadProfile(user.id)
+        } else {
+          setProfile(null)
+        }
       }
     })
 
     return () => {
+      isMounted = false
       subscription.unsubscribe()
     }
-
   }, [])
+
+  console.log("SESSION:", user)
 
   return (
     <AuthContext.Provider

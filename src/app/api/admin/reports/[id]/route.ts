@@ -1,4 +1,4 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function PATCH(
   req: Request,
@@ -6,7 +6,7 @@ export async function PATCH(
 ) {
   const { id } = await context.params
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
   const { status } = await req.json()
 
   const { error } = await supabase

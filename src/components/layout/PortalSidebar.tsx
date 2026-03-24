@@ -84,15 +84,17 @@ export function PortalSidebar({
         {mobile ? (
           <>
             <div className="flex items-center gap-3">
-              <Image
-                src="/logo/cafla-logo.png"
-                alt="CAFLA"
-                width={40}
-                height={40}
-              />
-              <span className="text-base font-semibold text-white">
-                CAFLA
-              </span>
+              <Link href="/portal">
+                <Image
+                  src="/logo/cafla-logo.png"
+                  alt="CAFLA"
+                  width={40}
+                  height={40}
+                />
+            </Link> 
+                <span className="text-base font-semibold text-yellow-400">
+                  CAFLA
+                </span>
             </div>
 
             <button
@@ -105,12 +107,14 @@ export function PortalSidebar({
           </>
         ) : (
           <div className="flex w-full justify-center">
-            <Image
-              src="/logo/cafla-logo.png"
-              alt="CAFLA"
-              width={48}
-              height={48}
-            />
+            <Link href="/portal">
+              <Image
+                src="/logo/cafla-logo.png"
+                alt="CAFLA"
+                width={48}
+                height={48}
+              />
+            </Link>
           </div>
         )}
       </div>
@@ -195,7 +199,7 @@ export function PortalSidebar({
 
       {/* LOGOUT MOBILE */}
       {mobile && (
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-white/10 p-4 hover:bg-red-600/10 rounded-lg transition">
           <UserMenu mobile variant="logout" />
         </div>
       )}

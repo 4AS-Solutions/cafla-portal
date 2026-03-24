@@ -1,11 +1,11 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getMembers(params?: {
   search?: string
   status?: string
   role?: string
 }) {
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   let query = supabase.from("members").select("*")
 

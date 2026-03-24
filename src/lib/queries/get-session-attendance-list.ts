@@ -1,8 +1,8 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getSessionAttendanceList(sessionId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data: members } = await supabase
     .from("members")

@@ -4,7 +4,8 @@ import QuizHistoryCard from "@/src/components/quizzes/QuizHistoryCard"
 
 export default async function QuizHistoryPage() {
 
-  const attempts = await getQuizHistory()
+  const attempts = await getQuizHistory();
+
 
   return (
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { getProfile } from "@/src/lib/queries/get-profile"
 
 export async function POST(req: Request) {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   const profile = data.profile
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const body = await req.json()
 

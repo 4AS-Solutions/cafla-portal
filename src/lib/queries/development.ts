@@ -1,8 +1,8 @@
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 export async function getMyQuizStats(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_quiz_scores")
@@ -18,7 +18,7 @@ export async function getMyQuizStats(memberId: string) {
 
 export async function getMyAttendanceStats(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_referee_attendance")
@@ -34,7 +34,7 @@ export async function getMyAttendanceStats(memberId: string) {
 
 export async function getMyPeerFeedback(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_peer_feedback_score")
@@ -50,7 +50,7 @@ export async function getMyPeerFeedback(memberId: string) {
 
 export async function getMyReportScore(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_referee_report_score")

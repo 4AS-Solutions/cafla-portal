@@ -28,30 +28,40 @@ export async function proxy(req: NextRequest) {
   const isPortal = pathname.startsWith("/portal")
   const isLogin = pathname === "/login"
   const isCompleteProfile = pathname === "/complete-profile"
-  const isCallback = pathname === "/callback" // ✅ NUEVO
+  const isCallback = pathname === "/auth/callback"
+
+  console.log("====================================")
+  console.log("🌐 PROXY PATH:", pathname)
 
   // =========================
   // 🚨 0. ALLOW CALLBACK SIEMPRE
   // =========================
   if (isCallback) {
+    console.log("➡️ ALLOW CALLBACK")
     return res
   }
 
-  let user = null
+  // =========================
+  // 👤 GET USER
+  // =========================
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!pathname.startsWith("/callback")) {
-    const {
-      data: { user: u },
-    } = await supabase.auth.getUser()
-
-    user = u
-  }
+  console.log("👤 USER:", user)
 
   // =========================
   // 🔐 1. NOT AUTHENTICATED
   // =========================
   if (!user) {
-    if (isPortal || isCompleteProfile) {
+    console.log("🚫 NO USER")
+
+    // 🔥 permitir complete-profile (para tokens)
+    if (isCompleteProfile) {
+      return res
+    }
+
+    if (isPortal) {
       return NextResponse.redirect(new URL("/login", req.url))
     }
 
@@ -65,19 +75,33 @@ export async function proxy(req: NextRequest) {
     .from("members")
     .select("status")
     .eq("id", user.id)
-    .single()
+    .maybeSingle()
 
-  // 🚨 VALIDACIÓN CRÍTICA
+  console.log("👤 MEMBER:", member)
+
+  // =========================
+  // 🚨 VALIDACIÓN MEMBER
+  // =========================
   if (!member || !member.status) {
+    console.log("⚠️ MEMBER INVALID")
+
+    // 🔥 permitir onboarding aunque falte data
+    if (isCompleteProfile) {
+      return res
+    }
+
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   const status = member.status
 
+  console.log("📊 STATUS:", status)
+
   // =========================
   // 🚫 2. LOGIN BLOCKED
   // =========================
   if (isLogin) {
+    console.log("➡️ LOGIN BLOCKED → PORTAL")
     return NextResponse.redirect(new URL("/portal", req.url))
   }
 
@@ -87,13 +111,20 @@ export async function proxy(req: NextRequest) {
 
   // 👉 usuario invitado
   if (status === "invited") {
+    console.log("👤 STATUS: INVITED")
+
+    // 🔥 solo redirige si NO está ya en complete-profile
     if (!isCompleteProfile) {
       return NextResponse.redirect(new URL("/complete-profile", req.url))
     }
+
+    return res // 🔥 CRÍTICO: evita loop
   }
 
   // 👉 usuario activo
   if (status === "active") {
+    console.log("👤 STATUS: ACTIVE")
+
     if (isCompleteProfile) {
       return NextResponse.redirect(new URL("/portal", req.url))
     }
@@ -107,6 +138,6 @@ export const config = {
     "/portal/:path*",
     "/login",
     "/complete-profile",
-    "/callback", // ✅ IMPORTANTE
+    "/auth/callback",
   ],
 }

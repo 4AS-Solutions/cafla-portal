@@ -2,18 +2,17 @@ import { NextResponse } from "next/server"
 import { requireBoard } from "@/src/lib/auth/require-board"
 import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
-
 export async function POST(req: Request) {
   try {
-    // 🔐 1. Verificar que sea board
+    console.log("INVITE: 🚀 INVITE START")
+
     await requireBoard()
 
-    const admin = getSupabaseAdmin();
+    const supabase = getSupabaseAdmin()
 
     const body = await req.json()
     const { email, full_name } = body
 
-    // 🧠 2. Validación básica
     if (!email || !full_name) {
       return NextResponse.json(
         { error: "Email and full name are required" },
@@ -21,28 +20,37 @@ export async function POST(req: Request) {
       )
     }
 
-    // 📩 3. Enviar invitación
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        full_name,
-      },
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/callback`, // URL de redirección después de aceptar la invitación
-    })
+    console.log("INVITE: 🚀 INVITE START")
+
+    console.log("INVITE: 📧 Email:", email)
+    console.log("INVITE: 👤 Name:", full_name)
+    console.log("INVITE: 🌍 Redirect:", `${process.env.NEXT_PUBLIC_BASE_URL}/complete-profile`)
+
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(
+      email,
+      {
+        data: {
+          full_name,
+        },
+        // 🔥 FIX CRÍTICO AQUÍ
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/complete-profile`,
+      }
+    )
+
+    console.log("INVITE: 📨 RESPONSE:", data)
+    console.log("INVITE: ❌ ERROR:", error)
 
     if (error) {
-      console.error(error)
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      user: data.user,
-    })
+    return NextResponse.json({ success: true })
 
   } catch (err: any) {
+    console.error("💥 CRASH:", err)
     return NextResponse.json(
       { error: err.message || "Unauthorized" },
       { status: 401 }

@@ -1,5 +1,5 @@
 import MatchDetail from "@/src/components/admin/MatchDetails"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export default async function MatchDetailPage({
   params,
@@ -9,7 +9,8 @@ export default async function MatchDetailPage({
 
   const { id } = await params
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
+
 
   const { data: match } = await supabase
     .from("matches")

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 import { parseArbiterFile } from "@/src/lib/importers/arbiter-parser"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function POST(req: Request) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const formData = await req.formData()
   const file = formData.get("file") as File

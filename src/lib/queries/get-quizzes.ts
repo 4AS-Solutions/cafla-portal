@@ -1,8 +1,8 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getQuizzes() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user }

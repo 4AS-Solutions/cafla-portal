@@ -6,7 +6,7 @@ import {
   PlayCircle,
   BarChart3,
 } from "lucide-react";
-import { format } from "path";
+
 import { formatMatchDate } from "@/src/lib/utils/format-date";
 
 export default function QuizCard({ quiz }: any) {

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { requireBoard } from "@/src/lib/auth/require-board"
 
 export async function POST(req: Request) {
 
   await requireBoard()
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { session_id, member_id, status } = await req.json()
 

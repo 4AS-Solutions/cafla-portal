@@ -1,4 +1,4 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 type CreateSessionInput = {
   title: string
@@ -10,7 +10,7 @@ type CreateSessionInput = {
 
 export async function createAttendanceSession(input: CreateSessionInput) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("attendance_sessions")

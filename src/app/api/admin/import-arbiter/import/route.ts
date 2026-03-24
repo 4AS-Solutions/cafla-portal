@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { matchReferee } from "@/src/lib/importers/referee-matcher"
 import { getProfile } from "@/src/lib/queries/get-profile"
 import { parseKickoff } from "@/src/lib/utils/format-date"
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   let rows: ArbiterRow[] = []
 

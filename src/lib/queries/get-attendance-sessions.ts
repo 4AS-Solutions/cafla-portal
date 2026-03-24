@@ -1,4 +1,4 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export type AttendanceSession = {
   id: string
@@ -14,7 +14,7 @@ export type AttendanceSession = {
 
 export async function getAttendanceSessions(): Promise<AttendanceSession[]> {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("attendance_sessions")

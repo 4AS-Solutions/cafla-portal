@@ -1,7 +1,7 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getMatchTimeline(matchId: string) {
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data: report } = await supabase
     .from("match_reports")

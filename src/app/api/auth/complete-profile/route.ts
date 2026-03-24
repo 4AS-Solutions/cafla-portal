@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient()
+    console.log("🚀 COMPLETE PROFILE START")
 
-    // =========================
-    // 🔐 1. GET AUTH USER
-    // =========================
+    const supabase = await supabaseServer()
+
+    // 🔐 USER
     const {
       data: { user },
       error: userError,
@@ -20,82 +20,56 @@ export async function POST(req: Request) {
       )
     }
 
-    // =========================
-    // 📦 2. BODY
-    // =========================
+    // 📦 BODY
     const body = await req.json()
+    const { phone, ussf_id, grade, password } = body
 
-    const {
-      phone,
-      ussf_id,
-      grade,
-    } = body
-
-    // =========================
-    // 🧠 3. VALIDATION
-    // =========================
-    if (!phone || !ussf_id || !grade) {
+    if (!phone || !ussf_id || !grade || !password) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
       )
     }
 
-    // =========================
-    // 📊 4. VERIFY MEMBER
-    // =========================
-    const { data: member, error: memberError } = await supabase
-      .from("members")
-      .select("status")
-      .eq("id", user.id)
-      .single()
+    // 🔐 SET PASSWORD
+    const { error: passwordError } = await supabase.auth.updateUser({
+      password,
+    })
 
-    if (memberError || !member) {
+    if (passwordError) {
+      console.error("❌ PASSWORD ERROR:", passwordError)
       return NextResponse.json(
-        { error: "Member not found" },
-        { status: 404 }
+        { error: "Failed to set password" },
+        { status: 500 }
       )
     }
 
-    // =========================
-    // 🚫 5. ONLY INVITED USERS
-    // =========================
-    if (member.status !== "invited") {
-      return NextResponse.json(
-        { error: "Profile already completed" },
-        { status: 400 }
-      )
-    }
-
-    // =========================
-    // ✏️ 6. UPDATE MEMBER
-    // =========================
+    // 🧠 UPDATE MEMBER (🔥 CAMBIO CLAVE)
     const { error: updateError } = await supabase
       .from("members")
       .update({
         phone,
         ussf_id,
         grade,
-        status: "active",
+        status: "active", // 🔥 activar usuario
+        notes: "Profile completed on " + new Date().toISOString(), // 🔥 agregar nota de completado
       })
       .eq("id", user.id)
 
     if (updateError) {
-      console.error(updateError)
+      console.error("❌ MEMBER UPDATE ERROR:", updateError)
       return NextResponse.json(
-        { error: "Failed to update profile" },
+        { error: "Failed to update member" },
         { status: 500 }
       )
     }
 
-    // =========================
-    // ✅ SUCCESS
-    // =========================
-    return NextResponse.json({
-      success: true,
-    })
+    console.log("✅ PROFILE COMPLETED")
+
+    return NextResponse.json({ success: true })
 
   } catch (err: any) {
+    console.error("💥 COMPLETE PROFILE CRASH:", err)
     return NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }

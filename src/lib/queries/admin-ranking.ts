@@ -1,8 +1,8 @@
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 export async function getAdminRanking() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_referee_ranking")
