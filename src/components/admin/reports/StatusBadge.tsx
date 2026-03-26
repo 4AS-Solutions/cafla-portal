@@ -1,16 +1,24 @@
 import { Badge } from "../../ui/badge"
 
-export default function StatusBadge({ status }: { status: string }) {
+type BadgeVariant =
+  | "default"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger"
 
-  const styles: Record<string, string> = {
-    pending: "warning",
-    submitted: "secondary",
-    approved: "success",
-    revision_required: "danger",
-  }
+const styles: Record<string, BadgeVariant> = {
+  pending: "warning",
+  submitted: "secondary",
+  approved: "success",
+  revision_required: "danger",
+}
+
+export default function StatusBadge({ status }: { status: string }) {
+  const variant = styles[status] ?? "default" // 🔥 fallback seguro
 
   return (
-    <Badge variant={styles[status]}>
+    <Badge variant={variant}>
       {status.replace("_", " ")}
     </Badge>
   )
