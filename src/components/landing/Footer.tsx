@@ -156,7 +156,7 @@ export function Footer() {
         <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between text-gray-500 text-sm">
 
           <span>
-            © 2026 CAFLA - College of Referees of Los Angeles. All rights reserved.
+            © 2026 CAFLA - Colegio de Arbitros de Futbol de Los Angeles. All rights reserved.
           </span>
 
           <div className="flex gap-6 mt-4 md:mt-0">

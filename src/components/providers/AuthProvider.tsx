@@ -40,6 +40,14 @@ export default function AuthProvider({
     setProfile(data)
   }
 
+  if (typeof window !== "undefined" && window.location.pathname === "/auth/callback") {
+    return (
+      <AuthContext.Provider value={{ user: null, profile: null, loading: true }}>
+        {children}
+      </AuthContext.Provider>
+    )
+  }
+
   useEffect(() => {
     let isMounted = true
 

@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { createClient } from "@/src/lib/supabase/client"
 
 function validatePassword(password: string) {
   const minLength = password.length >= 6
@@ -23,10 +22,7 @@ function validatePassword(password: string) {
 
 export default function CompleteProfilePage() {
   const router = useRouter()
-  const supabase = createClient()
-  const hasRun = useRef(false)
 
-  const [ready, setReady] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -34,60 +30,6 @@ export default function CompleteProfilePage() {
   const [ussfId, setUssfId] = useState("")
   const [grade, setGrade] = useState("")
   const [password, setPassword] = useState("")
-
-  // 🔥 HANDLE INVITE SESSION (HASH)
-  useEffect(() => {
-    if (hasRun.current) return
-    hasRun.current = true
-
-    const handleHash = async () => {
-      console.log("🔥 COMPLETE PROFILE INIT")
-
-      const hash = window.location.hash
-
-      if (!hash) {
-        console.log("⚠️ NO HASH")
-        setReady(true)
-        return
-      }
-
-      const params = new URLSearchParams(hash.replace("#", ""))
-
-      const access_token = params.get("access_token")
-      const refresh_token = params.get("refresh_token")
-
-      if (access_token && refresh_token) {
-        console.log("🚀 SETTING SESSION...")
-
-        const { error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token,
-        })
-
-        if (error) {
-          console.error("❌ SET SESSION ERROR:", error)
-        } else {
-          console.log("✅ SESSION SET")
-
-          // 🔥 limpiar URL SIN recargar
-          window.history.replaceState({}, "", "/complete-profile")
-        }
-      }
-
-      setReady(true)
-    }
-
-    handleHash()
-  }, [])
-
-  // 🔥 LOADING SOLO PARA SETUP INICIAL
-  if (!ready) {
-    return (
-      <div className="text-white flex h-screen items-center justify-center">
-        Setting up your account...
-      </div>
-    )
-  }
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -124,7 +66,6 @@ export default function CompleteProfilePage() {
       }
 
       router.push("/portal")
-
     } catch {
       setError("Unexpected error, please try again")
     } finally {
@@ -133,14 +74,24 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-[#071f1c] to-[#021312]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#071f1c] to-[#021312]">
+      {/* Background Glow */}
+      <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[120px] rounded-full top-[-200px] left-[-200px]" />
+      <div className="absolute w-[500px] h-[500px] bg-yellow-400/10 blur-[120px] rounded-full bottom-[-200px] right-[-200px]" />
 
+      {/* Container */}
       <div className="relative z-10 w-full max-w-md px-6">
+        {/* Logo + Title */}
+        <div className="flex flex-col items-center mb-10 animate-logoIntro">
+          <Image
+            src="/logo/cafla-logo.png"
+            alt="CAFLA"
+            width={180}
+            height={180}
+            priority
+          />
 
-        <div className="flex flex-col items-center mb-10">
-          <Image src="/logo/cafla-logo.png" alt="CAFLA" width={180} height={180} priority />
-
-          <h1 className="text-white text-2xl font-bold mt-4">
+          <h1 className="text-white text-3xl font-bold mt-4 tracking-wide">
             Complete Profile
           </h1>
 
@@ -149,49 +100,58 @@ export default function CompleteProfilePage() {
           </p>
         </div>
 
-        <div className="bg-[#0B0F0F]/80 border border-white/10 rounded-2xl p-8">
-
+        {/* Card */}
+        <div className="bg-[#0B0F0F]/80 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-xl animate-fadeIn">
           <div className="space-y-5">
-
             <input
               type="password"
               placeholder="Create password"
-              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white"
+              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
 
             <input
               placeholder="Phone"
-              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white"
+              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
 
             <input
               placeholder="USSF ID"
-              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white"
+              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              value={ussfId}
               onChange={(e) => setUssfId(e.target.value)}
             />
 
             <input
               placeholder="Grade"
-              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white"
+              className="w-full bg-[#071f1c] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              value={grade}
               onChange={(e) => setGrade(e.target.value)}
             />
 
             {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
+              <p className="text-red-400 text-sm text-center">
+                {error}
+              </p>
             )}
 
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full py-3 rounded-lg bg-emerald-500 text-black font-semibold"
+              className="w-full py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold transition shadow-lg hover:shadow-emerald-500/30 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {submitting ? "Saving..." : "Complete Profile"}
             </button>
-
           </div>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-xs mt-8">
+          © {new Date().getFullYear()} CAFLA Referee Platform
+        </p>
       </div>
     </div>
   )

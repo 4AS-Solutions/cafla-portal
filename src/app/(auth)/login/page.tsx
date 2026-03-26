@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/src/lib/supabase/client"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -45,13 +46,15 @@ export default function LoginPage() {
         {/* Logo + Title */}
         <div className="flex flex-col items-center mb-10 animate-logoIntro">
 
-          <Image
-            src="/logo/cafla-logo.png"
-            alt="CAFLA"
-            width={180}
-            height={180}
-            priority
-          />
+          <Link href="/">  
+            <Image
+              src="/logo/cafla-logo.png"
+              alt="CAFLA"
+              width={180}
+              height={180}
+              priority
+            />
+          </Link>
 
           <h1 className="text-white text-3xl font-bold mt-4 tracking-wide">
             CAFLA

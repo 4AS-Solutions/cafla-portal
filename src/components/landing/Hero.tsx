@@ -10,7 +10,7 @@ export function Hero() {
       id="home"
       className="relative min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden"
       style={{
-        backgroundImage: "url('/images/soccer_ground.png')",
+        backgroundImage: "url('/images/soccer_ground.png\')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

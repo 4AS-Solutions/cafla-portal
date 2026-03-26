@@ -33,7 +33,7 @@ export async function POST(req: Request) {
           full_name,
         },
         // 🔥 FIX CRÍTICO AQUÍ
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/complete-profile`,
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
       }
     )
 
