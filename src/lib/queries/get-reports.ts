@@ -1,4 +1,4 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export type ReportRow = {
   id: string
@@ -15,7 +15,7 @@ export type ReportRow = {
 }
 
 export async function getReports(): Promise<ReportRow[]> {
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("match_reports")

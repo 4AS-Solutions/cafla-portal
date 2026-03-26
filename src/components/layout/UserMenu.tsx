@@ -23,8 +23,14 @@ export function UserMenu({
   const role = (profile?.role ?? "member").toUpperCase()
 
   async function logout() {
-    await supabase.auth.signOut()
-    router.push("/login")
+    try {
+      await supabase.auth.signOut()
+
+      window.location.href = "/login" // 🔥 hard reset
+
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   if (mobile && variant === "info") {
@@ -49,7 +55,15 @@ export function UserMenu({
     return (
       <button
         onClick={logout}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-200 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-300"
+        className="
+          flex w-full items-center justify-center gap-2 
+          rounded-xl border border-white/10 
+          bg-white/5 px-4 py-3 text-sm font-medium 
+          text-gray-200 transition-all duration-200 
+          hover:border-red-400/40 hover:bg-red-500/20 hover:text-red-300
+          active:bg-red-600/30 active:scale-95
+          cursor-pointer
+        "
       >
         <LogOut size={16} />
         Logout
@@ -75,7 +89,12 @@ export function UserMenu({
 
       <button
         onClick={logout}
-        className="flex items-center gap-1 text-sm text-gray-400 transition hover:text-red-400"
+        className="
+          flex items-center gap-2 text-sm text-gray-400 
+          transition-all duration-200 
+          hover:text-red-400 hover:scale-[1.02]
+          cursor-pointer active:scale-95
+        "
       >
         <LogOut size={16} />
         Logout

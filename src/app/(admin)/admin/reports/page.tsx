@@ -1,27 +1,24 @@
-import { getReports } from "@/src/lib/queries/get-reports"
-import ReportsTable from "@/src/components/reports/ReportsTable"
+import AdminReportsList from "@/src/components/admin/reports/AdminReportsList";
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireBoard } from "@/src/lib/auth/require-board"
+import { getReports } from "@/src/lib/queries/get-reports";
 
 export default async function AdminReportsPage() {
 
-  // proteger ruta
-  await requireBoard()
+  await requireBoard();
 
-  const reports = await getReports()
+  const reports = await getReports();
+  
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          All Match Reports
-        </h1>
+    <div className="space-y-6 px-6">
+      <PortalPageHeader
+        title="Reports Management"
+        subtitle="Review and manage match reports submitted by referees."
+      />
 
-        <p className="text-sm text-muted-foreground">
-          Review all submitted referee reports
-        </p>
-      </div>
 
-      <ReportsTable reports={reports} />
+      <AdminReportsList reports={reports} />
     </div>
   )
 }

@@ -1,8 +1,8 @@
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 export async function getPendingEvaluations(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data: matches, error } = await supabase
     .from("matches")

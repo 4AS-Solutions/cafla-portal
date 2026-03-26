@@ -1,7 +1,7 @@
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 export async function getUser() {
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user },

@@ -83,13 +83,15 @@ export function Navbar() {
 
           <div className="flex items-center gap-3">
 
-            <Image
-              src="/logo/cafla-logo.png"
-              alt="CAFLA"
-              width={scrolled ? 30 : 36}
-              height={scrolled ? 30 : 36}
-              className="transition-all duration-300"
-            />
+            <Link href="#" className="flex items-center gap-3" onClick={() => scrollToSection("home")}>
+              <Image
+                src="/logo/cafla-logo.png"
+                alt="CAFLA"
+                width={scrolled ? 30 : 36}
+                height={scrolled ? 30 : 36}
+                className="transition-all duration-300"
+              />
+            </Link>
 
             <span className="text-yellow-400 font-semibold text-lg">
               CAFLA

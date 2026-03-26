@@ -1,11 +1,12 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { getUserMatches } from "@/src/lib/matches/get-user-matches"
-import MatchList from "@/src/components/match/MatchList"
-import MatchSummaryBar from "@/src/components/match/MatchSummaryBar"
+
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import MatchSummaryBar from "@/src/components/match/MatchSummaryBar"
+import MatchList from "@/src/components/match/MatchList"
 
 export default async function page() {
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user },

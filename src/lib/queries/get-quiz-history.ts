@@ -1,8 +1,8 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getQuizHistory() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user }
@@ -20,7 +20,10 @@ export async function getQuizHistory() {
       completed_at,
       quizzes (
         id,
-        title
+        title,
+        quiz_questions (
+          id
+        )
       )
     `)
     .eq("member_id", user.id)
@@ -31,5 +34,14 @@ export async function getQuizHistory() {
     throw error
   }
 
-  return data ?? []
+  // 👉 transformamos para agregar total_questions
+  const formatted = data?.map((attempt: any) => ({
+
+    ...attempt,
+
+    total_questions: attempt.quizzes.quiz_questions.length
+
+  }))
+
+  return formatted ?? []
 }

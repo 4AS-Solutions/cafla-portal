@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "@/src/lib/supabase/admin"
-import { createClient } from "@/src/lib/supabase/server"
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 
@@ -35,7 +35,8 @@ type SubmitPayload = {
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = await supabaseServer()
+    const supabaseAdmin = await getSupabaseAdmin();
 
     const {
       data: { user },

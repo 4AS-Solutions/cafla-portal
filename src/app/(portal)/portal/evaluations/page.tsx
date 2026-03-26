@@ -1,6 +1,7 @@
 import { getProfile } from "@/src/lib/queries/get-profile"
 import { getPendingEvaluations } from "@/src/lib/queries/evaluations"
 import { EvaluationList } from "@/src/components/evaluations/EvaluationList"
+import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function EvaluationsPage() {
 
@@ -13,14 +14,17 @@ export default async function EvaluationsPage() {
     : []
 
   return (
-    <div className="space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        Evaluations
-      </h1>
+    <div className="space-y-6 max-w-6xl">
+
+      <PortalPageHeader
+        title="Evaluations"
+        subtitle="View and manage your pending evaluations."
+      />
 
       <EvaluationList evaluations={evaluations ?? []} />
 
     </div>
+
   )
 }

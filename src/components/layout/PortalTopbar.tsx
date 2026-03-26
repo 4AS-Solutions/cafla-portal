@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Menu } from "lucide-react"
 import { UserMenu } from "./UserMenu"
+import Link from "next/link"
 
 export function PortalTopbar({
   onOpenMenu,
@@ -12,12 +13,14 @@ export function PortalTopbar({
   return (
     <header className="flex h-16 items-center border-b border-white/10 bg-[#0B0F0F] px-4 sm:px-6">
       <div className="flex items-center gap-3 md:hidden">
-        <Image
-          src="/logo/cafla-logo.png"
-          alt="CAFLA"
-          width={30}
-          height={30}
-        />
+        <Link href="/portal">
+          <Image
+            src="/logo/cafla-logo.png"
+            alt="CAFLA"
+            width={30}
+            height={30}
+          />
+      </Link>
 
         <span className="font-semibold text-yellow-400">
           CAFLA

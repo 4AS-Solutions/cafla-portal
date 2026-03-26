@@ -1,8 +1,8 @@
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 export async function getUpcomingMatches() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_upcoming_matches")
@@ -16,7 +16,7 @@ export async function getUpcomingMatches() {
 
 export async function getPendingReports() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_pending_reports")
@@ -30,7 +30,7 @@ export async function getPendingReports() {
 
 export async function getRefereeRanking() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_referee_ranking")
@@ -45,7 +45,7 @@ export async function getRefereeRanking() {
 
 export async function getPendingEvaluations() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_pending_evaluations")
@@ -59,7 +59,7 @@ export async function getPendingEvaluations() {
 
 export async function getMyDevelopment(memberId: string) {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("dashboard_referee_ranking")

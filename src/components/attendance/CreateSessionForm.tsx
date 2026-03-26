@@ -27,52 +27,100 @@ export default function CreateSessionForm() {
 
   return (
 
-    <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded-lg">
+    <form
+      onSubmit={handleSubmit}
+      className="
+        bg-[#0B0F0F]
+        border border-white/10
+        rounded-2xl
+        p-6
+        space-y-6
+      "
+    >
 
-      <h3 className="font-semibold">
-        Create Attendance Session
-      </h3>
+      {/* HEADER */}
+      <div>
+        <h3 className="text-lg font-semibold text-white">
+          Create Attendance Session
+        </h3>
+        <p className="text-sm text-gray-400">
+          Schedule a new training, meeting, or class session
+        </p>
+      </div>
 
-      <input
-        name="title"
-        placeholder="Session title"
-        required
-        className="border p-2 rounded w-full"
-      />
+      {/* GRID */}
+      <div className="grid md:grid-cols-2 gap-4">
 
-      <select
-        name="session_type"
-        required
-        className="border p-2 rounded w-full"
-      >
-        <option value="">Select type</option>
-        <option value="Training">Training</option>
-        <option value="Meeting">Meeting</option>
-        <option value="Class">Class</option>
-        <option value="Other">Other</option>
-      </select>
+        <input
+          name="title"
+          placeholder="Session title"
+          required
+          className="
+            bg-black/40 border border-white/10 rounded-lg px-3 py-2
+            text-sm text-white placeholder-gray-500
+            focus:outline-none focus:border-white/30
+          "
+        />
 
-      <input
-        type="datetime-local"
-        name="session_date"
-        required
-        className="border p-2 rounded w-full"
-      />
+        <select
+          name="session_type"
+          required
+          className="
+            bg-[#0B0F0F] border border-white/10 rounded-lg px-3 py-2
+            text-sm text-white
+            focus:outline-none focus:border-white/10
+          "
+        >
+          <option value="">Select type</option>
+          <option value="Training">Training</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Class">Class</option>
+          <option value="Other">Other</option>
+        </select>
 
-      <input
-        name="location"
-        placeholder="Location"
-        className="border p-2 rounded w-full"
-      />
+        <input
+          type="datetime-local"
+          name="session_date"
+          required
+          className="
+            bg-black/40 border border-white/10 rounded-lg px-3 py-2
+            text-sm text-white
+            focus:outline-none focus:border-white/30
+          "
+        />
 
-      <button
-        disabled={loading}
-        className="bg-black text-white px-4 py-2 rounded"
-      >
-        {loading ? "Creating..." : "Create Session"}
-      </button>
+        <input
+          name="location"
+          placeholder="Location"
+          className="
+            bg-black/40 border border-white/10 rounded-lg px-3 py-2
+            text-sm text-white placeholder-gray-500
+            focus:outline-none focus:border-white/30
+          "
+        />
+
+      </div>
+
+      {/* BUTTON */}
+      <div className="flex justify-end">
+
+        <button
+          disabled={loading}
+          className="
+            px-5 py-2.5
+            rounded-xl
+            text-sm font-medium
+            bg-emerald-500
+            text-black
+            hover:bg-emerald-400
+            transition
+          "
+        >
+          {loading ? "Creating..." : "Create Session"}
+        </button>
+
+      </div>
 
     </form>
-
   )
 }

@@ -1,4 +1,4 @@
-import { createClient } from "@/src/lib/supabase/server"
+import { supabaseServer } from "@/src/lib/supabase/server"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
 import { calculateAttendanceScore } from "@/src/lib/attendance/calculate-score"
 
@@ -9,7 +9,7 @@ import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 export default async function AttendancePage() {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user }

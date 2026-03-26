@@ -20,7 +20,6 @@ export default function AttendanceMemberCard({
   const [status, setStatus] = useState(initialStatus)
 
   async function updateStatus(newStatus: string) {
-
     setStatus(newStatus)
 
     await fetch("/api/admin/attendance/update-record", {
@@ -36,47 +35,68 @@ export default function AttendanceMemberCard({
     })
   }
 
+  function getClass(type: string) {
+
+    const base = `
+      h-10 rounded-xl text-sm font-semibold
+      border transition-all duration-200
+      flex items-center justify-center
+    `
+
+    // 🔥 ACTIVE STATES (FUERTES)
+    if (status === type) {
+      switch (type) {
+        case "present":
+          return `${base} bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/30`
+        case "excused":
+          return `${base} bg-blue-600 text-black border-blue-400 shadow-md shadow-blue-600/30`
+        case "late":
+          return `${base} bg-yellow-400 text-black border-yellow-300 shadow-md shadow-yellow-400/30`
+      }
+    }
+
+    // 🔥 INACTIVE (mejor contraste)
+    return `${base} bg-white/5 text-gray-300 border-white/10 hover:bg-white/10`
+  }
+
   return (
 
-    <div className="border rounded-lg p-4 space-y-3 bg-white">
+    <div className="
+      bg-[#0D1111]
+      border border-white/10
+      rounded-2xl
+      p-5
+      space-y-4
+      hover:border-white/20
+      hover:bg-[#101616]
+      transition
+    ">
 
-      <div className="font-medium">
+      <p className="text-sm font-semibold text-white">
         {member.full_name}
-      </div>
+      </p>
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-3 gap-2">
 
         <button
           onClick={() => updateStatus("present")}
-          className={`px-2 py-1 text-sm rounded border ${
-            status === "present"
-              ? "bg-green-600 text-white"
-              : ""
-          }`}
+          className={getClass("present")}
         >
           Present
         </button>
 
         <button
-          onClick={() => updateStatus("late")}
-          className={`px-2 py-1 text-sm rounded border ${
-            status === "late"
-              ? "bg-yellow-500 text-white"
-              : ""
-          }`}
+          onClick={() => updateStatus("excused")}
+          className={getClass("excused")}
         >
-          Late
+          Excused
         </button>
 
         <button
-          onClick={() => updateStatus("excused")}
-          className={`px-2 py-1 text-sm rounded border ${
-            status === "excused"
-              ? "bg-blue-600 text-white"
-              : ""
-          }`}
+          onClick={() => updateStatus("late")}
+          className={getClass("late")}
         >
-          Excused
+          Late
         </button>
 
       </div>

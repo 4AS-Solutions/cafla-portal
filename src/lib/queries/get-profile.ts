@@ -1,5 +1,5 @@
 import { User } from "@supabase/supabase-js"
-import { createClient } from "../supabase/server"
+import { supabaseServer } from "../supabase/server"
 
 type ProfileResult = {
   user: User
@@ -8,7 +8,7 @@ type ProfileResult = {
 
 export async function getProfile(): Promise<ProfileResult> {
 
-  const supabase = await createClient()
+  const supabase = await supabaseServer()
 
   const {
     data: { user }
