@@ -8,27 +8,18 @@ export function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden pt-28 pb-16"
       style={{
-        backgroundImage: "url('/images/soccer_ground.png\')",
+        backgroundImage: "url('/images/soccer_ground.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black" />
 
-      {/* dark cinematic overlay */}
-      <div className="absolute inset-0 bg-black/70"></div>
-
-      {/* gradient lighting */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black"></div>
-
-
-      {/* content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-
-        {/* logo */}
-        <div className="flex justify-center mb-8 hero-reveal hero-delay-1">
-
+      <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
+        <div className="hero-reveal hero-delay-1 mb-8 flex justify-center">
           <Image
             src="/logo/cafla-logo.png"
             alt="CAFLA"
@@ -36,87 +27,68 @@ export function Hero() {
             height={120}
             className="drop-shadow-2xl"
           />
-
         </div>
 
+        <p className="hero-reveal hero-delay-2 mb-4 text-sm font-semibold uppercase tracking-[0.28em] text-yellow-400">
+          Since 1962
+        </p>
 
-        {/* title */}
-        <h1 className="font-heading text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight hero-reveal hero-delay-2">
-          CAFLA
+        <h1 className="hero-reveal hero-delay-2 mb-6 text-5xl font-bold tracking-tight text-white md:text-7xl">
+          Professional Referee Development in Los Angeles
         </h1>
 
-
-        {/* subtitle */}
-        <p className="text-xl md:text-2xl text-yellow-400 font-medium mb-4 hero-reveal hero-delay-3">
+        <p className="hero-reveal hero-delay-3 mb-4 text-lg font-medium text-yellow-400 md:text-2xl">
           Colegio de Arbitros de Futbol de Los Angeles
         </p>
 
-
-        <p className="text-gray-300 max-w-2xl mx-auto mb-12 text-lg hero-reveal hero-delay-3">
-          Developing elite referees since 1962 through education,
-          mentorship, and a modern performance development platform.
+        <p className="hero-reveal hero-delay-3 mx-auto mb-12 max-w-3xl text-lg text-gray-300 md:text-xl">
+          CAFLA develops referees through education, mentorship, structured
+          evaluation, and a professional environment built to support long-term
+          growth on and off the field.
         </p>
 
-
-        {/* buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16 hero-reveal hero-delay-4">
-
-          <button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
-            Become a Referee
-          </button>
-
-          <Link href={'/login'}>
-            <button className="border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105">
-              Member Login
-            </button>
+        <div className="hero-reveal hero-delay-4 mb-16 flex flex-col justify-center gap-4 sm:flex-row">
+          <Link
+            href="/join"
+            className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-8 py-4 font-semibold text-white transition hover:scale-105 hover:bg-emerald-700"
+          >
+            Join CAFLA
           </Link>
 
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center rounded-lg border border-yellow-400 px-8 py-4 font-semibold text-yellow-400 transition hover:scale-105 hover:bg-yellow-400 hover:text-black"
+          >
+            Member Login
+          </Link>
         </div>
 
-
-        {/* stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-
-          <div className="group bg-white/5 backdrop-blur-lg border border-yellow-400/20 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300">
-
-            <Award className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition" />
-
+        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 md:grid-cols-4">
+          <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
+            <Award className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">60+</p>
             <p className="text-sm text-gray-300">Years of Excellence</p>
-
           </div>
 
-          <div className="group bg-white/5 backdrop-blur-lg border border-yellow-400/20 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300">
-
-            <Users className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition" />
-
+          <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
+            <Users className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">500+</p>
             <p className="text-sm text-gray-300">Certified Referees</p>
-
           </div>
 
-          <div className="group bg-white/5 backdrop-blur-lg border border-yellow-400/20 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300">
-
-            <CalendarDays className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition" />
-
+          <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
+            <CalendarDays className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">10,000+</p>
             <p className="text-sm text-gray-300">Matches Officiated</p>
-
           </div>
 
-          <div className="group bg-white/5 backdrop-blur-lg border border-yellow-400/20 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300">
-
-            <Globe className="w-8 h-8 text-yellow-400 mx-auto mb-3 group-hover:scale-110 transition" />
-
+          <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
+            <Globe className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">5+</p>
             <p className="text-sm text-gray-300">Countries Officiated</p>
-
           </div>
-
         </div>
-
       </div>
-
     </section>
   )
 }

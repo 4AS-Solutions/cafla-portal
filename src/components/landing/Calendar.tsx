@@ -2,8 +2,15 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CalendarDays, MapPin, Clock, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  CalendarDays,
+  MapPin,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
 import { calendarData } from "@/src/lib/calendar/calendarPlan."
+import { RecurringSchedule } from "./RecurringSchedule"
 
 
 
@@ -27,27 +34,36 @@ export function Calendar() {
       id="calendar"
       className="relative py-28 cafla-section overflow-hidden"
     >
-
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* header */}
-
+        {/* HEADER */}
         <div className="text-center mb-16">
 
           <h2 className="font-heading text-4xl md:text-5xl text-white mb-6">
-            Upcoming Referee Classes
+            Training & Referee Schedule
           </h2>
 
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Stay updated with our monthly referee meetings, fitness sessions,
-            and educational workshops. New referees are welcome to attend.
+            Stay updated with our weekly training sessions and upcoming referee
+            meetings, workshops, and educational classes. New referees are welcome to attend.
           </p>
 
         </div>
 
+        {/* 🔥 RECURRING */}
+        <RecurringSchedule />
 
-        {/* month selector */}
+        {/* 🔥 NEXT SESSION */}
+        <div className="text-center mb-16">
+          <p className="text-sm text-yellow-400 uppercase tracking-wide mb-2">
+            Next Session
+          </p>
+          <p className="text-white text-lg font-semibold">
+            Monday — Recovery Session — 7:00 PM
+          </p>
+        </div>
 
+        {/* MONTH SELECTOR */}
         <div className="flex items-center justify-center gap-8 mb-16">
 
           <button
@@ -57,8 +73,8 @@ export function Calendar() {
             <ChevronLeft className="text-white" />
           </button>
 
-          <h3 className="text-2xl text-white font-semibold">
-            {currentMonth}
+          <h3 className="text-3xl font-bold text-white">
+            {currentMonth} 2026
           </h3>
 
           <button
@@ -70,9 +86,7 @@ export function Calendar() {
 
         </div>
 
-
-        {/* cards */}
-
+        {/* EVENTS */}
         <div className="overflow-hidden">
 
           <AnimatePresence mode="wait">
@@ -93,11 +107,10 @@ export function Calendar() {
                   className="cafla-card p-8 rounded-xl hover:scale-[1.04] transition-all duration-300"
                 >
 
-                  {/* date */}
-
+                  {/* DATE */}
                   <div className="flex items-center gap-2 text-yellow-400 mb-4">
 
-                    <CalendarDays size={18} />
+                    <CalendarDays className="w-4 h-4" />
 
                     <span className="text-sm font-semibold">
                       {event.date}
@@ -105,38 +118,30 @@ export function Calendar() {
 
                   </div>
 
-
-                  {/* title */}
-
+                  {/* TITLE */}
                   <h3 className="text-lg text-white font-semibold mb-4">
                     {event.title}
                   </h3>
 
-
-                  {/* location */}
-
+                  {/* LOCATION */}
                   <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
-                    <MapPin size={16} />
+                    <MapPin className="w-4 h-4" />
                     {event.location}
                   </div>
 
-
-                  {/* time */}
-
+                  {/* TIME */}
                   <div className="flex items-center gap-2 text-gray-400 text-sm mb-6">
-                    <Clock size={16} />
+                    <Clock className="w-4 h-4" />
                     {event.time}
                   </div>
 
-
-                  {/* add to calendar */}
-
+                  {/* CTA */}
                   <a
                     href={event.googleLink}
                     target="_blank"
                     className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition"
                   >
-                    Add to Google Calendar
+                    Add to Calendar
                   </a>
 
                 </div>
@@ -150,7 +155,6 @@ export function Calendar() {
         </div>
 
       </div>
-
     </section>
   )
 }

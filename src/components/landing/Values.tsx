@@ -91,7 +91,7 @@ export function Values() {
                 {/* Icon */}
                 <div className="mb-6 inline-flex rounded-2xl bg-yellow-400/10 p-4 text-yellow-400 group-hover:scale-110 transition">
 
-                  <Icon className="h-7 w-7" />
+                  <Icon className="h-6 w-6" />
 
                 </div>
 

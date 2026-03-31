@@ -2,15 +2,15 @@ import { Navbar } from "@/src/components/landing/Navbar"
 import { Hero } from "@/src/components/landing/Hero"
 import { About } from "../components/landing/About"
 import { Values } from "../components/landing/Values"
-import { DevelopmentPlan } from "../components/landing/DevelopmentPlan"
+// import { DevelopmentPlan } from "../components/landing/DevelopmentPlan"
 import { Calendar } from "../components/landing/Calendar"
-import { Macron } from "../components/landing/Macron"
+// import { Macron } from "../components/landing/Macron"
 import { Macron2 } from "../components/landing/Macron2"
-import { BecomeReferee } from "../components/landing/BecomeReferee"
-import { BoardSection } from "../components/landing/Board"
+import { JoinCafla } from "../components/landing/JoinCafla"
+// import { BoardSection } from "../components/landing/Board"
 import { Contact } from "../components/landing/Contact"
 import { Footer } from "../components/landing/Footer"
-import { Resources } from "../components/landing/Resources"
+// import { Resources } from "../components/landing/Resources"
 
 export default function HomePage() {
   return (
@@ -19,13 +19,24 @@ export default function HomePage() {
       <Hero />
       <About />
       <Values />
-      <DevelopmentPlan />
+
+      {/* TODO: Move to dedicated public route (/development) */}
+      {/* <DevelopmentPlan /> */}
+
       <Calendar />
-      <Resources />
+
+      {/* TODO: Move to dedicated public route (/resources) if needed */}
+      {/* <Resources /> */}
+
+      {/* TODO: Evaluate if legacy section is still needed */}
       {/* <Macron /> */}
+
       <Macron2 />
-      <BecomeReferee />
-      <BoardSection />
+      {/* <JoinCafla /> */}
+
+      {/* TODO: Move full leadership content to dedicated public route (/leadership) */}
+      {/* <BoardSection /> */}
+
       <Contact />
       <Footer />
     </main>
