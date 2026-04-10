@@ -246,6 +246,7 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
   })
 
   async function onSubmit(values: FormData) {
+    console.log("Submitting report with values:", values)
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
@@ -255,6 +256,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
+
+      console.log("Current user:", user, "User error:", userError);
 
       if (userError || !user) {
         throw new Error("You must be logged in to submit this report.")
@@ -297,6 +300,17 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         }
       }
 
+      console.log("Submitting report with data:", {
+        match_id: match.id,
+        home_score: values.home_score,
+        away_score: values.away_score,
+        comments: values.comments,
+        goals: values.goals,
+        cards: values.cards,
+        home_roster_path: homeRosterPath,
+        away_roster_path: awayRosterPath,
+      })
+
       const res = await fetch("/api/reports/submit", {
         method: "POST",
         headers: {
@@ -313,6 +327,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
           away_roster_path: awayRosterPath,
         }),
       })
+
+      console.log("Server response:", res)
 
       let data: any = null
 

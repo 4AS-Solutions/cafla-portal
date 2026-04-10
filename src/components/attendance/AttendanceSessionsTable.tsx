@@ -1,11 +1,13 @@
 import Link from "next/link"
 import { Calendar, MapPin, ArrowRight } from "lucide-react"
 import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
+import { formatDate } from '../../lib/utils/format-date';
 
 export default function AttendanceSessionsTable({
-  sessions
+  sessions, showAction = true
 }: {
   sessions: AttendanceSession[]
+  showAction?: boolean
 }) {
   
   if (!sessions.length) {
@@ -60,7 +62,7 @@ export default function AttendanceSessionsTable({
               <div className="flex items-center gap-2">
                 <Calendar size={14} />
                 <span>
-                  {new Date(session.session_date).toLocaleString("en-US")}
+                  {formatDate(session.session_date)}
                 </span>
               </div>
 
@@ -76,25 +78,27 @@ export default function AttendanceSessionsTable({
           </div>
 
           {/* ACTION */}
-          <Link
-            href={`/admin/attendance/${session.id}`}
-            className="
-              mt-5
-              flex items-center justify-between
-              text-sm font-medium
-              px-4 py-2
-              rounded-xl
-              bg-white/5
-              border border-white/10
-              text-white
-              group-hover:bg-emerald-500
-              group-hover:text-black
-              transition
-            "
-          >
-            Manage Session
-            <ArrowRight size={16} />
-          </Link>
+          {showAction && (
+            <Link
+              href={`/admin/attendance/${session.id}`}
+              className="
+                mt-5
+                flex items-center justify-between
+                text-sm font-medium
+                px-4 py-2
+                rounded-xl
+                bg-white/5
+                border border-white/10
+                text-white
+                group-hover:bg-emerald-500
+                group-hover:text-black
+                transition
+              "
+            >
+              Manage Session
+              <ArrowRight size={16} />
+            </Link>
+          )}
 
         </div>
 

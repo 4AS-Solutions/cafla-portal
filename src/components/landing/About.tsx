@@ -39,7 +39,7 @@ export function About() {
 
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl">
               <Image
-                src="/images/referee-community.png"
+                src="/images/barba-tamayo.jpg"
                 alt="CAFLA referees"
                 width={1200}
                 height={900}

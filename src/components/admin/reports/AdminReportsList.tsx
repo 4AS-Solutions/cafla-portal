@@ -44,7 +44,7 @@ export default function AdminReportsList({ reports }: any) {
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
 
         {filtered.map((report: any) => (
-          <AdminReportCard key={report.id} report={report} />
+          <AdminReportCard key={report.id ?? report.match_id} report={report} />
         ))}
 
       </div>

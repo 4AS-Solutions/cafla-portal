@@ -6,14 +6,14 @@ import { getReportDetails } from "@/src/lib/queries/get-report-details"
 export default async function Page({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ match_id: string }>
 }) {
 
   await requireBoard()
 
-  const { id } = await params
+  const { match_id } = await params
 
-  const data = await getReportDetails(id)
+  const data = await getReportDetails(match_id)
 
   return (
     <div className="max-w-5xl mx-auto">

@@ -37,7 +37,7 @@ export default function ReportsList({
 
         {reports.map((report) => (
           <ReportCard
-            key={report.id}
+            key={report.match_id}
             report={report}
             type={type}
           />

@@ -50,7 +50,7 @@ export function Hero() {
         <div className="hero-reveal hero-delay-4 mb-16 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
             href="/join"
-            className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-8 py-4 font-semibold text-white transition hover:scale-105 hover:bg-emerald-700"
+            className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-8 py-4 font-semibold text-white active:scale-95 transition hover:scale-105 hover:bg-emerald-700"
           >
             Join CAFLA
           </Link>

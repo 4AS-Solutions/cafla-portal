@@ -59,7 +59,7 @@ export default function AdminReportCard({ report }: any) {
         <div className="flex gap-2">
 
           <button
-            onClick={() => router.push(`/admin/reports/${report.id}`)}
+            onClick={() => router.push(`/admin/reports/${report.match_id}`)}
             className="
               text-xs px-3 py-1.5 rounded-lg
               border border-white/10
@@ -74,7 +74,7 @@ export default function AdminReportCard({ report }: any) {
             <>
               <button
                 onClick={async () => {
-                  await fetch(`/api/admin/reports/${report.id}`, {
+                  await fetch(`/api/admin/reports/${report.match_id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: "approved" })
@@ -91,7 +91,7 @@ export default function AdminReportCard({ report }: any) {
 
               <button
                 onClick={async () => {
-                  await fetch(`/api/admin/reports/${report.id}`, {
+                  await fetch(`/api/admin/reports/${report.match_id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: "revision_required" })
