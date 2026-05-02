@@ -88,10 +88,10 @@ export function Contact() {
             </h3>
 
             <a
-              href="tel:+13235550188"
+              href="tel:+13235954895"
               className="text-gray-400 text-sm hover:text-yellow-400 transition"
             >
-              +1 (323) 555-0188
+              +1 (323) 595-4895
             </a>
           </div>
 
