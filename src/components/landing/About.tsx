@@ -20,13 +20,13 @@ export function About() {
           </p>
 
           <h2 className="text-4xl font-bold text-white md:text-6xl">
-            More than six decades of refereeing excellence in Los Angeles
+            A structured pathway for referee development in Los Angeles
           </h2>
 
           <p className="mt-6 text-lg text-gray-300 md:text-xl">
-            CAFLA has built a refereeing community based on education,
-            discipline, mentorship, and continuous growth, preparing referees
-            to lead with professionalism both on and off the field.
+            CAFLA is a non-profit referee organization established in 1962,
+            dedicated to developing referees, instructors, and assessors through
+            education, mentorship, and the proper application of the Laws of the Game.
           </p>
         </div>
 
@@ -37,13 +37,13 @@ export function About() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-yellow-400/10 blur-2xl" />
 
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl h-full min-h-[500px] lg:min-h-[650px]">
+
               <Image
                 src="/images/barba-tamayo.jpg"
-                alt="CAFLA referees"
-                width={1200}
-                height={900}
-                className="h-[320px] w-full object-cover md:h-[520px]"
+                alt="Ricardo Barbas Tamayo"
+                fill
+                className="object-cover object-top"
               />
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
@@ -53,11 +53,15 @@ export function About() {
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-yellow-400">
                     Founded in 1962
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-white">
-                    Refereeing tradition in Los Angeles and Southern California
+                  <p className="mt-2 text-lg font-semibold text-white leading-snug">
+                    Ricardo Barbas Tamayo — Founder and pioneer of referee development in Los Angeles
+                  </p>
+                  <p className="mt-2 text-xs text-gray-400">
+                    Built on decades of experience, mentorship, and professional standards
                   </p>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -76,9 +80,9 @@ export function About() {
                     History
                   </h3>
                   <p className="mt-3 text-gray-300">
-                    Since 1962, CAFLA has developed generations of referees
-                    committed to excellence, discipline, and continuous growth
-                    within competitive soccer.
+                    For over six decades, CAFLA has developed referees committed
+                    to discipline, professionalism, and continuous growth, supporting
+                    competitive soccer across Los Angeles and Southern California.
                   </p>
                 </div>
               </div>
@@ -97,8 +101,9 @@ export function About() {
                 </h4>
 
                 <p className="mt-3 text-sm text-gray-300">
-                  Develop referees through education, mentorship, and structured
-                  evaluation within the soccer community.
+                  To prepare referees with the knowledge, discipline, and experience
+                  required to officiate at all levels of the game through structured
+                  training, evaluation, and mentorship.
                 </p>
               </div>
 
@@ -112,8 +117,9 @@ export function About() {
                 </h4>
 
                 <p className="mt-3 text-sm text-gray-300">
-                  To be a reference in referee development, combining tradition,
-                  discipline, and professionalism in modern soccer.
+                  To be a leading reference in referee development by combining
+                  tradition, high standards, and a professional pathway for growth
+                  within modern soccer.
                 </p>
               </div>
 
@@ -128,13 +134,14 @@ export function About() {
 
                 <div>
                   <h4 className="text-xl font-semibold text-white">
-                    Tradition and Innovation
+                    Structured Development
                   </h4>
 
                   <p className="mt-3 text-gray-300">
-                    CAFLA combines decades of experience with a modern platform
-                    that allows referees to track performance, evaluations, and
-                    development over time.
+                    CAFLA operates through a structured program that includes
+                    weekly instruction, fitness training, game assignments, and
+                    mentorship from experienced referees, providing a clear pathway
+                    for long-term development and advancement.
                   </p>
                 </div>
               </div>

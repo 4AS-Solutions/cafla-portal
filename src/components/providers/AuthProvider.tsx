@@ -59,7 +59,7 @@ export default function AuthProvider({
 
     // 🚫 BLOQUEAR AUTH PROVIDER EN INVITE FLOW
     if (isInviteFlow) {
-      console.log("🚫 Skipping AuthProvider (invite flow)")
+
       setLoading(false)
       return
     }
@@ -85,7 +85,7 @@ export default function AuthProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth event:", event)
+
 
       if (!isMounted) return
 
@@ -114,8 +114,6 @@ export default function AuthProvider({
       subscription.unsubscribe()
     }
   }, [])
-
-  console.log("SESSION:", user)
 
   return (
     <AuthContext.Provider

@@ -15,10 +15,13 @@ export async function getUserMatches(userId: string) {
       location,
       field,
       kickoff_at,
-      report_status,
       center_referee_id,
       assistant_referee_1_id,
-      assistant_referee_2_id
+      assistant_referee_2_id,
+      match_reports (
+        status,
+        submitted_at
+      )
     `)
     .or(`center_referee_id.eq.${userId},assistant_referee_1_id.eq.${userId},assistant_referee_2_id.eq.${userId}`)
     .order("kickoff_at", { ascending: true })
@@ -28,25 +31,25 @@ export async function getUserMatches(userId: string) {
     throw error
   }
 
-  const matches = (data ?? []).map((m) => {
+  const matches = (data ?? []).map((m: any) => {
 
     let role = "AR"
 
-    if (m.center_referee_id === userId) {
-      role = "CR"
-    }
+    if (m.center_referee_id === userId) role = "CR"
+    if (m.assistant_referee_1_id === userId) role = "AR1"
+    if (m.assistant_referee_2_id === userId) role = "AR2"
 
-    if (m.assistant_referee_1_id === userId) {
-      role = "AR1"
-    }
+    // 🔥 FIX: tomar el status real
+    const report = Array.isArray(m.match_reports)
+      ? m.match_reports[0]
+      : m.match_reports
 
-    if (m.assistant_referee_2_id === userId) {
-      role = "AR2"
-    }
+    const report_status = report?.status ?? "pending"
 
     return {
       ...m,
-      role
+      role,
+      report_status, // 🔥 ahora correcto
     }
   })
 

@@ -2,6 +2,34 @@ import Link from "next/link"
 import { Badge } from "@/src/components/ui/badge"
 import { ReportRow } from "@/src/lib/queries/get-reports"
 
+type ReportStatus =
+  | "pending"
+  | "revision_required"
+  | "submitted"
+  | "approved"
+
+const statusConfig: Record<
+  ReportStatus,
+  { label: string; variant: string }
+> = {
+  pending: {
+    label: "Pending",
+    variant: "warning",
+  },
+  revision_required: {
+    label: "Revision Required",
+    variant: "danger",
+  },
+  submitted: {
+    label: "Submitted",
+    variant: "success",
+  },
+  approved: {
+    label: "Approved",
+    variant: "success",
+  },
+}
+
 export default function ReportCard({
   report,
   type,
@@ -11,6 +39,8 @@ export default function ReportCard({
 }) {
 
   const match = report.matches
+
+  const config = statusConfig[report.status as ReportStatus]
 
   const date = match
     ? new Date(match.kickoff_at).toLocaleString("en-US", {
@@ -22,9 +52,10 @@ export default function ReportCard({
     : "Date pending"
 
   const href =
-    type === "pending"
-      ? `/portal/reports/${report.match_id}`
-      : `/portal/matches/${report.match_id}`
+  report.status === "pending" ||
+  report.status === "revision_required"
+    ? `/portal/reports/${report.match_id}`
+    : `/portal/matches/${report.match_id}`
 
   return (
 
@@ -40,11 +71,9 @@ export default function ReportCard({
               : "Match not found"}
           </h3>
 
-          {type === "submitted" ? (
-            <Badge variant="success">Submitted</Badge>
-          ) : (
-            <Badge variant="warning">Pending</Badge>
-          )}
+          <Badge variant={config.variant as any}>
+            {config.label}
+          </Badge>
 
         </div>
 
@@ -52,16 +81,28 @@ export default function ReportCard({
           {date}
         </p>
 
-        {type === "submitted" && (
+        {["submitted", "approved"].includes(report.status) && (
           <p className="mt-2 text-sm text-gray-300">
             Score: {report.home_score} - {report.away_score}
           </p>
         )}
 
         <div className="mt-3 text-xs text-yellow-400 font-medium">
-          {type === "pending"
-            ? "Start Report "
-            : "View Match Details"}
+          {
+            report.status === "pending" && "Start Report"
+          }
+
+          {
+            report.status === "revision_required" && "Correct Report"
+          }
+
+          {
+            report.status === "submitted" && "View Match Details"
+          }
+
+          {
+            report.status === "approved" && "View Match Details"
+          }
         </div>
 
       </div>

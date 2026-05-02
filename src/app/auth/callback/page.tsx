@@ -6,14 +6,13 @@ import { createClient } from "@/src/lib/supabase/client"
 export default function AuthCallbackPage() {
   useEffect(() => {
     const run = async () => {
-      console.log("🚀 CALLBACK RUNNING")
 
       const supabase = createClient()
 
       const hash = window.location.hash
 
       if (!hash) {
-        console.log("❌ NO HASH")
+
         window.location.href = "/login"
         return
       }
@@ -24,12 +23,11 @@ export default function AuthCallbackPage() {
       const refresh_token = params.get("refresh_token")
 
       if (!access_token || !refresh_token) {
-        console.log("❌ TOKENS MISSING")
+
         window.location.href = "/login"
         return
       }
 
-      console.log("🔑 SETTING SESSION...")
 
       const { error } = await supabase.auth.setSession({
         access_token,
@@ -42,7 +40,6 @@ export default function AuthCallbackPage() {
         return
       }
 
-      console.log("✅ SESSION OK")
 
       // limpiar URL
       window.history.replaceState({}, "", "/auth/callback")

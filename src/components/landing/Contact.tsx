@@ -6,7 +6,8 @@ import {
   Phone,
   Facebook,
   Instagram,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from "lucide-react"
 import Link from "next/link"
 
@@ -29,8 +30,8 @@ export function Contact() {
           </h2>
 
           <p className="text-gray-400 text-lg">
-            Have questions about joining or want to learn more about our
-            organization? Reach out and we’ll guide you through the next steps.
+            Interested in becoming a referee or learning more about CAFLA?
+            Contact us and we’ll guide you through the process.
           </p>
         </div>
 
@@ -47,11 +48,15 @@ export function Contact() {
               Location
             </h3>
 
-            <p className="text-gray-400 text-sm">
+            <a
+              href="https://maps.google.com/?q=5914+E+Washington+Blvd+Commerce+CA+90040"
+              target="_blank"
+              className="text-gray-400 text-sm hover:text-yellow-400 transition"
+            >
               5914 E Washington Blvd
               <br />
               Commerce, CA 90040
-            </p>
+            </a>
           </div>
 
           {/* EMAIL */}
@@ -64,11 +69,12 @@ export function Contact() {
               Email
             </h3>
 
-            <p className="text-gray-400 text-sm">
-              info@cafla.org
-              <br />
-              membership@cafla.org
-            </p>
+            <a
+              href="mailto:cafla1962@gmail.com"
+              className="text-gray-400 text-sm hover:text-yellow-400 transition"
+            >
+              cafla1962@gmail.com
+            </a>
           </div>
 
           {/* PHONE */}
@@ -81,9 +87,12 @@ export function Contact() {
               Phone
             </h3>
 
-            <p className="text-gray-400 text-sm">
+            <a
+              href="tel:+13235550188"
+              className="text-gray-400 text-sm hover:text-yellow-400 transition"
+            >
               +1 (323) 555-0188
-            </p>
+            </a>
           </div>
 
         </div>
@@ -91,15 +100,17 @@ export function Contact() {
         {/* SOCIAL */}
         <div className="mt-12 flex justify-center gap-6">
           <a
-            href="#"
-            className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition"
+            href="https://www.facebook.com/Cafla1962"
+            target="_blank"
+            className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition hover:scale-110"
           >
             <Facebook size={18} />
           </a>
 
           <a
-            href="#"
-            className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition"
+            href="https://www.instagram.com/caflareferees/"
+            target="_blank"
+            className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition hover:scale-110"
           >
             <Instagram size={18} />
           </a>
@@ -118,8 +129,8 @@ export function Contact() {
               shadow-xl shadow-yellow-500/25
             "
           >
-            Join CAFLA
-            <ArrowRight size={18} />
+            Apply to Join CAFLA
+            <ExternalLink size={18} />
           </Link>
         </div>
 

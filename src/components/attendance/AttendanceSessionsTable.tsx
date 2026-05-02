@@ -1,12 +1,11 @@
 import Link from "next/link"
 import { Calendar, MapPin, ArrowRight } from "lucide-react"
-import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
 import { formatDate } from '../../lib/utils/format-date';
 
 export default function AttendanceSessionsTable({
   sessions, showAction = true
 }: {
-  sessions: AttendanceSession[]
+  sessions: any[]
   showAction?: boolean
 }) {
   

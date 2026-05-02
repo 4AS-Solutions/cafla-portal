@@ -19,32 +19,41 @@ export default function AdminActions({
   }
 
   return (
+    <div className="bg-[#0B0F0F] border border-white/10 rounded-2xl p-5 space-y-4">
 
-    <div className="bg-[#0B0F0F] border border-white/10 rounded-2xl p-5 space-y-3">
-
-      <p className="text-sm text-gray-400">
+      {/* TITLE */}
+      <p className="text-sm font-semibold text-gray-300 tracking-tight">
         Admin Actions
       </p>
 
-      <div className="flex flex-col gap-2">
+      {/* BUTTONS */}
+      <div className="flex flex-col gap-3">
 
+        {/* APPROVE */}
         <button
           onClick={() => updateStatus("approved")}
           className="
-            w-full px-4 py-2 rounded-xl
-            bg-emerald-500 text-black font-medium
-            hover:bg-emerald-400 transition
+            w-full px-4 py-2.5 rounded-xl
+            bg-emerald-500 text-black font-semibold
+            transition-all duration-200
+            hover:bg-emerald-400
+            hover:shadow-lg hover:shadow-emerald-500/20
+            active:scale-[0.97]
           "
         >
           Approve Report
         </button>
 
+        {/* REVIEW */}
         <button
           onClick={() => updateStatus("revision_required")}
           className="
-            w-full px-4 py-2 rounded-xl
-            bg-yellow-500 text-black font-medium
-            hover:bg-yellow-400 transition
+            w-full px-4 py-2.5 rounded-xl
+            bg-yellow-500 text-black font-semibold
+            transition-all duration-200
+            hover:bg-yellow-400
+            hover:shadow-lg hover:shadow-yellow-500/20
+            active:scale-[0.97]
           "
         >
           Send to Review

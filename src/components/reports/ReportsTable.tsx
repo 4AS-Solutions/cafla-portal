@@ -105,7 +105,7 @@ export default function ReportsTable({
 
           {reports.map((report) => (
 
-            <TableRow key={report.id}>
+            <TableRow key={report.match_id}>
 
               <TableCell className="font-medium text-white">
 

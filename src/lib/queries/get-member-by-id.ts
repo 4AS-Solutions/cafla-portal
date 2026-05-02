@@ -1,7 +1,6 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getMemberById(memberId: string) {
-  console.log(memberId)
 
   const supabase = await supabaseServer()
 

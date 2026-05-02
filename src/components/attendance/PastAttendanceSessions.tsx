@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import AttendanceSessionsTable from "./AttendanceSessionsTable"
-import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
 
 export default function PastAttendanceSessions({
   sessions,
@@ -10,7 +9,7 @@ export default function PastAttendanceSessions({
   page,
   limit
 }: {
-  sessions: AttendanceSession[]
+  sessions: any[]
   total: number
   page: number
   limit: number

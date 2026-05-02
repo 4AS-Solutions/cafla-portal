@@ -1,10 +1,9 @@
 import AttendanceSessionsTable from "./AttendanceSessionsTable"
-import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
 
 export default function UpcomingAttendanceSessions({
   sessions
 }: {
-  sessions: AttendanceSession[]
+  sessions: any[]
 }) {
 
   if (!sessions.length) return null

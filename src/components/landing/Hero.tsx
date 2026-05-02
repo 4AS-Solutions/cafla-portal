@@ -33,18 +33,22 @@ export function Hero() {
           Since 1962
         </p>
 
+        {/* 🔥 NUEVO HEADLINE */}
         <h1 className="hero-reveal hero-delay-2 mb-6 text-5xl font-bold tracking-tight text-white md:text-7xl">
-          Professional Referee Development in Los Angeles
+          Developing Soccer Referees at Every Level of the Game
         </h1>
 
+        {/* 🔥 SUBTITLE (se mantiene pero con más intención) */}
         <p className="hero-reveal hero-delay-3 mb-4 text-lg font-medium text-yellow-400 md:text-2xl">
-          Colegio de Arbitros de Futbol de Los Angeles
+          Colegio de Árbitros de Fútbol de Los Ángeles
         </p>
 
+        {/* 🔥 NUEVO CONTEXTO REAL */}
         <p className="hero-reveal hero-delay-3 mx-auto mb-12 max-w-3xl text-lg text-gray-300 md:text-xl">
-          CAFLA develops referees through education, mentorship, structured
-          evaluation, and a professional environment built to support long-term
-          growth on and off the field.
+          CAFLA is a non-profit referee organization dedicated to developing referees,
+          instructors, and assessors through education, mentorship, and the proper
+          application of the Laws of the Game. Train, get certified, and officiate
+          competitive matches in Los Angeles through a structured development program.
         </p>
 
         <div className="hero-reveal hero-delay-4 mb-16 flex flex-col justify-center gap-4 sm:flex-row">
@@ -67,13 +71,13 @@ export function Hero() {
           <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
             <Award className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">60+</p>
-            <p className="text-sm text-gray-300">Years of Excellence</p>
+            <p className="text-sm text-gray-300">Years Developing Referees</p>
           </div>
 
           <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">
             <Users className="mx-auto mb-3 h-8 w-8 text-yellow-400 transition group-hover:scale-110" />
             <p className="text-2xl font-bold text-white">500+</p>
-            <p className="text-sm text-gray-300">Certified Referees</p>
+            <p className="text-sm text-gray-300">Certified Officials</p>
           </div>
 
           <div className="group rounded-xl border border-yellow-400/20 bg-white/5 p-6 text-center backdrop-blur-lg transition-all duration-300 hover:bg-white/10">

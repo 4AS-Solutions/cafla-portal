@@ -1,7 +1,6 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
-import type { AttendanceSession } from "./get-attendance-sessions"
 
-export async function getUpcomingAttendanceSessions(): Promise<AttendanceSession[]> {
+export async function getUpcomingAttendanceSessions(): Promise<any[]> {
 
   const supabase = await supabaseServer()
 

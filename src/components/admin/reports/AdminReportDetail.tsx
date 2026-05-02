@@ -7,7 +7,7 @@ import MatchScore from "@/src/components/match/MatchScore"
 import { MatchTimeline } from "@/src/components/match/MatchTimeline"
 import StatusBadge from "./StatusBadge"
 import AdminActions from "./AdminActions"
-
+import MatchNarrativeSummary from "../../reports/MatchNarrativeSummary"
 
 export default function AdminReportDetail({
   match,
@@ -17,7 +17,9 @@ export default function AdminReportDetail({
   report,
   goals,
   cards,
-  assets
+  assets,
+  comments,
+  cardReasons,
 }: any) {
 
   if (!match) {
@@ -43,39 +45,62 @@ export default function AdminReportDetail({
   ].sort((a, b) => a.minute - b.minute)
 
   return (
-
     <div className="space-y-8">
 
       {/* HEADER */}
       <div className="flex items-center justify-between">
-
-        <MatchHeader match={match} />
-
-        {report && (
-          <StatusBadge status={report.status} />
-        )}
-
+        <MatchHeader match={match} status={report?.status} />
       </div>
 
+      {/* 🔥 GRID REAL 3 COLUMNAS */}
       <div className="grid gap-6 lg:grid-cols-3">
 
-        {/* LEFT */}
-        <div className="space-y-6 lg:col-span-2">
+        {/* ================= COL 1 ================= */}
+        <div className="space-y-6">
 
           <MatchScore report={report} />
 
+          {/* 🔥 Timeline SIN doble box */}
           <MatchTimeline events={timeline} />
 
           <MatchAssets assets={assets} />
 
         </div>
 
-        {/* RIGHT */}
+        {/* ================= COL 2 ================= */}
+        <div className="space-y-6">
+
+          {cards && cards.length > 0 && (
+            <MatchNarrativeSummary
+              cards={cards}
+              reasons={cardReasons}
+            />
+          )}
+
+        </div>
+
+        {/* ================= COL 3 ================= */}
         <div className="space-y-6">
 
           <MatchOfficials center={center} ar1={ar1} ar2={ar2} />
 
-          {report && (
+          {/* 🔥 COMMENTS */}
+          {comments && (
+            <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+
+              <p className="text-sm font-semibold text-gray-300 mb-2">
+                Referee Comments
+              </p>
+
+              <p className="text-sm text-white/90 whitespace-pre-line leading-relaxed">
+                {comments}
+              </p>
+
+            </div>
+          )}
+
+          {/* 🔥 ACTIONS */}
+          {report && report.status !== "approved" && (
             <AdminActions
               reportId={report.id}
               status={report.status}

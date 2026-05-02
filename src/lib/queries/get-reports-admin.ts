@@ -1,11 +1,12 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
+import { supabaseServer } from "../supabase/server"
 
-export type ReportRow = {
+export type AdminReportRow = {
   match_id: string
   status: string
   submitted_at: string | null
   home_score: number | null
   away_score: number | null
+  referee_id: string
   matches: {
     home_team: string
     away_team: string
@@ -13,14 +14,8 @@ export type ReportRow = {
   }
 }
 
-export async function getReports(): Promise<ReportRow[]> {
+export async function getReportsAdmin(): Promise<AdminReportRow[]> {
   const supabase = await supabaseServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return []
 
   const { data, error } = await supabase
     .from("matches")
@@ -29,6 +24,7 @@ export async function getReports(): Promise<ReportRow[]> {
       home_team,
       away_team,
       kickoff_at,
+      center_referee_id,
       match_reports (
         status,
         home_score,
@@ -36,12 +32,11 @@ export async function getReports(): Promise<ReportRow[]> {
         submitted_at
       )
     `)
-    .eq("center_referee_id", user.id)
     .lt("kickoff_at", new Date().toISOString())
     .order("kickoff_at", { ascending: false })
 
   if (error) {
-    console.error("getReports error:", error)
+    console.error("getReportsAdmin error:", error)
     throw error
   }
 
@@ -52,10 +47,9 @@ export async function getReports(): Promise<ReportRow[]> {
 
     return {
       match_id: match.id,
+      referee_id: match.center_referee_id, // 🔥 CLAVE PARA ADMIN
 
-      // 🔥 FIX REAL
       status: report?.status ?? "pending",
-
       submitted_at: report?.submitted_at ?? null,
       home_score: report?.home_score ?? null,
       away_score: report?.away_score ?? null,

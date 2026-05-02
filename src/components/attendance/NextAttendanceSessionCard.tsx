@@ -1,12 +1,11 @@
 import Link from "next/link"
 import { Calendar, MapPin, ArrowRight } from "lucide-react"
 import { formatDate } from "@/src/lib/utils/format-date"
-import type { AttendanceSession } from "@/src/lib/queries/get-attendance-sessions"
 
 export default function NextAttendanceSessionCard({
   session
 }: {
-  session: AttendanceSession | null
+  session: any | null
 }) {
 
   if (!session) {

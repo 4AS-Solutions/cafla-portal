@@ -4,7 +4,6 @@ import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
 export async function POST(req: Request) {
   try {
-    console.log("INVITE: 🚀 INVITE START")
 
     await requireBoard()
 
@@ -20,11 +19,7 @@ export async function POST(req: Request) {
       )
     }
 
-    console.log("INVITE: 🚀 INVITE START")
 
-    console.log("INVITE: 📧 Email:", email)
-    console.log("INVITE: 👤 Name:", full_name)
-    console.log("INVITE: 🌍 Redirect:", `${process.env.NEXT_PUBLIC_BASE_URL}/complete-profile`)
 
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(
       email,
@@ -37,8 +32,6 @@ export async function POST(req: Request) {
       }
     )
 
-    console.log("INVITE: 📨 RESPONSE:", data)
-    console.log("INVITE: ❌ ERROR:", error)
 
     if (error) {
       return NextResponse.json(

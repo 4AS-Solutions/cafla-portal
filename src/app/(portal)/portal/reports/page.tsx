@@ -6,8 +6,17 @@ export default async function ReportsPage() {
 
   const reports = await getReports()
 
-  const pending = reports.filter((r) => r.status !== "submitted")
-  const submitted = reports.filter((r) => r.status === "submitted")
+  const pending = reports.filter(
+    (r) =>
+      r.status === "pending" ||
+      r.status === "revision_required"
+  )
+
+  const submitted = reports.filter(
+    (r) =>
+      r.status === "submitted" ||
+      r.status === "approved"
+  )
 
   return (
 

@@ -1,5 +1,4 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
-import type { AttendanceSession } from "./get-attendance-sessions"
 
 export async function getPastAttendanceSessions({
   page = 0,
@@ -8,7 +7,7 @@ export async function getPastAttendanceSessions({
   page?: number
   limit?: number
 }): Promise<{
-  data: AttendanceSession[]
+  data: any[]
   count: number
 }> {
 
@@ -39,7 +38,7 @@ export async function getPastAttendanceSessions({
     throw error
   }
 
-  const normalized: AttendanceSession[] = (data ?? []).map((row: any) => {
+  const normalized: any[] = (data ?? []).map((row: any) => {
     const rawCreator = Array.isArray(row.creator)
       ? row.creator[0]
       : row.creator

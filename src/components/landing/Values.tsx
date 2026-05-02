@@ -13,37 +13,37 @@ export function Values() {
       icon: Scale,
       title: "Integrity",
       description:
-        "We act with honesty and transparency in every decision, maintaining the highest ethical standards on and off the field."
-    },
-    {
-      icon: HeartHandshake,
-      title: "Respect",
-      description:
-        "We treat players, coaches, and fans with respect, promoting fair play and sportsmanship in every match we officiate."
+        "We uphold fairness, honesty, and accountability in every decision, ensuring the game is officiated with respect and consistency."
     },
     {
       icon: Shield,
       title: "Discipline",
       description:
-        "We maintain rigorous standards of preparation, punctuality, and professionalism, embodying the discipline required of elite officials."
-    },
-    {
-      icon: Users,
-      title: "Teamwork",
-      description:
-        "We collaborate as a community, supporting each other through peer evaluations, mentorship, and shared experiences."
+        "We maintain high standards of preparation, fitness, and professionalism, reflecting the commitment required at every level of the game."
     },
     {
       icon: TrendingUp,
-      title: "Continuous Development",
+      title: "Development",
       description:
-        "We are committed to constant learning, staying updated with the latest rules and techniques to improve our craft."
-    },    
+        "We are committed to continuous growth through structured training, evaluation, and real match experience."
+    },
+    {
+      icon: Users,
+      title: "Community",
+      description:
+        "We foster a strong network of referees who support each other, creating an environment of collaboration and shared progress."
+    },
+    {
+      icon: HeartHandshake,
+      title: "Mentorship",
+      description:
+        "Experienced referees guide and support the next generation, helping them grow with confidence and knowledge."
+    },
     {
       icon: Award,
-      title: "Professionalism",
+      title: "Excellence",
       description:
-        "We strive for excellence in every aspect of our work, representing CAFLA with pride and maintaining the highest standards."
+        "We strive to reach the highest standards of officiating through consistency, performance, and dedication."
     }
   ]
 
@@ -65,13 +65,12 @@ export function Values() {
           </p>
 
           <h2 className="text-4xl font-bold text-white md:text-6xl">
-            Principles that guide our refereeing
+            Principles that define our referees
           </h2>
 
           <p className="mt-6 text-lg text-gray-300 md:text-xl">
-            At CAFLA, we believe that refereeing is not just about enforcing the
-            rules of the game, but about embodying values that strengthen the
-            spirit of soccer.
+            At CAFLA, refereeing goes beyond enforcing the Laws of the Game — 
+            it is about developing individuals who represent discipline, integrity, and professionalism at every level.
           </p>
 
         </div>

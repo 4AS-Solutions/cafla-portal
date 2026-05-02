@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Handshake, Shirt, Medal } from "lucide-react"
+import { Handshake, Shirt, Medal, ExternalLink } from "lucide-react"
 
 export function Macron2() {
 
@@ -13,8 +13,8 @@ export function Macron2() {
     },
     {
       icon: Shirt,
-      title: "Certified Equipment",
-      text: "Referees are equipped with professional-grade uniforms designed for performance, comfort, and compliance with official match requirements.",
+      title: "Official Uniform System",
+      text: "Referees follow a standardized uniform system designed for performance, visibility, and compliance with official match requirements.",
     },
     {
       icon: Medal,
@@ -34,16 +34,17 @@ export function Macron2() {
         <div className="text-center mb-16 max-w-2xl mx-auto">
 
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-yellow-400">
-            Standards
+            Partnership
           </p>
 
           <h2 className="font-heading text-4xl md:text-5xl text-white mb-6">
-            Professional Standards & Equipment
+            Official Equipment & Professional Standards
           </h2>
 
           <p className="text-gray-400 text-lg">
-            CAFLA referees operate under professional standards using certified
-            equipment designed for performance, consistency, and identity on the field.
+            Through our partnership with Macron, CAFLA ensures referees meet
+            professional standards in performance, appearance, and consistency
+            across all levels of competition.
           </p>
 
         </div>
@@ -62,12 +63,10 @@ export function Macron2() {
                 >
                   <div className="flex gap-4 items-start">
 
-                    {/* ICON FIXED */}
                     <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-yellow-400/10 text-yellow-400 shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
 
-                    {/* TEXT */}
                     <div>
                       <h3 className="text-lg text-white font-semibold mb-2">
                         {item.title}
@@ -85,51 +84,69 @@ export function Macron2() {
           </div>
 
           {/* RIGHT */}
-          <div className="cafla-card p-10 rounded-3xl text-center border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] backdrop-blur-md">
+          <div className="relative">
 
-            {/* LOGO */}
-            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-6">
-              <Image
-                src="/images/macron.png"
-                alt="Macron Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-              />
+            {/* subtle glow */}
+            <div className="absolute -inset-2 bg-yellow-400/10 blur-2xl rounded-3xl" />
+
+            <div className="relative cafla-card p-10 rounded-3xl text-center border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] backdrop-blur-md">
+
+              <p className="text-xs text-yellow-400 uppercase tracking-wide mb-3">
+                Official Partner
+              </p>
+
+              {/* LOGO */}
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-6">
+                <Image
+                  src="/images/macron.png"
+                  alt="Macron Logo"
+                  width={60}
+                  height={60}
+                  className="object-contain"
+                />
+              </div>
+
+              <h3 className="text-2xl font-semibold text-white mb-2">
+                Macron Sportswear
+              </h3>
+
+              <p className="text-gray-400 mb-8 text-sm">
+                Macron provides professional-grade referee equipment aligned
+                with international standards, supporting CAFLA’s commitment
+                to excellence.
+              </p>
+
+              <div className="space-y-3 mb-8">
+
+                <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
+                  Performance-Grade Materials
+                </div>
+
+                <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
+                  Professional Design Standards
+                </div>
+
+                <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
+                  International Match Compliance
+                </div>
+
+              </div>
+
+              <a
+                href="https://clubshop.macron.com/macron_sportswear_us/cafla-referees"
+                target="_blank"
+                className="
+                  group inline-flex items-center gap-2
+                  text-sm font-semibold text-yellow-400
+                  hover:text-white transition
+                "
+              >
+                View Official Equipment
+
+                <ExternalLink className="w-4 h-4 transform transition group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </a>
+
             </div>
-
-            <h3 className="text-2xl font-semibold text-white mb-2">
-              Official Equipment Partner
-            </h3>
-
-            <p className="text-gray-400 mb-8 text-sm">
-              CAFLA collaborates with Macron to ensure referees meet
-              international standards in performance and presentation.
-            </p>
-
-            <div className="space-y-3 mb-8">
-
-              <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
-                Performance-Grade Materials
-              </div>
-
-              <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
-                Professional Design Standards
-              </div>
-
-              <div className="bg-white/5 rounded-lg py-2 text-gray-300 text-sm">
-                International Match Compliance
-              </div>
-
-            </div>
-
-            <a
-              href="https://clubshop.macron.com/macron_sportswear_us/cafla-referees"
-              target="_blank"
-              className="inline-block text-sm font-semibold text-yellow-400 hover:text-white transition"
-            >
-              View Equipment Details
-            </a>
 
           </div>
 

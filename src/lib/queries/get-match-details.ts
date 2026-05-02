@@ -83,7 +83,6 @@ export async function getMatchDetails(matchId: string) {
     cards = c ?? []
     assets = a ?? []
 
-    console.log({ goals, cards, assets });
   }
 
   return {
@@ -94,6 +93,7 @@ export async function getMatchDetails(matchId: string) {
     report,
     goals,
     cards,
-    assets
+    assets,
+    comments: report?.comments ?? "",
   }
 }
