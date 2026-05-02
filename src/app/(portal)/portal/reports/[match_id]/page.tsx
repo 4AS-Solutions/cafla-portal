@@ -9,7 +9,7 @@ export default async function ReportPage({
 
   const { match_id } = await params
 
-  const match = await getMatchForReport(match_id)
+  const { match, report } = await getMatchForReport(match_id)
 
   if (!match) {
     return (
@@ -17,6 +17,16 @@ export default async function ReportPage({
         Match not found
       </div>
     )
+  }
+
+  let mode: "create" | "edit" | "read" = "create"
+
+  if (!report) {
+    mode = "create"
+  } else if (report.status === "revision_required") {
+    mode = "edit"
+  } else {
+    mode = "read"
   }
 
   const kickoff = match.kickoff_at
@@ -27,6 +37,7 @@ export default async function ReportPage({
         minute: "2-digit",
       })
     : "Date TBD"
+
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -51,7 +62,11 @@ export default async function ReportPage({
 
       {/* FORM */}
 
-      <MatchReportForm match={match} />
+      <MatchReportForm
+        match={match}
+        mode={mode}
+        initialData={report}
+      />
 
     </div>
   )

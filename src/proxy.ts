@@ -30,14 +30,12 @@ export async function proxy(req: NextRequest) {
   const isCompleteProfile = pathname === "/complete-profile"
   const isCallback = pathname === "/auth/callback"
 
-  console.log("====================================")
-  console.log("🌐 PROXY PATH:", pathname)
 
   // =========================
   // 🚨 0. ALLOW CALLBACK SIEMPRE
   // =========================
   if (isCallback) {
-    console.log("➡️ ALLOW CALLBACK")
+
     return res
   }
 
@@ -48,13 +46,12 @@ export async function proxy(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log("👤 USER:", user)
 
   // =========================
   // 🔐 1. NOT AUTHENTICATED
   // =========================
   if (!user) {
-    console.log("🚫 NO USER")
+
 
     // 🔥 permitir complete-profile (para tokens)
     if (isCompleteProfile) {
@@ -77,13 +74,12 @@ export async function proxy(req: NextRequest) {
     .eq("id", user.id)
     .maybeSingle()
 
-  console.log("👤 MEMBER:", member)
 
   // =========================
   // 🚨 VALIDACIÓN MEMBER
   // =========================
   if (!member || !member.status) {
-    console.log("⚠️ MEMBER INVALID")
+
 
     // 🔥 permitir onboarding aunque falte data
     if (isCompleteProfile) {
@@ -95,13 +91,12 @@ export async function proxy(req: NextRequest) {
 
   const status = member.status
 
-  console.log("📊 STATUS:", status)
 
   // =========================
   // 🚫 2. LOGIN BLOCKED
   // =========================
   if (isLogin) {
-    console.log("➡️ LOGIN BLOCKED → PORTAL")
+
     return NextResponse.redirect(new URL("/portal", req.url))
   }
 
@@ -111,7 +106,7 @@ export async function proxy(req: NextRequest) {
 
   // 👉 usuario invitado
   if (status === "invited") {
-    console.log("👤 STATUS: INVITED")
+
 
     // 🔥 solo redirige si NO está ya en complete-profile
     if (!isCompleteProfile) {
@@ -123,7 +118,7 @@ export async function proxy(req: NextRequest) {
 
   // 👉 usuario activo
   if (status === "active") {
-    console.log("👤 STATUS: ACTIVE")
+
 
     if (isCompleteProfile) {
       return NextResponse.redirect(new URL("/portal", req.url))

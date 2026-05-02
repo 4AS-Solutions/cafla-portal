@@ -1,15 +1,18 @@
-import { Navbar } from "@/src/components/landing/Navbar"
-import { Hero } from "@/src/components/landing/Hero"
-import { About } from "../components/landing/About"
-import { Values } from "../components/landing/Values"
-// import { DevelopmentPlan } from "../components/landing/DevelopmentPlan"
-import { Calendar } from "../components/landing/Calendar"
+
+// import { DevelopmentPlan } from "../components/landing/import { Calendar } from "../components/landing/Calendar"
 // import { Macron } from "../components/landing/Macron"
-import { Macron2 } from "../components/landing/Macron2"
-import { JoinCafla } from "../components/landing/JoinCafla"
+
+import { About } from "@/src/components/landing/About";
+import { Calendar } from "@/src/components/landing/Calendar";
+import { Contact } from "@/src/components/landing/Contact";
+import { Footer } from "@/src/components/landing/Footer";
+import { Hero } from "@/src/components/landing/Hero";
+import { Macron2 } from "@/src/components/landing/Macron2";
+import { Navbar } from "@/src/components/landing/Navbar";
+import { Values } from "@/src/components/landing/Values";
+
 // import { BoardSection } from "../components/landing/Board"
-import { Contact } from "../components/landing/Contact"
-import { Footer } from "../components/landing/Footer"
+
 // import { Resources } from "../components/landing/Resources"
 
 export default function HomePage() {

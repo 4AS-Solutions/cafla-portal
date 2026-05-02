@@ -7,7 +7,8 @@ import {
   Instagram,
   Mail,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from "lucide-react"
 
 export function Footer() {
@@ -34,17 +35,25 @@ export function Footer() {
             </div>
 
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
-              Colegio de Árbitros de Fútbol de Los Angeles. Developing referees
-              through structure, discipline, and continuous growth since 1962.
+              Colegio de Árbitros de Fútbol de Los Angeles. Developing referees through education, discipline, mentorship, 
+              and the proper application of the Laws of the Game since 1962.
             </p>
 
             {/* SOCIAL */}
             <div className="flex gap-3 mt-6">
-              <a className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition">
+              <a
+                href="https://www.facebook.com/Cafla1962"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition hover:scale-110"
+              >
                 <Facebook size={16} />
               </a>
 
-              <a className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition">
+              <a
+                href="https://www.instagram.com/caflareferees/"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-yellow-400 hover:text-black transition hover:scale-110"
+              >
                 <Instagram size={16} />
               </a>
             </div>
@@ -57,6 +66,7 @@ export function Footer() {
             </h4>
 
             <ul className="space-y-2 text-gray-400 text-sm">
+              <li><a href="#home" className="hover:text-white">Home</a></li>
               <li><a href="#about" className="hover:text-white">About</a></li>
               <li><a href="#values" className="hover:text-white">Values</a></li>
               <li><a href="#calendar" className="hover:text-white">Calendar</a></li>
@@ -73,13 +83,28 @@ export function Footer() {
             <div className="space-y-3 text-gray-400 text-sm mb-6">
 
               <div className="flex items-start gap-2">
-                <MapPin size={16} className="mt-[2px] text-yellow-400" />
-                <span>Los Angeles, CA</span>
+                <a
+                  href="https://maps.google.com/?q=5914+E+Washington+Blvd+Commerce+CA+90040"
+                  target="_blank"
+                  className="flex items-start gap-2 hover:text-white transition"
+                >
+                  <MapPin size={16} className="mt-[2px] text-yellow-400" />
+                  <span>
+                    5914 E Washington Blvd
+                    <br />
+                    Commerce, CA 90040
+                  </span>
+                </a>
               </div>
 
               <div className="flex items-center gap-2">
-                <Mail size={16} className="text-yellow-400" />
-                info@cafla.org
+                <a
+                  href="mailto:cafla1962@gmail.com"
+                  className="flex items-center gap-2 hover:text-white transition"
+                >
+                  <Mail size={16} className="text-yellow-400" />
+                  cafla1962@gmail.com
+                </a>
               </div>
 
             </div>
@@ -89,8 +114,8 @@ export function Footer() {
               href="/join"
               className="inline-flex items-center gap-2 text-sm font-semibold text-yellow-400 hover:text-white transition"
             >
-              Join CAFLA
-              <ArrowRight size={16} />
+              Apply to Become a CAFLA Referee
+              <ExternalLink size={16} />
             </Link>
           </div>
 
@@ -101,6 +126,7 @@ export function Footer() {
 
           <span>
             © 2026 CAFLA. All rights reserved.
+            Los Angeles, California.
           </span>
 
           {/* CREDITS */}

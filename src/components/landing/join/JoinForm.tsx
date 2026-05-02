@@ -24,9 +24,6 @@ export function JoinForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // 🔥 AQUÍ luego irá Supabase
-    console.log("FORM DATA:", form)
-
     setSubmitted(true)
   }
 

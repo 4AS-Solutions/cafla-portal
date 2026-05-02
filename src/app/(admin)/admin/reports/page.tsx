@@ -1,13 +1,13 @@
 import AdminReportsList from "@/src/components/admin/reports/AdminReportsList";
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireBoard } from "@/src/lib/auth/require-board"
-import { getReports } from "@/src/lib/queries/get-reports";
+import { getReportsAdmin } from "@/src/lib/queries/get-reports-admin";
 
 export default async function AdminReportsPage() {
 
   await requireBoard();
 
-  const reports = await getReports();
+  const reports = await getReportsAdmin();
   
 
   return (

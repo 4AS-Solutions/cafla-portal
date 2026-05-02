@@ -1,22 +1,48 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function getMatchForReport(matchId: string) {
-
-  console.log("matcID: " , matchId)
   const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("matches")
-    .select("*")
+    .select(`
+      *,
+      match_reports (
+        id,
+        status,
+        home_score,
+        away_score,
+        comments,
+        submitted_at,
+
+        report_goals (*),
+        report_cards (*),
+        report_injuries (*),
+        report_assets (*)
+      )
+    `)
     .eq("id", matchId)
     .maybeSingle()
-
-  console.log("data: ", data);
 
   if (error) {
     console.error(error)
     throw error
   }
 
-  return data
+  const rawReport = data?.match_reports ?? null
+
+  const report = rawReport
+    ? {
+        ...rawReport,
+        goals: rawReport.report_goals ?? [],
+        cards: rawReport.report_cards ?? [],
+        injuries: rawReport.report_injuries ?? [],
+        assets: rawReport.report_assets ?? [],
+      }
+    : null
+
+  return {
+    match: data,
+    report,
+  }
 }

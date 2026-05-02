@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useEffect, useState, useRef } from "react"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { createClient } from "@/src/lib/supabase/client"
 
 import { Button } from "@/src/components/ui/button"
@@ -39,6 +39,7 @@ type CardFormRow = {
   card_type: "yellow" | "red"
   reason_code: string
   notes?: string
+  auto_generated?: boolean
 }
 
 type FormData = {
@@ -47,6 +48,16 @@ type FormData = {
   comments: string
   goals: GoalFormRow[]
   cards: CardFormRow[]
+}
+
+type InitialReportData = {
+  id: string
+  status?: "pending" | "submitted" | "revision_required" | "approved"
+  home_score?: number | null
+  away_score?: number | null
+  comments?: string | null
+  goals?: GoalFormRow[]
+  cards?: CardFormRow[]
 }
 
 type MatchReportFormProps = {
@@ -61,29 +72,22 @@ type MatchReportFormProps = {
     location?: string | null
     kickoff_at?: string | null
   }
+  mode: "create" | "edit" | "read"
+  initialData?: InitialReportData | null
 }
 
-const CARD_REASONS = [
-  "USB",
-  "DISSENT",
-  "PI",
-  "DR",
-  "FRD",
-  "E",
-  "DOGSO",
-  "SFP",
-  "VC",
-  "2CT",
-  "OFFINABUS",
-  "SPITTING",
-]
-
-function GoalRow({ index, register, remove }: any) {
+function GoalRow({
+  index,
+  register,
+  remove,
+  disabled,
+}: any) {
   return (
     <div className="grid grid-cols-6 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
 
       <select
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm"
+        disabled={disabled}
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm disabled:opacity-60"
         {...register(`goals.${index}.team`)}
       >
         <option value="home">Home</option>
@@ -92,25 +96,29 @@ function GoalRow({ index, register, remove }: any) {
 
       <Input
         placeholder="#"
-        className="h-10 bg-[#0B0F0F]"
+        disabled={disabled}
+        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
         {...register(`goals.${index}.player_number`)}
       />
 
       <Input
         placeholder="Player"
-        className="h-10 bg-[#0B0F0F]"
+        disabled={disabled}
+        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
         {...register(`goals.${index}.player_name`)}
       />
 
       <Input
         type="number"
         placeholder="Min"
-        className="h-10 bg-[#0B0F0F]"
+        disabled={disabled}
+        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
         {...register(`goals.${index}.minute`, { valueAsNumber: true })}
       />
 
       <select
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm"
+        disabled={disabled}
+        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm disabled:opacity-60"
         {...register(`goals.${index}.goal_type`)}
       >
         <option value="normal">Goal</option>
@@ -118,89 +126,199 @@ function GoalRow({ index, register, remove }: any) {
         <option value="own_goal">Own Goal</option>
       </select>
 
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        onClick={() => remove(index)}
-      >
-        <Trash2 size={16} />
-      </Button>
+      {!disabled ? (
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          onClick={() => remove(index)}
+        >
+          <Trash2 size={16} />
+        </Button>
+      ) : (
+        <div />
+      )}
 
     </div>
   )
 }
 
+function CardRow({
+  index,
+  register,
+  remove,
+  disabled,
+  reasons,
+  watch,
+  setValue,
+}: any) {
 
-function CardRow({ index, register, remove }: any) {
+  // 🔥 UN SOLO WATCH (CLAVE)
+  const card = watch(`cards.${index}`) || {}
+
+  const cardType = card.card_type
+  const reasonCode = card.reason_code
+  const isAuto = card.auto_generated === true
+
+  const isLocked = disabled || isAuto
+
+  const filteredReasons = (reasons || []).filter(
+    (r: any) => r.card_type === cardType
+  )
+
+  const selectedReason = (reasons || []).find(
+    (r: any) => r.code === reasonCode
+  )
+
+  // ✅ evitar loop al cambiar tipo
+  const prevTypeRef = useRef(cardType)
+
+  useEffect(() => {
+    if (prevTypeRef.current !== cardType) {
+      prevTypeRef.current = cardType
+
+      if (!isAuto) {
+        setValue(`cards.${index}.reason_code`, "")
+      }
+    }
+  }, [cardType, isAuto, index, setValue])
+
+  // 🔥 FORZAR 2CT SIEMPRE
+  useEffect(() => {
+    if (isAuto && cardType === "red" && reasonCode !== "2CT") {
+      setValue(`cards.${index}.reason_code`, "2CT", {
+        shouldDirty: false,
+      })
+    }
+  }, [isAuto, cardType, reasonCode, index, setValue])
+
+  const isRed = cardType === "red";
+
   return (
-    <div className="grid grid-cols-7 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
+    <div className="space-y-2">
 
-      <select
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3"
-        {...register(`cards.${index}.team`)}
-      >
-        <option value="home">Home</option>
-        <option value="away">Away</option>
-      </select>
+      <div className="grid grid-cols-7 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
 
-      <Input
-        className="h-10 bg-[#0B0F0F]"
-        {...register(`cards.${index}.player_number`)}
-      />
+        {/* TEAM */}
+        <select
+          disabled={isLocked}
+          className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 disabled:opacity-60"
+          {...register(`cards.${index}.team`)}
+        >
+          <option value="home">Home</option>
+          <option value="away">Away</option>
+        </select>
 
-      <Input
-        className="h-10 bg-[#0B0F0F]"
-        {...register(`cards.${index}.player_name`)}
-      />
+        {/* NUMBER */}
+        <Input
+          placeholder="#"
+          disabled={isLocked}
+          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
+          {...register(`cards.${index}.player_number`)}
+        />
 
-      <Input
-        type="number"
-        className="h-10 bg-[#0B0F0F]"
-        {...register(`cards.${index}.minute`, { valueAsNumber: true })}
-      />
+        {/* NAME */}
+        <Input
+          placeholder="Player"
+          disabled={isLocked}
+          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
+          {...register(`cards.${index}.player_name`)}
+        />
 
-      <select
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
-        {...register(`cards.${index}.card_type`)}
-      >
-        <option value="yellow">Yellow</option>
-        <option value="red">Red</option>
-      </select>
+        {/* MINUTE */}
+        <Input
+          placeholder="Min"
+          type="number"
+          disabled={isLocked}
+          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
+          {...register(`cards.${index}.minute`, { valueAsNumber: true })}
+        />
 
-      <select
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
-        {...register(`cards.${index}.reason_code`)}
-      >
-        {CARD_REASONS.map((r: any) => (
-          <option key={r}>{r}</option>
-        ))}
-      </select>
+        {/* CARD TYPE */}
+        <select
+          disabled={isLocked}
+          className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] disabled:opacity-60"
+          {...register(`cards.${index}.card_type`)}
+        >
+          <option value="yellow">Yellow</option>
+          <option value="red">Red</option>
+        </select>
 
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        onClick={() => remove(index)}
-      >
-        <Trash2 size={16} />
-      </Button>
+        {/* REASON */}
+        {isLocked ? (
+          <div className="h-10 flex items-center px-3 rounded-md border border-white/10 bg-[#0B0F0F] text-sm text-gray-300">
+            {selectedReason
+              ? `${selectedReason.code} - ${selectedReason.label}`
+              : reasonCode === "2CT"
+                ? "2CT - Second Caution"
+                : "-"}
+          </div>
+        ) : (
+          <select
+            value={reasonCode || ""}
+            className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
+            {...register(`cards.${index}.reason_code`)}
+          >
+            <option value="">Select</option>
+            {filteredReasons.map((r: any) => (
+              <option key={r.code} value={r.code}>
+                {r.code} - {r.label}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* REMOVE */}
+        {!isLocked ? (
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            onClick={() => remove(index)}
+          >
+            <Trash2 size={16} />
+          </Button>
+        ) : (
+          <div />
+        )}
+
+      </div>
+
+      {/* 🔴 RED CARD DESCRIPTION */}
+      {isRed && !isAuto && !disabled && (
+        <Textarea
+          placeholder="Describe the reason for the red card..."
+          className="bg-[#0B0F0F] border border-red-500/20 text-sm"
+          {...register(`cards.${index}.notes`)}
+        />
+      )}
 
     </div>
   )
 }
+
 
 const darkSelectClass =
-  "h-10 w-full rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm text-white outline-none transition focus:border-yellow-400/40"
+  "h-10 w-full rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm text-white outline-none transition focus:border-yellow-400/40 disabled:opacity-60"
 
-export function MatchReportForm({ match }: MatchReportFormProps) {
+export function MatchReportForm({
+  match,
+  mode,
+  initialData,
+}: MatchReportFormProps) {
   const supabase = createClient()
   const router = useRouter()
+
+
+
+  const isReadOnly = mode === "read"
+  const isEdit = mode === "edit"
 
   const [submitting, setSubmitting] = useState(false)
   const [, setMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const [cardReasons, setCardReasons] = useState<any[]>([])
   const [homeRosterFile, setHomeRosterFile] = useState<File | null>(null)
   const [awayRosterFile, setAwayRosterFile] = useState<File | null>(null)
 
@@ -214,8 +332,171 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
     },
   })
 
+  const { watch, setValue } = form;
+
+  const goalsArray = useFieldArray({
+    control: form.control,
+    name: "goals",
+  })
+
+  const cardsArray = useFieldArray({
+    control: form.control,
+    name: "cards",
+  })
+
   const goals = form.watch("goals")
   const cards = form.watch("cards")
+
+  const watchedCards = useWatch({
+    control: form.control,
+    name: "cards",
+  })
+
+  useEffect(() => {
+    if (!initialData) return
+
+    form.reset({
+      home_score: initialData.home_score ?? 0,
+      away_score: initialData.away_score ?? 0,
+      comments: initialData.comments ?? "",
+      goals: initialData.goals ?? [],
+      cards: initialData.cards ?? [],
+    })
+  }, [initialData, form])
+
+  useEffect(() => {
+    async function loadReasons() {
+      const { data, error } = await supabase
+        .from("card_reasons")
+        .select("*")
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      setCardReasons(data || [])
+    }
+
+    loadReasons()
+  }, [])
+
+  // Automatic Red Card
+  useEffect(() => {
+    if (!watchedCards) return
+
+    // 🔥 1. separar manuales vs auto
+    const manualCards = watchedCards.filter((c) => !c.auto_generated)
+
+    // 🔥 2. separar incompletas (NO se deben borrar)
+    const incompleteCards = manualCards.filter(
+      (c) =>
+        !c.player_number ||
+        c.minute === undefined ||
+        c.minute === null ||
+        Number(c.minute) <= 0
+    )
+
+    // 🔥 3. tarjetas válidas (estas sí se procesan)
+    const validCards = manualCards.filter(
+      (c) =>
+        c.player_number &&
+        c.minute !== undefined &&
+        c.minute !== null &&
+        Number(c.minute) > 0
+    )
+
+    // 🔥 4. agrupar por jugador
+    const grouped: Record<string, any[]> = {}
+
+    validCards.forEach((c) => {
+      const key = `${c.team}-${c.player_number}`
+
+      if (!grouped[key]) grouped[key] = []
+
+      grouped[key].push(c)
+    })
+
+    const autoCards: any[] = []
+
+    // 🔥 5. lógica de 2 amarillas → roja automática
+    Object.values(grouped).forEach((playerCards: any[]) => {
+      const yellows = playerCards
+        .filter((c) => c.card_type === "yellow")
+        .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+
+      // 🚫 máximo 2 amarillas
+      if (yellows.length > 2) {
+        yellows.splice(2)
+      }
+
+      if (yellows.length >= 2) {
+        const second = yellows[1] // 👈 SIEMPRE la segunda amarilla
+
+        // 🚫 si ya hay roja manual → NO crear otra
+        const hasManualRed = playerCards.some(
+          (c) => c.card_type === "red" && !c.auto_generated
+        )
+
+        if (!hasManualRed) {
+          autoCards.push({
+            team: second.team,
+            player_name: second.player_name,
+            player_number: second.player_number,
+            minute: Number(second.minute),
+            card_type: "red",
+            reason_code: "2CT",
+            notes: "",
+            auto_generated: true,
+          })
+        }
+      }
+    })
+
+    // 🔥 6. limpiar duplicados manuales (máximo 2 amarillas por jugador)
+    const cleanedManualCards: any[] = []
+
+    const seen: Record<string, number> = {}
+
+    validCards.forEach((c) => {
+      const key = `${c.team}-${c.player_number}`
+
+      if (!seen[key]) seen[key] = 0
+
+      if (c.card_type === "yellow") {
+        if (seen[key] < 2) {
+          cleanedManualCards.push(c)
+          seen[key]++
+        }
+      } else {
+        cleanedManualCards.push(c)
+      }
+    })
+
+    // 🔥 7. reconstruir TODO (IMPORTANTE)
+    const nextCards = [
+      ...incompleteCards, // 👈 NO desaparecen
+      ...cleanedManualCards.map((c) => ({
+        ...c,
+        auto_generated: false,
+      })),
+      ...autoCards,
+    ]
+
+    // 🔥 8. evitar loop infinito
+    const currentSerialized = JSON.stringify(watchedCards)
+    const nextSerialized = JSON.stringify(nextCards)
+
+    if (currentSerialized !== nextSerialized) {
+      form.setValue("cards", nextCards, {
+        shouldDirty: true,
+        shouldTouch: false,
+        shouldValidate: false,
+      })
+    }
+  }, [watchedCards, form])
+
+
 
   const timelinePreview = [
     ...(goals ?? []).map((g) => ({
@@ -235,17 +516,10 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
     })),
   ].sort((a, b) => a.minute - b.minute)
 
-  const goalsArray = useFieldArray({
-    control: form.control,
-    name: "goals",
-  })
-
-  const cardsArray = useFieldArray({
-    control: form.control,
-    name: "cards",
-  })
-
   async function onSubmit(values: FormData) {
+    if (isReadOnly) return
+
+
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
@@ -255,6 +529,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
+
+  
 
       if (userError || !user) {
         throw new Error("You must be logged in to submit this report.")
@@ -297,22 +573,35 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         }
       }
 
-      const res = await fetch("/api/reports/submit", {
-        method: "POST",
+      const payload = {
+        match_id: match.id,
+        home_score: values.home_score,
+        away_score: values.away_score,
+        comments: values.comments,
+        goals: values.goals,
+        cards: values.cards,
+        home_roster_path: homeRosterPath,
+        away_roster_path: awayRosterPath,
+      }
+
+  
+
+      const endpoint =
+        isEdit && initialData?.id
+          ? `/api/reports/${initialData.id}`
+          : "/api/reports/submit"
+
+      const method = isEdit ? "PATCH" : "POST"
+
+      const res = await fetch(endpoint, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          match_id: match.id,
-          home_score: values.home_score,
-          away_score: values.away_score,
-          comments: values.comments,
-          goals: values.goals,
-          cards: values.cards,
-          home_roster_path: homeRosterPath,
-          away_roster_path: awayRosterPath,
-        }),
+        body: JSON.stringify(payload),
       })
+
+  
 
       let data: any = null
 
@@ -326,12 +615,16 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         throw new Error(data?.error || "Failed to submit report.")
       }
 
-      toast.success("Match report submitted successfully")
+      toast.success(
+        isEdit
+          ? "Match report updated successfully"
+          : "Match report submitted successfully"
+      )
 
       setHomeRosterFile(null)
       setAwayRosterFile(null)
 
-      router.push("/portal")
+      router.push("/portal/reports")
       router.refresh()
     } catch (error) {
       console.error(error)
@@ -348,8 +641,29 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
     }
   }
 
+
+  const hasInvalidRed = (cards || []).some(
+    (c) =>
+      c.card_type === "red" &&
+      !c.auto_generated &&
+      (!c.notes || c.notes.trim() === "")
+  )
+
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      {isEdit && (
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
+          This report requires corrections. Please update the necessary fields and resubmit.
+        </div>
+      )}
+
+      {isReadOnly && (
+        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
+          This report is in read-only mode.
+        </div>
+      )}
+
       {/* SCOREBOARD */}
       <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 sm:p-8 backdrop-blur-md">
         <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
@@ -363,7 +677,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
             <Input
               type="number"
               min={0}
-              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold"
+              disabled={isReadOnly}
+              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold disabled:opacity-60"
               {...form.register("home_score", { valueAsNumber: true })}
             />
           </div>
@@ -377,7 +692,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
             <Input
               type="number"
               min={0}
-              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold"
+              disabled={isReadOnly}
+              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold disabled:opacity-60"
               {...form.register("away_score", { valueAsNumber: true })}
             />
           </div>
@@ -394,24 +710,26 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
               Goals
             </h2>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
-              onClick={() =>
-                goalsArray.append({
-                  team: "home",
-                  player_name: "",
-                  player_number: "",
-                  minute: 0,
-                  half: "first",
-                  goal_type: "normal",
-                })
-              }
-            >
-              <Plus size={16} />
-              Add Goal
-            </Button>
+            {!isReadOnly && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
+                onClick={() =>
+                  goalsArray.append({
+                    team: "home",
+                    player_name: "",
+                    player_number: "",
+                    minute: 0,
+                    half: "first",
+                    goal_type: "normal",
+                  })
+                }
+              >
+                <Plus size={16} />
+                Add Goal
+              </Button>
+            )}
           </div>
 
           {goalsArray.fields.length === 0 ? (
@@ -426,9 +744,10 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
                   index={index}
                   register={form.register}
                   remove={goalsArray.remove}
+                  disabled={isReadOnly}
                 />
               ))}
-              </div>
+            </div>
           )}
         </section>
 
@@ -440,25 +759,28 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
               Cards
             </h2>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
-              onClick={() =>
-                cardsArray.append({
-                  team: "home",
-                  player_name: "",
-                  player_number: "",
-                  minute: 0,
-                  card_type: "yellow",
-                  reason_code: "USB",
-                  notes: "",
-                })
-              }
-            >
-              <Plus size={16} />
-              Add Card
-            </Button>
+            {!isReadOnly && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
+                onClick={() =>
+                  cardsArray.append({
+                    team: "home",
+                    player_name: "",
+                    player_number: "",
+                    minute: 0,
+                    card_type: "yellow",
+                    reason_code: "UB",
+                    notes: "",
+                    auto_generated: false
+                  })
+                }
+              >
+                <Plus size={16} />
+                Add Card
+              </Button>
+            )}
           </div>
 
           {cardsArray.fields.length === 0 ? (
@@ -473,9 +795,13 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
                   index={index}
                   register={form.register}
                   remove={cardsArray.remove}
+                  disabled={isReadOnly}
+                  reasons={cardReasons}
+                  watch={form.watch}
+                  setValue={form.setValue}
                 />
               ))}
-              </div>
+            </div>
           )}
         </section>
       </div>
@@ -487,7 +813,7 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
           Timeline Preview
         </h2>
 
-        <div className="mb-4 flex justify-between text-sm text-gray-400">
+        <div className="mb-4 flex justify-around text-sm font-bold text-white">
           <span>{match.home_team}</span>
           <span>{match.away_team}</span>
         </div>
@@ -510,7 +836,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
             <Input
               type="file"
               accept="image/*"
-              className="border-white/10 bg-[#0B0F0F] cursor-pointer"
+              disabled={isReadOnly}
+              className="border-white/10 bg-[#0B0F0F] cursor-pointer disabled:opacity-60"
               onChange={(e) => setHomeRosterFile(e.target.files?.[0] ?? null)}
             />
           </div>
@@ -522,7 +849,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
             <Input
               type="file"
               accept="image/*"
-              className="border-white/10 bg-[#0B0F0F] cursor-pointer"
+              disabled={isReadOnly}
+              className="border-white/10 bg-[#0B0F0F] cursor-pointer disabled:opacity-60"
               onChange={(e) => setAwayRosterFile(e.target.files?.[0] ?? null)}
             />
           </div>
@@ -538,7 +866,8 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
 
         <Textarea
           rows={5}
-          className="border-white/10 bg-[#0B0F0F]"
+          disabled={isReadOnly}
+          className="border-white/10 bg-[#0B0F0F] disabled:opacity-60"
           placeholder="Additional match notes..."
           {...form.register("comments")}
         />
@@ -551,10 +880,29 @@ export function MatchReportForm({ match }: MatchReportFormProps) {
         </div>
       )}
 
+      {hasInvalidRed && (
+        <div className="text-sm text-red-400">
+          Red cards require a description before submitting the report.
+        </div>
+      )}
+
       {/* SUBMIT */}
       <div className="flex justify-end">
-        <Button size="lg" className="px-10" type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit Match Report"}
+        <Button
+          size="lg"
+          className="px-10"
+          type="submit"
+          disabled={submitting || isReadOnly || hasInvalidRed }
+        >
+          {isReadOnly
+            ? "View Only"
+            : submitting
+            ? isEdit
+              ? "Updating..."
+              : "Submitting..."
+            : isEdit
+            ? "Update Match Report"
+            : "Submit Match Report"}
         </Button>
       </div>
     </form>

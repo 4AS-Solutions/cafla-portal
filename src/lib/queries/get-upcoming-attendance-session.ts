@@ -1,18 +1,6 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
 
-export type AttendanceSession = {
-  id: string
-  title: string
-  session_type: string
-  session_date: string
-  location: string | null
-  created_by: string
-  created_by_user: {
-    full_name: string
-  } | null
-}
-
-export async function getAttendanceSessions(): Promise<AttendanceSession[]> {
+export async function getUpcomingAttendanceSessions(): Promise<any[]> {
 
   const supabase = await supabaseServer()
 
@@ -29,15 +17,16 @@ export async function getAttendanceSessions(): Promise<AttendanceSession[]> {
         full_name
       )
     `)
-    .order("session_date", { ascending: false })
+    .gte("session_date", new Date().toISOString())
+    .order("session_date", { ascending: true })
+    .limit(6)
 
   if (error) {
-    console.error("getAttendanceSessions error:", error)
+    console.error("getUpcomingAttendanceSessions error:", error)
     throw error
   }
 
-  const normalized: AttendanceSession[] = (data ?? []).map((row: any) => {
-
+  return (data ?? []).map((row: any) => {
     const rawCreator = Array.isArray(row.creator)
       ? row.creator[0]
       : row.creator
@@ -50,12 +39,8 @@ export async function getAttendanceSessions(): Promise<AttendanceSession[]> {
       location: row.location,
       created_by: row.created_by,
       created_by_user: rawCreator
-        ? {
-            full_name: rawCreator.full_name
-          }
+        ? { full_name: rawCreator.full_name }
         : null
     }
   })
-
-  return normalized
 }

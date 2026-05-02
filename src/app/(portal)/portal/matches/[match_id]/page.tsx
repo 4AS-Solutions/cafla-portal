@@ -1,10 +1,11 @@
-
 import MatchAssets from "@/src/components/match/MatchAssets"
 import MatchHeader from "@/src/components/match/MatchHeader"
 import MatchOfficials from "@/src/components/match/MatchOfficials"
 import MatchScore from "@/src/components/match/MatchScore"
 import { MatchTimeline } from "@/src/components/match/MatchTimeline"
+import MatchNarrativeSummary from "@/src/components/reports/MatchNarrativeSummary"
 import { getMatchDetails } from "@/src/lib/queries/get-match-details"
+import { getCardReasons } from "@/src/lib/queries/get-card-reasons"
 
 export default async function MatchDetailsPage({
   params,
@@ -14,8 +15,20 @@ export default async function MatchDetailsPage({
 
   const { match_id } = await params
 
-  const { match, center, ar1, ar2, report, goals, cards, assets } =
-    await getMatchDetails(match_id)
+  const {
+    match,
+    center,
+    ar1,
+    ar2,
+    report,
+    goals,
+    cards,
+    assets,
+    comments,
+  } = await getMatchDetails(match_id)
+
+  // 🔥 NUEVO: traer razones
+  const cardReasons = await getCardReasons()
 
   if (!match) {
     return <div>Match not found</div>
@@ -40,16 +53,19 @@ export default async function MatchDetailsPage({
   ].sort((a, b) => a.minute - b.minute)
 
   return (
-
     <div className="space-y-8">
 
-      <MatchHeader match={match} />
+      {/* HEADER */}
+      <MatchHeader
+        match={match}
+        status={report?.status}
+      />
 
+      {/* 🔥 GRID 3 COLUMNAS */}
       <div className="grid gap-6 lg:grid-cols-3">
 
-        {/* LEFT SIDE */}
-
-        <div className="space-y-6 lg:col-span-2">
+        {/* ================= COL 1 ================= */}
+        <div className="space-y-6">
 
           <MatchScore report={report} />
 
@@ -59,11 +75,36 @@ export default async function MatchDetailsPage({
 
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* ================= COL 2 ================= */}
+        <div className="space-y-6">
 
+          {cards && cards.length > 0 && (
+            <MatchNarrativeSummary
+              cards={cards}
+              reasons={cardReasons}
+            />
+          )}
+
+        </div>
+
+        {/* ================= COL 3 ================= */}
         <div className="space-y-6">
 
           <MatchOfficials center={center} ar1={ar1} ar2={ar2} />
+
+          {comments && (
+            <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+              
+              <p className="text-sm font-semibold text-gray-300 mb-2">
+                Referee Comments
+              </p>
+
+              <p className="text-sm text-white/90 whitespace-pre-line">
+                {comments}
+              </p>
+
+            </div>
+          )}
 
         </div>
 

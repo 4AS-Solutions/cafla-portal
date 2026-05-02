@@ -3,7 +3,6 @@ import { supabaseServer } from "@/src/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
-    console.log("🚀 COMPLETE PROFILE START")
 
     const supabase = await supabaseServer()
 
@@ -64,7 +63,6 @@ export async function POST(req: Request) {
       )
     }
 
-    console.log("✅ PROFILE COMPLETED")
 
     return NextResponse.json({ success: true })
 
