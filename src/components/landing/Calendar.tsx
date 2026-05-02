@@ -42,7 +42,7 @@ export async function Calendar() {
     // Monday
     if (day === 1) {
       return [
-        "/images/uniforms/friday-shirt.png",
+        "/images/uniforms/monday-shirt.png",
         "/images/uniforms/short-training.png",
       ]
     }
