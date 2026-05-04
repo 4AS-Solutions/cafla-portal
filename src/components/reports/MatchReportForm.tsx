@@ -76,69 +76,159 @@ type MatchReportFormProps = {
   initialData?: InitialReportData | null
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+
+    check()
+    window.addEventListener("resize", check)
+
+    return () => window.removeEventListener("resize", check)
+  }, [])
+
+  return isMobile
+}
+
 function GoalRow({
   index,
   register,
   remove,
   disabled,
 }: any) {
+  const isMobile = useIsMobile()
+
   return (
-    <div className="grid grid-cols-6 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
+    <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
+      {isMobile ? (
+        <div className="flex flex-col gap-3">
+          <select
+            disabled={disabled}
+            className={darkSelectClass}
+            {...register(`goals.${index}.team`)}
+          >
+            <option value="home">Home</option>
+            <option value="away">Away</option>
+          </select>
 
-      <select
-        disabled={disabled}
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm disabled:opacity-60"
-        {...register(`goals.${index}.team`)}
-      >
-        <option value="home">Home</option>
-        <option value="away">Away</option>
-      </select>
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="Player Number"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.player_number`)}
+          />
 
-      <Input
-        placeholder="#"
-        disabled={disabled}
-        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-        {...register(`goals.${index}.player_number`)}
-      />
+          <Input
+            placeholder="Player Name"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.player_name`)}
+          />
 
-      <Input
-        placeholder="Player"
-        disabled={disabled}
-        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-        {...register(`goals.${index}.player_name`)}
-      />
+          <Input
+            type="number"
+            min={1}
+            max={90}
+            placeholder="Minute"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.minute`, {
+              valueAsNumber: true,
+              min: 1,
+              max: 90,
+            })}
+          />
 
-      <Input
-        type="number"
-        placeholder="Min"
-        disabled={disabled}
-        className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-        {...register(`goals.${index}.minute`, { valueAsNumber: true })}
-      />
+          <select
+            disabled={disabled}
+            className={darkSelectClass}
+            {...register(`goals.${index}.goal_type`)}
+          >
+            <option value="normal">Goal</option>
+            <option value="penalty">Penalty</option>
+            <option value="own_goal">Own Goal</option>
+          </select>
 
-      <select
-        disabled={disabled}
-        className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm disabled:opacity-60"
-        {...register(`goals.${index}.goal_type`)}
-      >
-        <option value="normal">Goal</option>
-        <option value="penalty">Penalty</option>
-        <option value="own_goal">Own Goal</option>
-      </select>
-
-      {!disabled ? (
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          onClick={() => remove(index)}
-        >
-          <Trash2 size={16} />
-        </Button>
+          {!disabled && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => remove(index)}
+            >
+              Remove Goal
+            </Button>
+          )}
+        </div>
       ) : (
-        <div />
-      )}
+        <div className="grid grid-cols-6 gap-3 items-center">
+          <select
+            disabled={disabled}
+            className={darkSelectClass}
+            {...register(`goals.${index}.team`)}
+          >
+            <option value="home">Home</option>
+            <option value="away">Away</option>
+          </select>
 
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="#"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.player_number`)}
+          />
+
+          <Input
+            placeholder="Player"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.player_name`)}
+          />
+
+          <Input
+            type="number"
+            min={1}
+            max={90}
+            placeholder="Min"
+            disabled={disabled}
+            className="bg-[#0B0F0F]"
+            {...register(`goals.${index}.minute`, {
+              valueAsNumber: true,
+              min: 1,
+              max: 90,
+            })}
+          />
+
+          <select
+            disabled={disabled}
+            className={darkSelectClass}
+            {...register(`goals.${index}.goal_type`)}
+          >
+            <option value="normal">Goal</option>
+            <option value="penalty">Penalty Kick</option>
+            <option value="own_goal">Own Goal</option>
+          </select>
+
+          {!disabled ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => remove(index)}
+            >
+              <Trash2 size={16} />
+            </Button>
+          ) : (
+            <div />
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -152,8 +242,8 @@ function CardRow({
   watch,
   setValue,
 }: any) {
+  const isMobile = useIsMobile()
 
-  // 🔥 UN SOLO WATCH (CLAVE)
   const card = watch(`cards.${index}`) || {}
 
   const cardType = card.card_type
@@ -170,7 +260,6 @@ function CardRow({
     (r: any) => r.code === reasonCode
   )
 
-  // ✅ evitar loop al cambiar tipo
   const prevTypeRef = useRef(cardType)
 
   useEffect(() => {
@@ -183,7 +272,6 @@ function CardRow({
     }
   }, [cardType, isAuto, index, setValue])
 
-  // 🔥 FORZAR 2CT SIEMPRE
   useEffect(() => {
     if (isAuto && cardType === "red" && reasonCode !== "2CT") {
       setValue(`cards.${index}.reason_code`, "2CT", {
@@ -192,107 +280,202 @@ function CardRow({
     }
   }, [isAuto, cardType, reasonCode, index, setValue])
 
-  const isRed = cardType === "red";
+  const isRed = cardType === "red"
 
   return (
-    <div className="space-y-2">
+    <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
+      {isMobile ? (
+        <div className="flex flex-col gap-3">
+          <select
+            disabled={isLocked}
+            className={darkSelectClass}
+            {...register(`cards.${index}.team`)}
+          >
+            <option value="home">Home</option>
+            <option value="away">Away</option>
+          </select>
 
-      <div className="grid grid-cols-7 gap-3 items-center p-3 rounded-lg border border-white/10 bg-black/30">
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="Player Number"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.player_number`)}
+          />
 
-        {/* TEAM */}
-        <select
-          disabled={isLocked}
-          className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] px-3 disabled:opacity-60"
-          {...register(`cards.${index}.team`)}
-        >
-          <option value="home">Home</option>
-          <option value="away">Away</option>
-        </select>
+          <Input
+            placeholder="Player Name"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.player_name`)}
+          />
 
-        {/* NUMBER */}
-        <Input
-          placeholder="#"
-          disabled={isLocked}
-          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-          {...register(`cards.${index}.player_number`)}
-        />
+          <Input
+            type="number"
+            min={1}
+            max={90}
+            placeholder="Minute"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.minute`, {
+              valueAsNumber: true,
+              min: 1,
+              max: 90,
+            })}
+          />
 
-        {/* NAME */}
-        <Input
-          placeholder="Player"
-          disabled={isLocked}
-          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-          {...register(`cards.${index}.player_name`)}
-        />
+          <select
+            disabled={isLocked}
+            className={darkSelectClass}
+            {...register(`cards.${index}.card_type`)}
+          >
+            <option value="yellow">Yellow Card</option>
+            <option value="red">Red Card</option>
+          </select>
 
-        {/* MINUTE */}
-        <Input
-          placeholder="Min"
-          type="number"
-          disabled={isLocked}
-          className="h-10 bg-[#0B0F0F] disabled:opacity-60"
-          {...register(`cards.${index}.minute`, { valueAsNumber: true })}
-        />
-
-        {/* CARD TYPE */}
-        <select
-          disabled={isLocked}
-          className="h-10 rounded-md border border-white/10 bg-[#0B0F0F] disabled:opacity-60"
-          {...register(`cards.${index}.card_type`)}
-        >
-          <option value="yellow">Yellow</option>
-          <option value="red">Red</option>
-        </select>
-
-        {/* REASON */}
-        {isLocked ? (
-          <div className="h-10 flex items-center px-3 rounded-md border border-white/10 bg-[#0B0F0F] text-sm text-gray-300">
-            {selectedReason
-              ? `${selectedReason.code} - ${selectedReason.label}`
-              : reasonCode === "2CT"
+          {isLocked ? (
+            <div className="h-10 flex items-center px-3 rounded-md border border-white/10 bg-[#0B0F0F] text-sm text-gray-300">
+              {selectedReason
+                ? `${selectedReason.code} - ${selectedReason.label}`
+                : reasonCode === "2CT"
                 ? "2CT - Second Caution"
                 : "-"}
-          </div>
-        ) : (
+            </div>
+          ) : (
+            <select
+              className={darkSelectClass}
+              {...register(`cards.${index}.reason_code`)}
+            >
+              <option value="">Select Reason</option>
+
+              {filteredReasons.map((r: any) => (
+                <option key={r.code} value={r.code}>
+                  {r.code} - {r.label}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {!isLocked && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => remove(index)}
+            >
+              Remove Card
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-3 items-center">
           <select
-            value={reasonCode || ""}
-            className="h-10 rounded-md border border-white/10 bg-[#0B0F0F]"
-            {...register(`cards.${index}.reason_code`)}
+            disabled={isLocked}
+            className={darkSelectClass}
+            {...register(`cards.${index}.team`)}
           >
-            <option value="">Select</option>
-            {filteredReasons.map((r: any) => (
-              <option key={r.code} value={r.code}>
-                {r.code} - {r.label}
-              </option>
-            ))}
+            <option value="home">Home</option>
+            <option value="away">Away</option>
           </select>
-        )}
 
-        {/* REMOVE */}
-        {!isLocked ? (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            onClick={() => remove(index)}
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="#"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.player_number`)}
+          />
+
+          <Input
+            placeholder="Player"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.player_name`)}
+          />
+
+          <Input
+            type="number"
+            min={1}
+            max={90}
+            placeholder="Min"
+            disabled={isLocked}
+            className="bg-[#0B0F0F]"
+            {...register(`cards.${index}.minute`, {
+              valueAsNumber: true,
+              min: 1,
+              max: 90,
+            })}
+          />
+
+          <select
+            disabled={isLocked}
+            className={darkSelectClass}
+            {...register(`cards.${index}.card_type`)}
           >
-            <Trash2 size={16} />
-          </Button>
-        ) : (
-          <div />
-        )}
+            <option value="yellow">Yellow</option>
+            <option value="red">Red</option>
+          </select>
 
-      </div>
+          {isLocked ? (
+            <div className="h-10 flex items-center px-3 rounded-md border border-white/10 bg-[#0B0F0F] text-sm text-gray-300">
+              {selectedReason
+                ? `${selectedReason.code} - ${selectedReason.label}`
+                : reasonCode === "2CT"
+                ? "2CT - Second Caution"
+                : "-"}
+            </div>
+          ) : (
+            <select
+              className={darkSelectClass}
+              {...register(`cards.${index}.reason_code`)}
+            >
+              <option value="">Select</option>
 
-      {/* 🔴 RED CARD DESCRIPTION */}
-      {isRed && !isAuto && !disabled && (
-        <Textarea
-          placeholder="Describe the reason for the red card..."
-          className="bg-[#0B0F0F] border border-red-500/20 text-sm"
-          {...register(`cards.${index}.notes`)}
-        />
+              {filteredReasons.map((r: any) => (
+                <option key={r.code} value={r.code}>
+                  {r.code} - {r.label}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {!isLocked ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => remove(index)}
+            >
+              <Trash2 size={16} />
+            </Button>
+          ) : (
+            <div />
+          )}
+        </div>
       )}
 
+      {isRed && !disabled && (
+        <div className="space-y-2">
+          {isAuto && (
+            <p className="text-xs text-yellow-400">
+              This red card was generated from two cautions. Please describe both caution incidents.
+            </p>
+          )}
+
+          <Textarea
+            placeholder={
+              isAuto
+                ? "Explain the first and second caution that led to the send-off..."
+                : "Describe the reason for the red card..."
+            }
+            className="bg-[#0B0F0F] border border-red-500/20 text-sm"
+            {...register(`cards.${index}.notes`)}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -385,106 +568,113 @@ export function MatchReportForm({
   useEffect(() => {
     if (!watchedCards) return
 
-    // 🔥 1. separar manuales vs auto
-    const manualCards = watchedCards.filter((c) => !c.auto_generated)
+    const currentCards = watchedCards || []
 
-    // 🔥 2. separar incompletas (NO se deben borrar)
-    const incompleteCards = manualCards.filter(
-      (c) =>
-        !c.player_number ||
-        c.minute === undefined ||
-        c.minute === null ||
-        Number(c.minute) <= 0
-    )
+    const manualCards = currentCards.filter((c) => !c.auto_generated)
+    const existingAutoCards = currentCards.filter((c) => c.auto_generated)
 
-    // 🔥 3. tarjetas válidas (estas sí se procesan)
-    const validCards = manualCards.filter(
-      (c) =>
-        c.player_number &&
+    const yellowGroups: Record<string, any[]> = {}
+
+    manualCards.forEach((c, manualIndex) => {
+      if (!c.player_number) return
+
+      const minute = Number(c.minute)
+
+      if (
+        c.card_type === "yellow" &&
         c.minute !== undefined &&
         c.minute !== null &&
-        Number(c.minute) > 0
-    )
+        !isNaN(minute) &&
+        minute >= 1 &&
+        minute <= 90
+      ) {
+        const key = `${c.team}-${c.player_number}`
 
-    // 🔥 4. agrupar por jugador
-    const grouped: Record<string, any[]> = {}
+        if (!yellowGroups[key]) yellowGroups[key] = []
 
-    validCards.forEach((c) => {
-      const key = `${c.team}-${c.player_number}`
-
-      if (!grouped[key]) grouped[key] = []
-
-      grouped[key].push(c)
+        yellowGroups[key].push({
+          ...c,
+          manualIndex,
+          minute: Number(c.minute),
+        })
+      }
     })
 
-    const autoCards: any[] = []
+    const secondYellowIndexByPlayer: Record<string, number> = {}
 
-    // 🔥 5. lógica de 2 amarillas → roja automática
-    Object.values(grouped).forEach((playerCards: any[]) => {
-      const yellows = playerCards
-        .filter((c) => c.card_type === "yellow")
-        .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+    Object.entries(yellowGroups).forEach(([key, yellows]) => {
+      const sortedYellows = [...yellows].sort((a, b) => {
+        if (a.minute !== b.minute) return a.minute - b.minute
+        return a.manualIndex - b.manualIndex
+      })
 
-      // 🚫 máximo 2 amarillas
-      if (yellows.length > 2) {
-        yellows.splice(2)
+      if (sortedYellows.length >= 2) {
+        secondYellowIndexByPlayer[key] = sortedYellows[1].manualIndex
+      }
+    })
+
+    const yellowCountByPlayer: Record<string, number> = {}
+    const nextCards: any[] = []
+
+    manualCards.forEach((card, manualIndex) => {
+      const key = `${card.team}-${card.player_number}`
+
+      if (card.card_type === "yellow" && card.player_number) {
+        if (!yellowCountByPlayer[key]) yellowCountByPlayer[key] = 0
+
+        // 🚫 no permitir tercera amarilla
+        if (yellowCountByPlayer[key] >= 2) {
+          return
+        }
+
+        yellowCountByPlayer[key]++
       }
 
-      if (yellows.length >= 2) {
-        const second = yellows[1] // 👈 SIEMPRE la segunda amarilla
+      const cleanCard = {
+        ...card,
+        auto_generated: false,
+      }
 
-        // 🚫 si ya hay roja manual → NO crear otra
-        const hasManualRed = playerCards.some(
-          (c) => c.card_type === "red" && !c.auto_generated
+      nextCards.push(cleanCard)
+
+      const isSecondYellow =
+        card.card_type === "yellow" &&
+        card.player_number &&
+        secondYellowIndexByPlayer[key] === manualIndex
+
+      if (isSecondYellow) {
+        const hasManualRed = manualCards.some(
+          (c) =>
+            c.card_type === "red" &&
+            !c.auto_generated &&
+            c.team === card.team &&
+            c.player_number === card.player_number
         )
 
         if (!hasManualRed) {
-          autoCards.push({
-            team: second.team,
-            player_name: second.player_name,
-            player_number: second.player_number,
-            minute: Number(second.minute),
+          const existingAuto = existingAutoCards.find(
+            (c) =>
+              c.card_type === "red" &&
+              c.reason_code === "2CT" &&
+              c.team === card.team &&
+              c.player_number === card.player_number
+          )
+
+          nextCards.push({
+            team: card.team,
+            player_name: card.player_name,
+            player_number: card.player_number,
+            minute: Number(card.minute),
             card_type: "red",
             reason_code: "2CT",
-            notes: "",
+            notes: existingAuto?.notes || "",
             auto_generated: true,
           })
         }
       }
     })
 
-    // 🔥 6. limpiar duplicados manuales (máximo 2 amarillas por jugador)
-    const cleanedManualCards: any[] = []
-
-    const seen: Record<string, number> = {}
-
-    validCards.forEach((c) => {
-      const key = `${c.team}-${c.player_number}`
-
-      if (!seen[key]) seen[key] = 0
-
-      if (c.card_type === "yellow") {
-        if (seen[key] < 2) {
-          cleanedManualCards.push(c)
-          seen[key]++
-        }
-      } else {
-        cleanedManualCards.push(c)
-      }
-    })
-
-    // 🔥 7. reconstruir TODO (IMPORTANTE)
-    const nextCards = [
-      ...incompleteCards, // 👈 NO desaparecen
-      ...cleanedManualCards.map((c) => ({
-        ...c,
-        auto_generated: false,
-      })),
-      ...autoCards,
-    ]
-
-    // 🔥 8. evitar loop infinito
-    const currentSerialized = JSON.stringify(watchedCards)
+    const currentSerialized = JSON.stringify(currentCards)
     const nextSerialized = JSON.stringify(nextCards)
 
     if (currentSerialized !== nextSerialized) {
@@ -645,7 +835,6 @@ export function MatchReportForm({
   const hasInvalidRed = (cards || []).some(
     (c) =>
       c.card_type === "red" &&
-      !c.auto_generated &&
       (!c.notes || c.notes.trim() === "")
   )
 
@@ -716,7 +905,7 @@ export function MatchReportForm({
                 variant="ghost"
                 className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
                 onClick={() =>
-                  goalsArray.append({
+                  goalsArray.prepend({
                     team: "home",
                     player_name: "",
                     player_number: "",
@@ -765,7 +954,7 @@ export function MatchReportForm({
                 variant="ghost"
                 className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
                 onClick={() =>
-                  cardsArray.append({
+                  cardsArray.prepend({
                     team: "home",
                     player_name: "",
                     player_number: "",
@@ -881,10 +1070,10 @@ export function MatchReportForm({
       )}
 
       {hasInvalidRed && (
-        <div className="text-sm text-red-400">
-          Red cards require a description before submitting the report.
-        </div>
-      )}
+      <div className="text-sm text-red-400">
+        Red cards require a description before submitting the report.
+      </div>
+    )}
 
       {/* SUBMIT */}
       <div className="flex justify-end">
