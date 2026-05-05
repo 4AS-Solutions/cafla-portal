@@ -9,16 +9,42 @@ export async function Calendar() {
 
   const now = new Date()
 
-  // 🔥 GET + FILTER FUTURE SESSIONS
+  // 🔥 SAFE DATE PARSER (FIX CRASH + TIMEZONE + FORMAT)
+  function parseLocalDate(dateString: string) {
+    if (!dateString) return new Date()
+
+    // ISO format (2026-05-04T19:00:00.000Z)
+    if (dateString.includes("T")) {
+      return new Date(dateString)
+    }
+
+    // Normal format "YYYY-MM-DD HH:mm:ss"
+    const parts = dateString.split(" ")
+
+    if (parts.length < 2) {
+      return new Date(dateString)
+    }
+
+    const [datePart, timePart] = parts
+
+    const [year, month, day] = datePart.split("-").map(Number)
+    const [hour = 0, minute = 0, second = 0] =
+      timePart?.split(":").map(Number) || []
+
+    return new Date(year, month - 1, day, hour, minute, second)
+  }
+
+  // 🔥 GET + CLEAN + FILTER
   const sessionsRaw = await getSessions()
 
   const sessions = sessionsRaw
-    .filter((s: any) => new Date(s.session_date) >= now)
-    .sort(
-      (a: any, b: any) =>
-        new Date(a.session_date).getTime() -
-        new Date(b.session_date).getTime()
-    )
+    .filter((s: any) => s?.session_date) // 🛡️ prevent undefined crash
+    .map((s: any) => ({
+      ...s,
+      dateObj: parseLocalDate(s.session_date),
+    }))
+    .filter((s: any) => s.dateObj.getTime() + 15 * 60 * 1000 >= now.getTime()) // 🧠 buffer 15min
+    .sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())
 
   const nextSession = sessions[0]
 
@@ -37,9 +63,8 @@ export async function Calendar() {
 
   // 🔥 UNIFORM LOGIC
   function getUniformSet(session: any) {
-    const day = new Date(session.session_date).getDay()
+    const day = parseLocalDate(session?.session_date).getDay()
 
-    // Monday
     if (day === 1) {
       return [
         "/images/uniforms/monday-shirt.png",
@@ -47,7 +72,6 @@ export async function Calendar() {
       ]
     }
 
-    // Thursday
     if (day === 4) {
       return [
         "/images/uniforms/thursday-shirt.png",
@@ -55,7 +79,6 @@ export async function Calendar() {
       ]
     }
 
-    // Friday (classes / meetings)
     if (day === 5) {
       return [
         "/images/uniforms/friday-jacket.png",
@@ -71,7 +94,7 @@ export async function Calendar() {
 
   // 🔥 DATE FORMAT
   function formatFullDate(dateString: string) {
-    const date = new Date(dateString)
+    const date = parseLocalDate(dateString)
 
     return date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -119,7 +142,7 @@ export async function Calendar() {
             </p>
 
             <p className="text-gray-400 mb-1">
-              {new Date(nextSession.session_date).toLocaleTimeString("en-US", {
+              {parseLocalDate(nextSession.session_date).toLocaleTimeString("en-US", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
@@ -129,7 +152,7 @@ export async function Calendar() {
               {getAddress(nextSession)}
             </p>
 
-            {/* 🔥 UNIFORM DISPLAY */}
+            {/* 🔥 UNIFORM */}
             <div className="flex justify-center">
 
               <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -138,23 +161,13 @@ export async function Calendar() {
                   Required Uniform
                 </p>
 
-                {/* GRID */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
 
                   {getUniformSet(nextSession).map((img, i) => (
 
                     <div
                       key={i}
-                      className="
-                        rounded-xl
-                        overflow-hidden
-                        border border-white/10
-                        bg-black/30
-                        p-2
-                        hover:scale-105
-                        hover:border-yellow-400/30
-                        transition
-                      "
+                      className="rounded-xl overflow-hidden border border-white/10 bg-black/30 p-2 hover:scale-105 hover:border-yellow-400/30 transition"
                     >
                       <img
                         src={img}
@@ -166,7 +179,6 @@ export async function Calendar() {
 
                 </div>
 
-                {/* 🔥 NOTE */}
                 <p className="text-xs text-gray-400 text-center mt-5 leading-relaxed max-w-md mx-auto">
                   Note: If you are new and do not yet have the official uniform, please try to wear colors that closely match the standard referee attire.
                 </p>
@@ -179,7 +191,7 @@ export async function Calendar() {
 
         )}
 
-        {/* 🔥 FUTURE SESSIONS (SCROLL) */}
+        {/* 🔥 FUTURE SESSIONS */}
         <div>
 
           <div className="text-center mb-12">
@@ -200,7 +212,7 @@ export async function Calendar() {
 
               {sessions.map((event: any, i: number) => {
 
-                const date = new Date(event.session_date)
+                const date = parseLocalDate(event.session_date)
 
                 return (
 
@@ -209,7 +221,6 @@ export async function Calendar() {
                     className="min-w-[260px] cafla-card p-6 rounded-xl flex-shrink-0 hover:scale-[1.04] transition-all"
                   >
 
-                    {/* DATE */}
                     <div className="flex items-center gap-2 text-yellow-400 mb-3">
 
                       <CalendarDays className="w-4 h-4" />
@@ -220,23 +231,19 @@ export async function Calendar() {
 
                     </div>
 
-                    {/* TITLE */}
                     <h3 className="text-white font-semibold mb-2">
                       {event.title}
                     </h3>
 
-                    {/* LOCATION */}
                     <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
                       <MapPin className="w-4 h-4" />
                       {event.location}
                     </div>
 
-                    {/* ADDRESS */}
                     <p className="text-gray-500 text-xs mb-2">
                       {getAddress(event)}
                     </p>
 
-                    {/* TIME */}
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                       <Clock className="w-4 h-4" />
                       {date.toLocaleTimeString("en-US", {
