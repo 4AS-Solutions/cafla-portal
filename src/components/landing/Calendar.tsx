@@ -7,31 +7,30 @@ import {
 
 export async function Calendar() {
 
-  const now = new Date()
+  const now = new Date( new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) )
 
   // 🔥 SAFE DATE PARSER (FIX CRASH + TIMEZONE + FORMAT)
   function parseLocalDate(dateString: string) {
     if (!dateString) return new Date()
 
-    // ISO format (2026-05-04T19:00:00.000Z)
+    let date: Date
+
     if (dateString.includes("T")) {
-      return new Date(dateString)
+      date = new Date(dateString)
+    } else {
+      const [datePart, timePart] = dateString.split(" ")
+
+      const [year, month, day] = datePart.split("-").map(Number)
+      const [hour = 0, minute = 0, second = 0] =
+        timePart?.split(":").map(Number) || []
+
+      date = new Date(year, month - 1, day, hour, minute, second)
     }
 
-    // Normal format "YYYY-MM-DD HH:mm:ss"
-    const parts = dateString.split(" ")
-
-    if (parts.length < 2) {
-      return new Date(dateString)
-    }
-
-    const [datePart, timePart] = parts
-
-    const [year, month, day] = datePart.split("-").map(Number)
-    const [hour = 0, minute = 0, second = 0] =
-      timePart?.split(":").map(Number) || []
-
-    return new Date(year, month - 1, day, hour, minute, second)
+    // 🔥 FORCE LA TIMEZONE
+    return new Date(
+      date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+    )
   }
 
   // 🔥 GET + CLEAN + FILTER
