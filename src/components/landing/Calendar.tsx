@@ -13,16 +13,10 @@ export async function Calendar() {
   function parseLocalDate(dateString: string) {
     if (!dateString) return new Date()
 
-    if (dateString.includes("T")) {
-      return new Date(dateString)
-    }
+    // 🔥 IMPORTANTE: forzar que sea tratado como LA time
+    const fixed = dateString.replace(" ", "T") + "-07:00"
 
-    const [datePart, timePart] = dateString.split(" ")
-    const [year, month, day] = datePart.split("-").map(Number)
-    const [hour = 0, minute = 0, second = 0] =
-      timePart?.split(":").map(Number) || []
-
-    return new Date(year, month - 1, day, hour, minute, second)
+    return new Date(fixed)
   }
 
   // 🔥 GET + CLEAN + FILTER
