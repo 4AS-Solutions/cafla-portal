@@ -7,42 +7,28 @@ import {
 
 export async function Calendar() {
 
-  const now = new Date( new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }) )
+  const now = new Date()
 
-  // 🔥 SAFE DATE PARSER (FIX CRASH + TIMEZONE + FORMAT)
+  // ✅ SAFE DATE PARSER (SIN timezone hacks)
   function parseLocalDate(dateString: string) {
     if (!dateString) return new Date()
 
-    let date: Date
+    // 🔥 IMPORTANTE: forzar que sea tratado como LA time
+    const fixed = dateString.replace(" ", "T") + "-07:00"
 
-    if (dateString.includes("T")) {
-      date = new Date(dateString)
-    } else {
-      const [datePart, timePart] = dateString.split(" ")
-
-      const [year, month, day] = datePart.split("-").map(Number)
-      const [hour = 0, minute = 0, second = 0] =
-        timePart?.split(":").map(Number) || []
-
-      date = new Date(year, month - 1, day, hour, minute, second)
-    }
-
-    // 🔥 FORCE LA TIMEZONE
-    return new Date(
-      date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
-    )
+    return new Date(fixed)
   }
 
   // 🔥 GET + CLEAN + FILTER
   const sessionsRaw = await getSessions()
 
   const sessions = sessionsRaw
-    .filter((s: any) => s?.session_date) // 🛡️ prevent undefined crash
+    .filter((s: any) => s?.session_date)
     .map((s: any) => ({
       ...s,
       dateObj: parseLocalDate(s.session_date),
     }))
-    .filter((s: any) => s.dateObj.getTime() + 15 * 60 * 1000 >= now.getTime()) // 🧠 buffer 15min
+    .filter((s: any) => s.dateObj.getTime() + 15 * 60 * 1000 >= now.getTime())
     .sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())
 
   const nextSession = sessions[0]
@@ -62,7 +48,11 @@ export async function Calendar() {
 
   // 🔥 UNIFORM LOGIC
   function getUniformSet(session: any) {
-    const day = parseLocalDate(session?.session_date).getDay()
+    const date = parseLocalDate(session?.session_date)
+
+    const day = new Date(
+      date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+    ).getDay()
 
     if (day === 1) {
       return [
@@ -91,11 +81,12 @@ export async function Calendar() {
     return ["/images/uniforms/short-training.png"]
   }
 
-  // 🔥 DATE FORMAT
+  // 🔥 DATE FORMAT (CON timezone correcto)
   function formatFullDate(dateString: string) {
     const date = parseLocalDate(dateString)
 
     return date.toLocaleDateString("en-US", {
+      timeZone: "America/Los_Angeles",
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -123,7 +114,7 @@ export async function Calendar() {
 
         </div>
 
-        {/* 🔥 NEXT SESSION */}
+        {/* NEXT SESSION */}
         {nextSession && (
 
           <div className="mb-20 text-center">
@@ -142,6 +133,7 @@ export async function Calendar() {
 
             <p className="text-gray-400 mb-1">
               {parseLocalDate(nextSession.session_date).toLocaleTimeString("en-US", {
+                timeZone: "America/Los_Angeles",
                 hour: "2-digit",
                 minute: "2-digit",
               })}
@@ -151,7 +143,7 @@ export async function Calendar() {
               {getAddress(nextSession)}
             </p>
 
-            {/* 🔥 UNIFORM */}
+            {/* UNIFORM */}
             <div className="flex justify-center">
 
               <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -190,7 +182,7 @@ export async function Calendar() {
 
         )}
 
-        {/* 🔥 FUTURE SESSIONS */}
+        {/* FUTURE SESSIONS */}
         <div>
 
           <div className="text-center mb-12">
@@ -246,6 +238,7 @@ export async function Calendar() {
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                       <Clock className="w-4 h-4" />
                       {date.toLocaleTimeString("en-US", {
+                        timeZone: "America/Los_Angeles",
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
