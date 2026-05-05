@@ -48,7 +48,11 @@ export async function Calendar() {
 
   // 🔥 UNIFORM LOGIC
   function getUniformSet(session: any) {
-    const day = parseLocalDate(session?.session_date).getDay()
+    const date = parseLocalDate(session?.session_date)
+
+    const day = new Date(
+      date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+    ).getDay()
 
     if (day === 1) {
       return [
