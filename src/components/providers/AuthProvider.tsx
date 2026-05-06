@@ -1,7 +1,15 @@
 "use client"
 
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
+
+import { usePathname, useRouter } from "next/navigation"
+
 import { createClient } from "@/src/lib/supabase/client"
-import { createContext, useContext, useEffect, useState } from "react"
 
 type AuthContextType = {
   user: any
@@ -24,97 +32,196 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode
 }) {
+
   const supabase = createClient()
 
+  const router = useRouter()
+
+  const pathname = usePathname()
+
   const [user, setUser] = useState<any>(null)
+
   const [profile, setProfile] = useState<any>(null)
+
   const [loading, setLoading] = useState(true)
 
+  // =========================================
+  // 🔥 LOAD PROFILE
+  // =========================================
   async function loadProfile(userId: string) {
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("members")
       .select("*")
       .eq("id", userId)
-      .single()
+      .maybeSingle()
 
-    setProfile(data)
-  }
+    if (error) {
 
-  if (typeof window !== "undefined" && window.location.pathname === "/auth/callback") {
-    return (
-      <AuthContext.Provider value={{ user: null, profile: null, loading: true }}>
-        {children}
-      </AuthContext.Provider>
-    )
-  }
+      console.error("❌ Profile load error:", error)
 
-  useEffect(() => {
-    let isMounted = true
+      setProfile(null)
 
-    // 🔥 DETECTAR INVITE FLOW
-    const isInviteFlow =
-      typeof window !== "undefined" &&
-      window.location.pathname === "/complete-profile" &&
-      window.location.hash.includes("access_token")
-
-    // 🚫 BLOQUEAR AUTH PROVIDER EN INVITE FLOW
-    if (isInviteFlow) {
-
-      setLoading(false)
       return
     }
 
-    async function init() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+    setProfile(data ?? null)
+  }
 
-      if (!isMounted) return
+  // =========================================
+  // 🔥 SPECIAL ROUTES
+  // =========================================
+  const isCallbackRoute = pathname === "/auth/callback"
 
-      setUser(user)
+  const isInviteFlow =
+    pathname === "/complete-profile" &&
+    typeof window !== "undefined" &&
+    window.location.hash.includes("access_token")
 
-      if (user) {
-        await loadProfile(user.id)
-      }
+  // =========================================
+  // 🔥 AUTH INIT
+  // =========================================
+  useEffect(() => {
+
+    let mounted = true
+
+    // 🚫 CALLBACK ROUTE
+    if (isCallbackRoute) {
 
       setLoading(false)
+
+      return
     }
 
-    init()
+    // 🚫 INVITE FLOW
+    if (isInviteFlow) {
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setLoading(false)
 
+      return
+    }
 
-      if (!isMounted) return
+    async function initializeAuth() {
 
-      if (event === "SIGNED_OUT") {
-        setUser(null)
-        setProfile(null)
-        window.location.href = "/login"
-        return
-      }
+      try {
 
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        const user = session?.user ?? null
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser()
+
+        if (!mounted) return
+
+        // 🚨 SESSION INVALID / EXPIRED
+        if (error || !user) {
+
+          setUser(null)
+
+          setProfile(null)
+
+          setLoading(false)
+
+          return
+        }
 
         setUser(user)
 
-        if (user) {
-          await loadProfile(user.id)
-        } else {
-          setProfile(null)
+        await loadProfile(user.id)
+
+      } catch (error) {
+
+        console.error("❌ Auth initialization error:", error)
+
+        setUser(null)
+
+        setProfile(null)
+
+      } finally {
+
+        if (mounted) {
+          setLoading(false)
         }
       }
-    })
+    }
 
+    initializeAuth()
+
+    // =========================================
+    // 🔥 AUTH LISTENER
+    // =========================================
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+
+        if (!mounted) return
+
+        console.log("🔐 Auth event:", event)
+
+        // =========================================
+        // 🚪 SIGNED OUT
+        // =========================================
+        if (event === "SIGNED_OUT") {
+
+          setUser(null)
+
+          setProfile(null)
+
+          setLoading(false)
+
+          router.replace("/login")
+
+          return
+        }
+
+        // =========================================
+        // 🔄 TOKEN REFRESH / SIGN IN
+        // =========================================
+        if (
+          event === "SIGNED_IN" ||
+          event === "TOKEN_REFRESHED" ||
+          event === "USER_UPDATED"
+        ) {
+
+          const currentUser = session?.user ?? null
+
+          setUser(currentUser)
+
+          if (currentUser) {
+
+            await loadProfile(currentUser.id)
+
+          } else {
+
+            setProfile(null)
+          }
+
+          setLoading(false)
+        }
+      }
+    )
+
+    // =========================================
+    // 🔥 CLEANUP
+    // =========================================
     return () => {
-      isMounted = false
+
+      mounted = false
+
       subscription.unsubscribe()
     }
-  }, [])
 
+  }, [
+    supabase,
+    router,
+    pathname,
+    isCallbackRoute,
+    isInviteFlow,
+  ])
+
+  // =========================================
+  // 🔥 PROVIDER
+  // =========================================
   return (
     <AuthContext.Provider
       value={{

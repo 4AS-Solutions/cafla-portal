@@ -15,9 +15,26 @@ export async function getUserMatches(userId: string) {
       location,
       field,
       kickoff_at,
+
       center_referee_id,
       assistant_referee_1_id,
       assistant_referee_2_id,
+
+      center_referee:center_referee_id (
+        id,
+        full_name
+      ),
+
+      ar1:assistant_referee_1_id (
+        id,
+        full_name
+      ),
+
+      ar2:assistant_referee_2_id (
+        id,
+        full_name
+      ),
+
       match_reports (
         status,
         submitted_at

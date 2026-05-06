@@ -34,39 +34,78 @@ export default function MatchCard({ match }: { match: any }) {
   Action Logic
   -----------------------------
   */
-
   if (isFuture) {
 
     actionLabel = (
+
       <span className="text-xs text-gray-400">
         Report not available yet
       </span>
+
     )
 
-  } else if (!isCR) {
+  }
+
+  else if (!isCR) {
 
     actionLabel = (
+
       <span className="text-xs text-gray-400">
         Waiting for Center Referee
       </span>
+
     )
 
-  } else if (status === "pending_report") {
+  }
+
+  else if (status === "pending_report") {
 
     href = `/portal/reports/${match.id}`
 
     actionLabel = (
+
       <span className="text-xs text-yellow-400">
         Submit match report
       </span>
+
     )
 
-  } else {
+  }
+
+  else if (status === "submitted") {
 
     actionLabel = (
-      <span className="text-xs text-emerald-400">
-        Report submitted
+
+      <span className="text-xs text-blue-400">
+        Pending approval
       </span>
+
+    )
+
+  }
+
+  else if (status === "revision_required") {
+
+    href = `/portal/reports/${match.id}`
+
+    actionLabel = (
+
+      <span className="text-xs text-orange-400">
+        Correct match report
+      </span>
+
+    )
+
+  }
+
+  else if (status === "approved") {
+
+    actionLabel = (
+
+      <span className="text-xs text-emerald-400">
+        Match report complete
+      </span>
+
     )
 
   }
@@ -95,7 +134,6 @@ export default function MatchCard({ match }: { match: any }) {
       >
 
         {/* HEADER */}
-
         <div className="flex items-start justify-between gap-3">
 
           <div>
@@ -118,7 +156,6 @@ export default function MatchCard({ match }: { match: any }) {
 
 
         {/* MATCH META */}
-
         <div className="mt-3 space-y-1 text-sm">
 
           <div className="flex items-center gap-2 text-gray-300">
@@ -141,7 +178,6 @@ export default function MatchCard({ match }: { match: any }) {
 
 
         {/* CREW PREVIEW */}
-
         <div className="mt-3 border-t border-white/10 pt-3">
 
           <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">

@@ -1,25 +1,39 @@
 export function getMatchStatus(match: any) {
 
   const now = new Date()
+
   const kickoff = new Date(match.kickoff_at)
 
-  const report = match.match_reports?.[0] ?? null
-  const reportStatus = report?.status ?? null
+  /*
+  -----------------------------------
+  FUTURE MATCH
+  -----------------------------------
+  */
 
-  // 🟢 FUTURE
   if (kickoff > now) {
     return "upcoming"
   }
 
-  // 🔴 PLAYED BUT NO REPORT
-  if (!report) {
+  /*
+  -----------------------------------
+  NO REPORT SUBMITTED
+  -----------------------------------
+  */
+
+  if (!match.report_status) {
     return "pending_report"
   }
 
-  // 🟡 BASED ON REPORT STATUS
-  switch (reportStatus) {
+  /*
+  -----------------------------------
+  REPORT WORKFLOW
+  -----------------------------------
+  */
+
+  switch (match.report_status) {
+
     case "pending":
-      return "pending_report"
+      return "submitted"
 
     case "submitted":
       return "submitted"
@@ -32,5 +46,7 @@ export function getMatchStatus(match: any) {
 
     default:
       return "pending_report"
+
   }
+
 }

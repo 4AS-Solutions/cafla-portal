@@ -54,7 +54,7 @@ export function About() {
                     Founded in 1962
                   </p>
                   <p className="mt-2 text-lg font-semibold text-white leading-snug">
-                    Ricardo Barbas Tamayo — Founder and pioneer of referee development in Los Angeles
+                    Ricardo Barba Tamayo — Founder and pioneer of referee development in Los Angeles
                   </p>
                   <p className="mt-2 text-xs text-gray-400">
                     Built on decades of experience, mentorship, and professional standards
