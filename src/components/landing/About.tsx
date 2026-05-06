@@ -41,7 +41,7 @@ export function About() {
 
               <Image
                 src="/images/barba-tamayo.jpg"
-                alt="Ricardo Barbas Tamayo"
+                alt="Ricardo Barba Tamayo"
                 fill
                 className="object-cover object-top"
               />

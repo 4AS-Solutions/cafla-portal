@@ -1,97 +1,29 @@
 import { getSessions } from "@/src/lib/queries/get-sessions"
+
 import {
   CalendarDays,
   MapPin,
   Clock,
 } from "lucide-react"
 
+import {
+  formatFullDate,
+  formatSessionTime,
+  getAddress,
+  getUniformSet,
+  getUpcomingSessions,
+  getNextSession,
+} from "@/src/lib/utils/session-utils"
+
 export async function Calendar() {
 
-  const now = new Date()
-
-  // ✅ SAFE DATE PARSER (SIN timezone hacks)
-  function parseLocalDate(dateString: string) {
-    if (!dateString) return new Date()
-
-    // 🔥 IMPORTANTE: forzar que sea tratado como LA time
-    const fixed = dateString.replace(" ", "T") + "-07:00"
-
-    return new Date(fixed)
-  }
-
-  // 🔥 GET + CLEAN + FILTER
+  // 🔥 FETCH SESSIONS
   const sessionsRaw = await getSessions()
 
-  const sessions = sessionsRaw
-    .filter((s: any) => s?.session_date)
-    .map((s: any) => ({
-      ...s,
-      dateObj: parseLocalDate(s.session_date),
-    }))
-    .filter((s: any) => s.dateObj.getTime() + 15 * 60 * 1000 >= now.getTime())
-    .sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())
+  // 🔥 CENTRALIZED LOGIC
+  const sessions = getUpcomingSessions(sessionsRaw)
 
-  const nextSession = sessions[0]
-
-  // 🔥 ADDRESS MAPPING
-  function getAddress(session: any) {
-    if (session.location === "CAFLA") {
-      return "5914 E. Washington Blvd, Commerce, CA 90040"
-    }
-
-    if (session.location === "Rosewood Park") {
-      return "5600 Harbor St, Commerce, CA 90040"
-    }
-
-    return session.address || "Location details provided in session"
-  }
-
-  // 🔥 UNIFORM LOGIC
-  function getUniformSet(session: any) {
-    const date = parseLocalDate(session?.session_date)
-
-    const day = new Date(
-      date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
-    ).getDay()
-
-    if (day === 1) {
-      return [
-        "/images/uniforms/monday-shirt.png",
-        "/images/uniforms/short-training.png",
-      ]
-    }
-
-    if (day === 4) {
-      return [
-        "/images/uniforms/thursday-shirt.png",
-        "/images/uniforms/short-training.png",
-      ]
-    }
-
-    if (day === 5) {
-      return [
-        "/images/uniforms/friday-jacket.png",
-        "/images/uniforms/friday-shirt.png",
-        "/images/uniforms/friday-pants.png",
-        "/images/uniforms/friday-short.png",
-        "/images/uniforms/friday-sweater.png",
-      ]
-    }
-
-    return ["/images/uniforms/short-training.png"]
-  }
-
-  // 🔥 DATE FORMAT (CON timezone correcto)
-  function formatFullDate(dateString: string) {
-    const date = parseLocalDate(dateString)
-
-    return date.toLocaleDateString("en-US", {
-      timeZone: "America/Los_Angeles",
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    })
-  }
+  const nextSession = getNextSession(sessionsRaw)
 
   return (
     <section
@@ -132,11 +64,7 @@ export async function Calendar() {
             </p>
 
             <p className="text-gray-400 mb-1">
-              {parseLocalDate(nextSession.session_date).toLocaleTimeString("en-US", {
-                timeZone: "America/Los_Angeles",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {formatSessionTime(nextSession.session_date)}
             </p>
 
             <p className="text-gray-400 text-sm mb-6">
@@ -158,20 +86,41 @@ export async function Calendar() {
 
                     <div
                       key={i}
-                      className="rounded-xl overflow-hidden border border-white/10 bg-black/30 p-2 hover:scale-105 hover:border-yellow-400/30 transition"
+                      className="
+                        rounded-xl
+                        overflow-hidden
+                        border border-white/10
+                        bg-black/30
+                        p-2
+                        hover:scale-105
+                        hover:border-yellow-400/30
+                        transition
+                      "
                     >
+
                       <img
                         src={img}
                         className="w-full h-24 object-contain"
                       />
+
                     </div>
 
                   ))}
 
                 </div>
 
-                <p className="text-xs text-gray-400 text-center mt-5 leading-relaxed max-w-md mx-auto">
-                  Note: If you are new and do not yet have the official uniform, please try to wear colors that closely match the standard referee attire.
+                <p className="
+                  text-xs
+                  text-gray-400
+                  text-center
+                  mt-5
+                  leading-relaxed
+                  max-w-md
+                  mx-auto
+                ">
+                  Note: If you are new and do not yet have the official uniform,
+                  please try to wear colors that closely match the standard
+                  referee attire.
                 </p>
 
               </div>
@@ -201,54 +150,58 @@ export async function Calendar() {
 
             <div className="flex gap-6 w-max">
 
-              {sessions.map((event: any, i: number) => {
+              {sessions.map((event: any, i: number) => (
 
-                const date = parseLocalDate(event.session_date)
+                <div
+                  key={i}
+                  className="
+                    min-w-[260px]
+                    cafla-card
+                    p-6
+                    rounded-xl
+                    flex-shrink-0
+                    hover:scale-[1.04]
+                    transition-all
+                  "
+                >
 
-                return (
+                  <div className="flex items-center gap-2 text-yellow-400 mb-3">
 
-                  <div
-                    key={i}
-                    className="min-w-[260px] cafla-card p-6 rounded-xl flex-shrink-0 hover:scale-[1.04] transition-all"
-                  >
+                    <CalendarDays className="w-4 h-4" />
 
-                    <div className="flex items-center gap-2 text-yellow-400 mb-3">
-
-                      <CalendarDays className="w-4 h-4" />
-
-                      <span className="text-sm font-semibold">
-                        {formatFullDate(event.session_date)}
-                      </span>
-
-                    </div>
-
-                    <h3 className="text-white font-semibold mb-2">
-                      {event.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
-                      <MapPin className="w-4 h-4" />
-                      {event.location}
-                    </div>
-
-                    <p className="text-gray-500 text-xs mb-2">
-                      {getAddress(event)}
-                    </p>
-
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
-                      <Clock className="w-4 h-4" />
-                      {date.toLocaleTimeString("en-US", {
-                        timeZone: "America/Los_Angeles",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
+                    <span className="text-sm font-semibold">
+                      {formatFullDate(event.session_date)}
+                    </span>
 
                   </div>
 
-                )
+                  <h3 className="text-white font-semibold mb-2">
+                    {event.title}
+                  </h3>
 
-              })}
+                  <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+
+                    <MapPin className="w-4 h-4" />
+
+                    {event.location}
+
+                  </div>
+
+                  <p className="text-gray-500 text-xs mb-2">
+                    {getAddress(event)}
+                  </p>
+
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+
+                    <Clock className="w-4 h-4" />
+
+                    {formatSessionTime(event.session_date)}
+
+                  </div>
+
+                </div>
+
+              ))}
 
             </div>
 

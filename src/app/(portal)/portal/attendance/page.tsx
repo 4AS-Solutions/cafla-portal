@@ -1,6 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
-import { calculateAttendanceScore } from "@/src/lib/attendance/calculate-score"
 
 
 import AttendanceScoreCard from "@/src/components/attendance/AttendanceScoreCard"
@@ -19,9 +18,7 @@ export default async function AttendancePage() {
     return <div>Not authenticated</div>
   }
 
-  const records = await getUserAttendance(user.id)
-
-  const score = calculateAttendanceScore(records)
+  const { sessions, stats } = await getUserAttendance(user.id)
 
   return (
 
@@ -33,7 +30,7 @@ export default async function AttendancePage() {
       />
 
       <div className="max-w-md">
-        <AttendanceScoreCard score={score} />
+        <AttendanceScoreCard score={stats.percentage} />
       </div>
 
       <div>
@@ -42,7 +39,7 @@ export default async function AttendancePage() {
           Attendance History
         </h2>
 
-        <AttendanceHistoryTable records={records} />
+        <AttendanceHistoryTable records={sessions} />
 
       </div>
 

@@ -1,9 +1,9 @@
 import { Footer } from "@/src/components/landing/Footer";
-import { Benefits } from "@/src/components/landing/join/Benefits";
-import { ImportantInfo } from "@/src/components/landing/join/ImportantInfo";
+import { DevelopmentEnvironment  } from "@/src/components/landing/join/DevelopmentEnvironment";
+import { CommitmentStandards  } from "@/src/components/landing/join/CommitmentStandards";
 import { JoinForm } from "@/src/components/landing/join/JoinForm";
 import { JoinHero } from "@/src/components/landing/join/JoinHero";
-import { NextSession } from "@/src/components/landing/join/NextSession";
+import { FirstSessionOverview  } from "@/src/components/landing/join/FirstSessionOverview";
 import { Navbar } from "@/src/components/landing/Navbar";
 
 
@@ -15,14 +15,14 @@ export default function JoinPage() {
       {/* HERO */}
       <JoinHero />
 
-      {/* WHAT HAPPENS */}
-      <NextSession />
+      {/* FIRST SESSION OVERVIEW */}
+      <FirstSessionOverview  />
 
-      {/* IMPORTANT INFO */}
-      <ImportantInfo />
+      {/* COMMITMENT STANDARDS */}
+      <CommitmentStandards  />
 
-      {/* BENEFITS */}
-      <Benefits />
+      {/* DEVELOPMENT ENVIRONMENT */}
+      <DevelopmentEnvironment  />
 
       {/* FORM */}
       <JoinForm />

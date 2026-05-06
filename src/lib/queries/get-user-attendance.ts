@@ -1,37 +1,93 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
+import { pre } from "framer-motion/client"
 
 export async function getUserAttendance(userId: string) {
 
   const supabase = await supabaseServer()
 
+  // 🔥 FECHA ACTUAL (solo sesiones pasadas)
+  const now = new Date().toISOString()
+
   const { data, error } = await supabase
-    .from("attendance_records")
+    .from("attendance_sessions")
     .select(`
-      status,
-      attendance_sessions (
-        id,
-        title,
-        session_type,
-        session_date,
-        location
+      id,
+      title,
+      session_type,
+      session_date,
+      location,
+      attendance_records (
+        member_id,
+        status
       )
     `)
-    .eq("member_id", userId)
+    .lte("session_date", now) // ✅ solo sesiones pasadas
+    .order("session_date", { ascending: false })
 
   if (error) {
     console.error("attendance error", error)
     throw error
   }
 
-  // ordenar manualmente en JS
-  const sorted = (data ?? []).sort((a: any, b: any) => {
+  // 🔥 NORMALIZAR DATA
+  const sessions = (data ?? []).map((session: any) => {
 
-    const dateA = new Date(a.attendance_sessions.session_date).getTime()
-    const dateB = new Date(b.attendance_sessions.session_date).getTime()
+    // 🔥 buscar el record del usuario
+    const record = session.attendance_records.find(
+      (r: any) => r.member_id === userId
+    )
 
-    return dateB - dateA
+    let status: "present" | "late" | "excused" | "absent" = "absent"
 
+    if (record) {
+      if (record.status === "present") status = "present"
+      else if (record.status === "late") status = "late"
+      else if (record.status === "excused") status = "excused"
+    }
+
+    return {
+      id: session.id,
+      title: session.title,
+      session_type: session.session_type,
+      session_date: session.session_date,
+      location: session.location,
+      status,
+    }
   })
 
-  return sorted
+  // 🔥 MÉTRICAS
+  const total = sessions.length
+
+  const present = sessions.filter(
+    (s) => s.status === "present"
+  ).length
+
+  const late = sessions.filter(
+    (s) => s.status === "late"
+  ).length
+
+  const excused = sessions.filter(
+    (s) => s.status === "excused"
+  ).length
+
+  // 💡 puedes ajustar pesos aquí
+  const scoreRaw =
+    present * 1 +
+    late * 0.5 +
+    excused * 0.75
+
+  const percentage =
+    total === 0 ? 0 : Math.round((scoreRaw / total) * 100)
+
+  return {
+    sessions,
+    stats: {
+      total,
+      present,
+      late,
+      excused,
+      absent: total - present - late - excused,
+      percentage,
+    },
+  }
 }

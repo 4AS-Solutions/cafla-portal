@@ -6,9 +6,10 @@ export function calculateAttendanceScore(records: any[]) {
 
   records.forEach((r) => {
 
-    if (r.status === "present") total += 1
+    if (r.status === "attended") total += 1
     if (r.status === "late") total += 0.5
     if (r.status === "excused") total += 0.75
+    if (r.status === "absent") total += 0
 
   })
 

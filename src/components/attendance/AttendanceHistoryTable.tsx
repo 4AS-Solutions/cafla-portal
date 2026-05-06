@@ -46,41 +46,29 @@ export default function AttendanceHistoryTable({ records }: any) {
 
           {records.map((r: any) => (
 
-            <TableRow key={r.attendance_sessions.id}>
+            <TableRow key={r.id}>
 
               <TableCell>
-
-                {new Date(
-                  r.attendance_sessions.session_date
-                ).toLocaleDateString("en-US")}
-
+                {new Date(r.session_date).toLocaleDateString("en-US")}
               </TableCell>
 
               <TableCell className="font-medium">
-
-                {r.attendance_sessions.title}
-
+                {r.title}
               </TableCell>
 
               <TableCell className="text-gray-400">
-
-                {r.attendance_sessions.location}
-
+                {r.location}
               </TableCell>
 
               <TableCell>
-
                 <AttendanceStatusBadge status={r.status} />
-
               </TableCell>
 
               <TableCell className="text-right">
 
                 <button
                   className="text-sm text-yellow-400 hover:underline"
-                  onClick={() =>
-                    setSessionId(r.attendance_sessions.id)
-                  }
+                  onClick={() => setSessionId(r.id)}
                 >
                   View
                 </button>
