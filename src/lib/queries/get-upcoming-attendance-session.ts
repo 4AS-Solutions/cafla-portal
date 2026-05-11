@@ -1,5 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
-import { getPacificISOString, getPacificNow } from "../utils/session-utils"
+import { getPacificISOString } from "../utils/session-utils"
 
 export async function getUpcomingAttendanceSessions(): Promise<any[]> {
 
