@@ -1,5 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
-import { getPacificNow } from "../utils/session-utils"
+import { getPacificISOString, getPacificNow } from "../utils/session-utils"
 
 export type AttendanceSession = {
   id: string
@@ -30,10 +30,7 @@ export async function getNextAttendanceSessions(): Promise<AttendanceSession | n
         full_name
       )
     `)
-    .gte(
-          "session_date",
-          getPacificNow().toISOString()
-        )
+    .gte( "session_date", getPacificISOString())
     .order("session_date", { ascending: true })
     .limit(1)
     .maybeSingle()
