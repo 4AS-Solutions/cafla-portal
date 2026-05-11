@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
+import { getPacificNow } from "../utils/session-utils"
 
 export async function getUpcomingAttendanceSessions(): Promise<any[]> {
 
@@ -17,7 +18,10 @@ export async function getUpcomingAttendanceSessions(): Promise<any[]> {
         full_name
       )
     `)
-    .gte("session_date", new Date().toISOString())
+    .gte(
+          "session_date",
+          getPacificNow().toISOString()
+        )
     .order("session_date", { ascending: true })
     .limit(6)
 
