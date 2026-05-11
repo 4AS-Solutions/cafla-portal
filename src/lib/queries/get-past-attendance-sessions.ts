@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
+import { getPacificNow } from "../utils/session-utils"
 
 export async function getPastAttendanceSessions({
   page = 0,
@@ -29,7 +30,10 @@ export async function getPastAttendanceSessions({
         full_name
       )
     `, { count: "exact" })
-    .lt("session_date", new Date().toISOString())
+    .lt(
+      "session_date",
+      getPacificNow().toISOString()
+    )
     .order("session_date", { ascending: false })
     .range(from, to)
 

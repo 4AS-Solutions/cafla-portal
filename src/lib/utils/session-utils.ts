@@ -99,3 +99,15 @@ export function getNextSession(sessionsRaw: any[]) {
 
   return sessions[0] || null
 }
+
+export function getPacificNow() {
+
+  const now = new Date()
+
+  return new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "America/Los_Angeles",
+    })
+  )
+
+}
