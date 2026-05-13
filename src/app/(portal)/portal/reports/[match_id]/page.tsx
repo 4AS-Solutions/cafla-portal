@@ -60,8 +60,47 @@ export default async function ReportPage({
 
       </div>
 
-      {/* FORM */}
+      {/* REVISION FEEDBACK */}
+      {report?.status === "revision_required" &&
+        report?.revision_notes && (
 
+          <div className="
+            rounded-2xl
+            border border-yellow-500/20
+            bg-yellow-500/10
+            p-5
+            space-y-3
+          ">
+
+            <div className="flex items-center gap-2">
+
+              <div className="
+                h-2 w-2 rounded-full
+                bg-yellow-400
+              " />
+
+              <h2 className="
+                text-sm font-semibold
+                text-yellow-300
+              ">
+                Revision Feedback
+              </h2>
+
+            </div>
+
+            <p className="
+              whitespace-pre-wrap
+              text-sm leading-relaxed
+              text-yellow-100/90
+            ">
+              {report.revision_notes}
+            </p>
+
+          </div>
+
+      )}
+
+      {/* FORM */}
       <MatchReportForm
         match={match}
         mode={mode}

@@ -11,8 +11,6 @@ export async function PATCH(
   const body = await req.json()
 
   const {
-    home_score,
-    away_score,
     comments,
     goals,
     cards,
@@ -20,12 +18,21 @@ export async function PATCH(
     assets,
   } = body
 
+  // 🔥 AUTO CALCULATE SCORE
+  const homeScore = (goals || []).filter(
+    (goal: any) => goal.team === "home"
+  ).length
+
+  const awayScore = (goals || []).filter(
+    (goal: any) => goal.team === "away"
+  ).length
+
   // 🔥 1. UPDATE MAIN REPORT
   const { data: updatedRows, error: reportError } = await supabase
     .from("match_reports")
     .update({
-      home_score,
-      away_score,
+      home_score: homeScore,
+      away_score: awayScore,
       comments,
       status: "submitted",
       submitted_at: new Date().toISOString(),

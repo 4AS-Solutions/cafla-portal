@@ -90,6 +90,15 @@ export async function POST(req: Request) {
       )
     }
 
+    // 🔥 AUTO CALCULATE SCORE
+    const homeScore = body.goals.filter(
+      (goal) => goal.team === "home"
+    ).length
+
+    const awayScore = body.goals.filter(
+      (goal) => goal.team === "away"
+    ).length
+
     // 3) Crear report principal
     const { data: report, error: reportError } = await supabaseAdmin
       .from("match_reports")
@@ -97,8 +106,8 @@ export async function POST(req: Request) {
         match_id: body.match_id,
         submitted_by: user.id,
         submitted_at: new Date().toISOString(),
-        home_score: body.home_score,
-        away_score: body.away_score,
+        home_score: homeScore,
+        away_score: awayScore,
         comments: body.comments,
         status: "submitted",
       })

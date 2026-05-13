@@ -14,6 +14,7 @@ export async function getMatchForReport(matchId: string) {
         away_score,
         comments,
         submitted_at,
+        revision_notes,
 
         report_goals (*),
         report_cards (*),

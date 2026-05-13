@@ -530,6 +530,15 @@ export function MatchReportForm({
   const goals = form.watch("goals")
   const cards = form.watch("cards")
 
+  // 🔥 LIVE SCORE
+  const homeScore = (goals || []).filter(
+    (goal) => goal.team === "home"
+  ).length
+
+  const awayScore = (goals || []).filter(
+    (goal) => goal.team === "away"
+  ).length
+
   const watchedCards = useWatch({
     control: form.control,
     name: "cards",
@@ -765,8 +774,8 @@ export function MatchReportForm({
 
       const payload = {
         match_id: match.id,
-        home_score: values.home_score,
-        away_score: values.away_score,
+        home_score: homeScore,
+        away_score: awayScore,
         comments: values.comments,
         goals: values.goals,
         cards: values.cards,
@@ -854,39 +863,79 @@ export function MatchReportForm({
       )}
 
       {/* SCOREBOARD */}
-      <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 sm:p-8 backdrop-blur-md">
-        <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
+      <section className="
+        rounded-2xl
+        border border-white/10
+        bg-[#0B0F0F]/80
+        p-6 sm:p-8
+        backdrop-blur-md
+      ">
+
+        <h2 className="
+          mb-6 flex items-center gap-2
+          text-lg font-semibold text-white
+        ">
           <Trophy size={18} className="text-yellow-400" />
-          Score
+          Match Score
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:items-center md:text-center">
-          <div>
-            <div className="mb-2 text-sm text-gray-400">{match.home_team}</div>
-            <Input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold disabled:opacity-60"
-              {...form.register("home_score", { valueAsNumber: true })}
-            />
+        <div className="
+          flex flex-col items-center
+          gap-6
+          md:flex-row
+          md:justify-center
+        ">
+
+          {/* HOME */}
+          <div className="text-center">
+
+            <div className="
+              mb-2 text-sm text-gray-400
+            ">
+              {match.home_team}
+            </div>
+
+            <div className="
+              text-5xl font-bold text-white
+            ">
+              {homeScore}
+            </div>
+
           </div>
 
-          <div className="hidden text-3xl font-bold text-gray-500 md:block">
+          {/* DASH */}
+          <div className="
+            text-4xl font-bold text-yellow-400
+          ">
             -
           </div>
 
-          <div>
-            <div className="mb-2 text-sm text-gray-400">{match.away_team}</div>
-            <Input
-              type="number"
-              min={0}
-              disabled={isReadOnly}
-              className="h-14 border-white/10 bg-[#0B0F0F] text-center text-2xl font-bold disabled:opacity-60"
-              {...form.register("away_score", { valueAsNumber: true })}
-            />
+          {/* AWAY */}
+          <div className="text-center">
+
+            <div className="
+              mb-2 text-sm text-gray-400
+            ">
+              {match.away_team}
+            </div>
+
+            <div className="
+              text-5xl font-bold text-white
+            ">
+              {awayScore}
+            </div>
+
           </div>
+
         </div>
+
+        <p className="
+          mt-6 text-center text-xs
+          text-gray-500
+        ">
+          Match score is calculated automatically from submitted goals.
+        </p>
+
       </section>
 
       {/* GOALS + CARDS */}
@@ -1025,7 +1074,7 @@ export function MatchReportForm({
             <Input
               type="file"
               accept="image/*"
-              disabled={isReadOnly}
+              disabled
               className="border-white/10 bg-[#0B0F0F] cursor-pointer disabled:opacity-60"
               onChange={(e) => setHomeRosterFile(e.target.files?.[0] ?? null)}
             />
@@ -1038,7 +1087,7 @@ export function MatchReportForm({
             <Input
               type="file"
               accept="image/*"
-              disabled={isReadOnly}
+              disabled
               className="border-white/10 bg-[#0B0F0F] cursor-pointer disabled:opacity-60"
               onChange={(e) => setAwayRosterFile(e.target.files?.[0] ?? null)}
             />
