@@ -10,7 +10,13 @@ export async function POST(req: Request) {
 
   const title = formData.get("title") as string
   const session_type = formData.get("session_type") as string
-  const session_date = formData.get("session_date") as string
+
+  // 🔥 FIX REAL TIMEZONE
+  const rawDate = formData.get("session_date") as string
+
+  const session_date =
+    rawDate.replace("T", " ") + ":00-07:00"
+
   const location = formData.get("location") as string
 
   const session = await createAttendanceSession({

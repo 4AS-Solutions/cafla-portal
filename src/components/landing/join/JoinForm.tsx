@@ -33,15 +33,40 @@ export function JoinForm() {
 
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault()
 
-    // TODO:
-    // Save to Supabase / CRM / onboarding pipeline
+    try {
 
-    console.log(form)
+      const res = await fetch("/api/join", {
+        method: "POST",
 
-    setSubmitted(true)
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(form),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to submit request")
+      }
+
+      setSubmitted(true)
+
+    } catch (error) {
+
+      console.error(error)
+
+      alert(
+        "Something went wrong while submitting your request. Please try again."
+      )
+
+    }
+
   }
 
   // SUCCESS STATE
