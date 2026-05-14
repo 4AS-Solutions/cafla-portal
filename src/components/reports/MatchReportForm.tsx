@@ -718,7 +718,6 @@ export function MatchReportForm({
   async function onSubmit(values: FormData) {
     if (isReadOnly) return
 
-
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
@@ -728,8 +727,6 @@ export function MatchReportForm({
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
-
-  
 
       if (userError || !user) {
         throw new Error("You must be logged in to submit this report.")
@@ -742,7 +739,13 @@ export function MatchReportForm({
       let homeRosterPath: string | null = null
       let awayRosterPath: string | null = null
 
+      // ---------------------------------------------
+      // HOME ROSTER UPLOAD
+      // ---------------------------------------------
+
       if (homeRosterFile) {
+        console.log("Uploading home roster...")
+
         homeRosterPath = `${match.id}/home-${Date.now()}-${homeRosterFile.name}`
 
         const { error: uploadHomeError } = await supabase.storage
@@ -753,11 +756,20 @@ export function MatchReportForm({
           })
 
         if (uploadHomeError) {
+          console.error(uploadHomeError)
           throw new Error("Failed to upload home roster.")
         }
+
+        console.log("Home roster uploaded successfully")
       }
 
+      // ---------------------------------------------
+      // AWAY ROSTER UPLOAD
+      // ---------------------------------------------
+
       if (awayRosterFile) {
+        console.log("Uploading away roster...")
+
         awayRosterPath = `${match.id}/away-${Date.now()}-${awayRosterFile.name}`
 
         const { error: uploadAwayError } = await supabase.storage
@@ -768,9 +780,16 @@ export function MatchReportForm({
           })
 
         if (uploadAwayError) {
+          console.error(uploadAwayError)
           throw new Error("Failed to upload away roster.")
         }
+
+        console.log("Away roster uploaded successfully")
       }
+
+      // ---------------------------------------------
+      // PAYLOAD
+      // ---------------------------------------------
 
       const payload = {
         match_id: match.id,
@@ -783,7 +802,7 @@ export function MatchReportForm({
         away_roster_path: awayRosterPath,
       }
 
-  
+      console.log("Submitting report payload...", payload)
 
       const endpoint =
         isEdit && initialData?.id
@@ -800,12 +819,16 @@ export function MatchReportForm({
         body: JSON.stringify(payload),
       })
 
-  
+      // ---------------------------------------------
+      // SAFER RESPONSE HANDLING
+      // ---------------------------------------------
+
+      const text = await res.text()
 
       let data: any = null
 
       try {
-        data = await res.json()
+        data = text ? JSON.parse(text) : null
       } catch {
         throw new Error("Invalid server response.")
       }
@@ -813,6 +836,8 @@ export function MatchReportForm({
       if (!res.ok) {
         throw new Error(data?.error || "Failed to submit report.")
       }
+
+      console.log("Report submitted successfully")
 
       toast.success(
         isEdit
@@ -823,8 +848,12 @@ export function MatchReportForm({
       setHomeRosterFile(null)
       setAwayRosterFile(null)
 
+      // ---------------------------------------------
+      // IMPORTANT:
+      // REMOVE router.refresh()
+      // ---------------------------------------------
+
       router.push("/portal/reports")
-      router.refresh()
     } catch (error) {
       console.error(error)
 
