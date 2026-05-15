@@ -5,6 +5,7 @@ export type Goal = {
   minute: number
   half: "first" | "second"
   goal_type: "normal" | "penalty" | "own_goal"
+  player_id?: string
 }
 
 export type Card = {
@@ -16,6 +17,7 @@ export type Card = {
   reason_code: string
   notes?: string
   auto_generated?: boolean
+  player_id?: string
 }
 
 export type MatchReportFormData = {

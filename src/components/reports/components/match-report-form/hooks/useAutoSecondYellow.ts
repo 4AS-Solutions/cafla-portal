@@ -120,6 +120,7 @@ export function useAutoSecondYellow({
 
           nextCards.push({
             team: card.team,
+            player_id: card.player_id,
             player_name: card.player_name,
             player_number: card.player_number,
             minute: Number(card.minute),

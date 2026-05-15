@@ -10,6 +10,9 @@ type CardsSectionProps = {
   watch: any
   setValue: any
   isMobile: boolean
+  players: any[]
+  homeTeam: string
+  awayTeam: string
 }
 
 export function CardsSection({
@@ -19,7 +22,10 @@ isReadOnly,
 reasons,
 watch,
 setValue,
-isMobile
+isMobile,
+players,
+homeTeam,
+awayTeam
 }: CardsSectionProps) { 
     return (
         <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
@@ -70,6 +76,9 @@ isMobile
                     watch={watch}
                     setValue={setValue}
                     isMobile={isMobile}
+                    players={players}
+                    homeTeam={homeTeam}
+                    awayTeam={awayTeam}
                 />
                 ))}
             </div>

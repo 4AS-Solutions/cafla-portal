@@ -19,6 +19,7 @@ import { useCardReasons } from "./components/match-report-form/hooks/useCardReas
 import { Card, Goal, MatchReportFormData } from "./components/match-report-form/match-report.types"
 import { useIsMobile } from "./components/match-report-form/hooks/useIsMobile"
 import { TimelinePreviewSection } from "./components/match-report-form/TimelinePreviewSection"
+import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRoster"
 
 
 type InitialReportData = {
@@ -57,6 +58,8 @@ export function MatchReportForm({
 
   // Detect mobile for better form UX
   const isMobile = useIsMobile()
+
+  const { players: rosterPlayers, loading: rosterLoading } = useMatchRoster(match.id);
 
   const isReadOnly = mode === "read"
   const isEdit = mode === "edit"
@@ -337,6 +340,11 @@ export function MatchReportForm({
           register={form.register}
           isReadOnly={isReadOnly}
           isMobile={isMobile}
+          players={rosterPlayers}
+          setValue={form.setValue}
+          watch={watch}
+          homeTeam={match.home_team}
+          awayTeam={match.away_team}
         />
 
         {/* CARDS */}
@@ -348,6 +356,9 @@ export function MatchReportForm({
           watch={watch}
           setValue={setValue}
           isMobile={isMobile}
+          players={rosterPlayers}
+          homeTeam={match.home_team}
+          awayTeam={match.away_team}
         />
 
       </div>

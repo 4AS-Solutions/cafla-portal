@@ -9,6 +9,11 @@ type GoalsSectionProps = {
   register: any
   isReadOnly: boolean
   isMobile: boolean
+  players: any[],
+  setValue: any,
+  watch: any,
+  homeTeam: string,
+  awayTeam: string
 }
 
 export function GoalsSection({
@@ -16,6 +21,11 @@ export function GoalsSection({
   register,
   isReadOnly,
   isMobile,
+  players,
+  setValue,
+  watch,
+  homeTeam,
+  awayTeam
 }: GoalsSectionProps) {
   return (
     <section className="rounded-2xl border border-white/10 bg-[#0B0F0F]/80 p-6 backdrop-blur-md">
@@ -61,6 +71,11 @@ export function GoalsSection({
               remove={goalsArray.remove}
               disabled={isReadOnly}
               isMobile={isMobile}
+              players={players}
+              setValue={setValue}
+              watch={watch}
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
             />
           ))}
         </div>

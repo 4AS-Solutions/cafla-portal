@@ -3,6 +3,7 @@ import { Input } from "@/src/components/ui/input"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Trash2 } from "lucide-react"
 import { useEffect, useRef } from "react"
+import PlayerSelect from "./PlayerSelect"
 
 
 export function CardRow({
@@ -13,12 +14,28 @@ export function CardRow({
   reasons,
   watch,
   setValue,
-  isMobile
+  isMobile,
+  players,
+  homeTeam,
+  awayTeam
 }: any) {
 
     const darkSelectClass =
     "h-10 w-full rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm text-white outline-none transition focus:border-yellow-400/40 disabled:opacity-60"
 
+    const selectedTeam = watch(
+      `cards.${index}.team`
+    )
+
+    const filteredPlayers = players.filter(
+      (player: any) =>
+        selectedTeam === "home"
+          ? player.team_name === homeTeam
+          : player.team_name === awayTeam
+    )  
+    .sort((a: any, b: any) =>
+      a.last_name.localeCompare(b.last_name)
+    )
 
   const card = watch(`cards.${index}`) || {}
 
@@ -67,8 +84,8 @@ export function CardRow({
             className={darkSelectClass}
             {...register(`cards.${index}.team`)}
           >
-            <option value="home">Home</option>
-            <option value="away">Away</option>
+            <option value="home">{homeTeam}</option>
+            <option value="away">{awayTeam}</option>
           </select>
 
           <Input
@@ -81,11 +98,19 @@ export function CardRow({
             {...register(`cards.${index}.player_number`)}
           />
 
-          <Input
-            placeholder="Player Name"
-            disabled={isLocked}
-            className="bg-[#0B0F0F]"
-            {...register(`cards.${index}.player_name`)}
+          <PlayerSelect
+            players={filteredPlayers}
+            disabled={disabled || isLocked}
+            value={watch(`cards.${index}.player_id`) || ""}
+            onChange={(player) => {
+              if (!player) return
+
+              setValue(`cards.${index}.player_id`, player.player_id)
+              setValue(
+                `cards.${index}.player_name`,
+                `${player.first_name} ${player.last_name}`
+              )
+            }}
           />
 
           <Input
@@ -151,8 +176,8 @@ export function CardRow({
             className={darkSelectClass}
             {...register(`cards.${index}.team`)}
           >
-            <option value="home">Home</option>
-            <option value="away">Away</option>
+            <option value="home">{homeTeam}</option>
+            <option value="away">{awayTeam}</option>
           </select>
 
           <Input
@@ -165,11 +190,19 @@ export function CardRow({
             {...register(`cards.${index}.player_number`)}
           />
 
-          <Input
-            placeholder="Player"
-            disabled={isLocked}
-            className="bg-[#0B0F0F]"
-            {...register(`cards.${index}.player_name`)}
+          <PlayerSelect
+            players={filteredPlayers}
+            disabled={disabled || isLocked}
+            value={watch(`cards.${index}.player_id`) || ""}
+            onChange={(player) => {
+              if (!player) return
+
+              setValue(`cards.${index}.player_id`, player.player_id)
+              setValue(
+                `cards.${index}.player_name`,
+                `${player.first_name} ${player.last_name}`
+              )
+            }}
           />
 
           <Input

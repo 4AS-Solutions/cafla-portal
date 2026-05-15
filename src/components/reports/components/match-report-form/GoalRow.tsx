@@ -1,6 +1,7 @@
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Trash2 } from "lucide-react"
+import PlayerSelect from "./PlayerSelect"
 
 export function GoalRow({
   index,
@@ -8,11 +9,30 @@ export function GoalRow({
   remove,
   disabled,
   isMobile,
+  players,
+  setValue,
+  watch,
+  homeTeam,
+  awayTeam
 }: any) {
 
   
     const darkSelectClass =
     "h-10 w-full rounded-md border border-white/10 bg-[#0B0F0F] px-3 text-sm text-white outline-none transition focus:border-yellow-400/40 disabled:opacity-60"
+
+    const selectedTeam = watch(
+      `goals.${index}.team`
+    )
+
+    const filteredPlayers = players.filter(
+      (player: any) =>
+        selectedTeam === "home"
+          ? player.team_name === homeTeam
+          : player.team_name === awayTeam
+    )  
+    .sort((a: any, b: any) =>
+      a.last_name.localeCompare(b.last_name)
+    )
 
   return (
     <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
@@ -23,8 +43,8 @@ export function GoalRow({
             className={darkSelectClass}
             {...register(`goals.${index}.team`)}
           >
-            <option value="home">Home</option>
-            <option value="away">Away</option>
+            <option value="home">{homeTeam}</option>
+            <option value="away">{awayTeam}</option>
           </select>
 
           <Input
@@ -37,11 +57,23 @@ export function GoalRow({
             {...register(`goals.${index}.player_number`)}
           />
 
-          <Input
-            placeholder="Player Name"
+          <PlayerSelect
+            players={filteredPlayers}
             disabled={disabled}
-            className="bg-[#0B0F0F]"
-            {...register(`goals.${index}.player_name`)}
+            value={undefined}
+            onChange={(player) => {
+              if (!player) return
+
+              setValue(
+                `goals.${index}.player_id`,
+                player.player_id
+              )
+
+              setValue(
+                `goals.${index}.player_name`,
+                `${player.first_name} ${player.last_name}`
+              )
+            }}
           />
 
           <Input
@@ -85,8 +117,8 @@ export function GoalRow({
             className={darkSelectClass}
             {...register(`goals.${index}.team`)}
           >
-            <option value="home">Home</option>
-            <option value="away">Away</option>
+            <option value="home">{homeTeam}</option>
+            <option value="away">{awayTeam}</option>
           </select>
 
           <Input
@@ -99,11 +131,23 @@ export function GoalRow({
             {...register(`goals.${index}.player_number`)}
           />
 
-          <Input
-            placeholder="Player"
+          <PlayerSelect
+            players={filteredPlayers}
             disabled={disabled}
-            className="bg-[#0B0F0F]"
-            {...register(`goals.${index}.player_name`)}
+            value={undefined}
+            onChange={(player) => {
+              if (!player) return
+
+              setValue(
+                `goals.${index}.player_id`,
+                player.player_id
+              )
+
+              setValue(
+                `goals.${index}.player_name`,
+                `${player.first_name} ${player.last_name}`
+              )
+            }}
           />
 
           <Input

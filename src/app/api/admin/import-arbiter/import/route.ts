@@ -3,6 +3,7 @@ import { supabaseServer } from "@/src/lib/supabase/server"
 import { matchReferee } from "@/src/lib/importers/referee-matcher"
 import { getProfile } from "@/src/lib/queries/get-profile"
 import { parseKickoff } from "@/src/lib/utils/format-date"
+import { createMatchRosterSnapshot } from "@/src/lib/queries/create-match-roster-snapshot"
 
 type ArbiterRow = {
   game_id: string
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
       const locationName = parts[0]?.trim() || null
       const fieldName = parts[1]?.trim() || null
 
-      const { error } = await supabase
+      const { data: matchData, error } = await supabase
         .from("matches")
         .upsert(
           {
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
             location: locationName,
             field: fieldName,
             kickoff_at: kickoff_at,
-            
+
             arbiter_comments: row.comments,
 
             center_referee_id: center,
@@ -90,10 +91,21 @@ export async function POST(req: Request) {
             onConflict: "arbiter_match_id",
           }
         )
+        .select("id")
+        .single()
 
       if (error) {
         console.error("Import error for match:", row.game_id, error)
         continue
+      }
+
+      if (matchData?.id) {
+        await createMatchRosterSnapshot(
+          supabase,
+          matchData.id,
+          row.home,
+          row.away
+        )
       }
 
       imported++
