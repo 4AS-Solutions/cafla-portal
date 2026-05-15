@@ -60,7 +60,7 @@ export function GoalRow({
           <PlayerSelect
             players={filteredPlayers}
             disabled={disabled}
-            value={undefined}
+            value={watch(`goals.${index}.player_id`) || ""}
             onChange={(player) => {
               if (!player) return
 
@@ -134,7 +134,7 @@ export function GoalRow({
           <PlayerSelect
             players={filteredPlayers}
             disabled={disabled}
-            value={undefined}
+            value={watch(`goals.${index}.player_id`) || ""}
             onChange={(player) => {
               if (!player) return
 
