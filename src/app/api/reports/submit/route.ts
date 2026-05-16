@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 
 type GoalRow = {
   team: "home" | "away"
+  player_id?: string | null
   player_name: string
   player_number: string
   minute: number
@@ -14,6 +15,7 @@ type GoalRow = {
 
 type CardRow = {
   team: "home" | "away"
+  player_id?: string | null
   player_name: string
   player_number: string
   minute: number
@@ -123,6 +125,7 @@ export async function POST(req: Request) {
       const goalsPayload = body.goals.map((goal) => ({
         report_id: reportId,
         team: goal.team,
+        player_id: goal.player_id ?? null,
         player_name: goal.player_name,
         player_number: goal.player_number,
         minute: Number(goal.minute),
@@ -142,6 +145,7 @@ export async function POST(req: Request) {
       const cardsPayload = body.cards.map((card) => ({
         report_id: reportId,
         team: card.team,
+        player_id: card.player_id ?? null,
         player_name: card.player_name,
         player_number: card.player_number,
         minute: Number(card.minute),

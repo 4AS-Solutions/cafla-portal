@@ -101,6 +101,7 @@ export async function PATCH(
       await replaceTable("report_goals", goals, (g) => ({
         report_id,
         team: g.team,
+        player_id: g.player_id ?? null,
         player_name: g.player_name,
         player_number: g.player_number,
         minute: Number(g.minute),
@@ -114,6 +115,7 @@ export async function PATCH(
       await replaceTable("report_cards", cards, (c) => ({
         report_id,
         team: c.team,
+        player_id: c.player_id ?? null,        
         player_name: c.player_name,
         player_number: c.player_number,
         minute: Number(c.minute),
