@@ -75,6 +75,8 @@ export function CardRow({
 
   const isRed = cardType === "red"
 
+  const hasRosterPlayers = filteredPlayers.length > 0
+
   return (
     <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
       {isMobile ? (
@@ -98,20 +100,30 @@ export function CardRow({
             {...register(`cards.${index}.player_number`)}
           />
 
-          <PlayerSelect
-            players={filteredPlayers}
-            disabled={disabled || isLocked}
-            value={watch(`cards.${index}.player_id`) || ""}
-            onChange={(player) => {
-              if (!player) return
+          { hasRosterPlayers ? (
+            <PlayerSelect
+              players={filteredPlayers}
+              disabled={disabled || isLocked}
+              value={watch(`cards.${index}.player_id`) || ""}
+              onChange={(player) => {
+                if (!player) return
 
-              setValue(`cards.${index}.player_id`, player.player_id)
-              setValue(
-                `cards.${index}.player_name`,
-                `${player.first_name} ${player.last_name}`
-              )
-            }}
-          />
+                setValue(`cards.${index}.player_id`, player.player_id)
+
+                setValue(
+                  `cards.${index}.player_name`,
+                  `${player.first_name} ${player.last_name}`
+                )
+              }}
+            />
+          ) : (
+            <Input
+              placeholder="Player"
+              disabled={disabled || isLocked}
+              className="bg-[#0B0F0F]"
+              {...register(`cards.${index}.player_name`)}
+            />
+          )}
 
           <Input
             type="number"
@@ -190,20 +202,30 @@ export function CardRow({
             {...register(`cards.${index}.player_number`)}
           />
 
-          <PlayerSelect
-            players={filteredPlayers}
-            disabled={disabled || isLocked}
-            value={watch(`cards.${index}.player_id`) || ""}
-            onChange={(player) => {
-              if (!player) return
+          { hasRosterPlayers ? (
+            <PlayerSelect
+              players={filteredPlayers}
+              disabled={disabled || isLocked}
+              value={watch(`cards.${index}.player_id`) || ""}
+              onChange={(player) => {
+                if (!player) return
 
-              setValue(`cards.${index}.player_id`, player.player_id)
-              setValue(
-                `cards.${index}.player_name`,
-                `${player.first_name} ${player.last_name}`
-              )
-            }}
-          />
+                setValue(`cards.${index}.player_id`, player.player_id)
+
+                setValue(
+                  `cards.${index}.player_name`,
+                  `${player.first_name} ${player.last_name}`
+                )
+              }}
+            />
+          ) : (
+            <Input
+              placeholder="Player"
+              disabled={disabled || isLocked}
+              className="bg-[#0B0F0F]"
+              {...register(`cards.${index}.player_name`)}
+            />
+          )}
 
           <Input
             type="number"
