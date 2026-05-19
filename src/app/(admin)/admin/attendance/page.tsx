@@ -10,6 +10,7 @@ import PastAttendanceSessions from "@/src/components/attendance/PastAttendanceSe
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { getUpcomingAttendanceSessions } from "@/src/lib/queries/get-upcoming-attendance-session"
 import UpcomingAttendanceSessions from "@/src/components/attendance/UpcomingAttendanceSession"
+import Pagination from "@/src/components/shared/pagination/Pagination"
 
 export default async function AdminAttendancePage({
   searchParams
@@ -65,6 +66,14 @@ export default async function AdminAttendancePage({
         page={page}
         limit={limit}
       />
+
+      {/* PAGINATION */}
+        <Pagination
+          currentPage={page}
+          totalItems={count}
+          itemsPerPage={limit}
+          basePath="/admin/attendance"
+        />
 
     </div>
   )

@@ -3,11 +3,8 @@
 import { useEffect, useState, useRef } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { createClient } from "@/src/lib/supabase/client"
-
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Clock3 } from "lucide-react"
-import { MatchTimeline } from "../match/MatchTimeline"
 import ScoreboardSection from "./components/match-report-form/ScoreboardSection"
 import CommentsSection from "./components/match-report-form/CommentsSection"
 import SubmitSection from "./components/match-report-form/SubmitSetion"
@@ -20,7 +17,7 @@ import { Card, Goal, MatchReportFormData } from "./components/match-report-form/
 import { useIsMobile } from "./components/match-report-form/hooks/useIsMobile"
 import { TimelinePreviewSection } from "./components/match-report-form/TimelinePreviewSection"
 import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRoster"
-
+import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
 
 type InitialReportData = {
   id: string
@@ -67,6 +64,12 @@ export function MatchReportForm({
   const [submitting, setSubmitting] = useState(false)
   const [, setMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [confirmationType, setConfirmationType] = useState<
+    "no-goals" | "no-cards" | null
+  >(null)
+
+  const [pendingSubmitValues, setPendingSubmitValues] =
+    useState<MatchReportFormData | null>(null)
 
   const [homeRosterFile, setHomeRosterFile] = useState<File | null>(null)
   const [awayRosterFile, setAwayRosterFile] = useState<File | null>(null)
@@ -149,7 +152,7 @@ export function MatchReportForm({
     })),
   ].sort((a, b) => a.minute - b.minute)
 
-  async function onSubmit(values: MatchReportFormData) {
+  async function submitReport(values: MatchReportFormData) {
     if (isReadOnly) return
 
     setSubmitting(true)
@@ -309,99 +312,180 @@ export function MatchReportForm({
       (!c.notes || c.notes.trim() === "")
   )
 
+  function handlePreSubmit(values: MatchReportFormData) {
+
+    // ---------------------------------------------
+    // NO GOALS CONFIRMATION
+    // ---------------------------------------------
+
+    if ((values.goals || []).length === 0) {
+
+      setPendingSubmitValues(values)
+
+      setConfirmationType("no-goals")
+
+      return
+    }
+
+    // ---------------------------------------------
+    // NO CARDS CONFIRMATION
+    // ---------------------------------------------
+
+    if ((values.cards || []).length === 0) {
+
+      setPendingSubmitValues(values)
+
+      setConfirmationType("no-cards")
+
+      return
+    }
+
+    // ---------------------------------------------
+    // DIRECT SUBMIT
+    // ---------------------------------------------
+
+    submitReport(values)
+  }
+
+  async function handleConfirmation() {
+
+    if (!pendingSubmitValues) return
+
+    // ---------------------------------------------
+    // FIRST STEP:
+    // NO GOALS
+    // ---------------------------------------------
+
+    if (
+      confirmationType === "no-goals" &&
+      (pendingSubmitValues.cards || []).length === 0
+    ) {
+
+      setConfirmationType("no-cards")
+
+      return
+    }
+
+    // ---------------------------------------------
+    // FINAL SUBMIT
+    // ---------------------------------------------
+
+    setConfirmationType(null)
+
+    await submitReport(pendingSubmitValues)
+
+    setPendingSubmitValues(null)
+  }
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      {isEdit && (
-        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
-          This report requires corrections. Please update the necessary fields and resubmit.
-        </div>
-      )}
+    <>
+      <form onSubmit={form.handleSubmit(handlePreSubmit)} className="space-y-8">
+        {isEdit && (
+          <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
+            This report requires corrections. Please update the necessary fields and resubmit.
+          </div>
+        )}
 
-      {isReadOnly && (
-        <div className="rounded-xl border border-whiando las props,
-        te/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
-          This report is in read-only mode.
-        </div>
-      )}
+        {isReadOnly && (
+          <div className="rounded-xl border border-whiando las props,
+          te/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
+            This report is in read-only mode.
+          </div>
+        )}
 
-      {/* SCOREBOARD */}
-      <ScoreboardSection
-        homeTeam={match.home_team}
-        awayTeam={match.away_team}
-        homeScore={homeScore}
-        awayScore={awayScore}
-      />
-
-      {/* GOALS + CARDS */}
-      <div className="space-y-6">
-        {/* GOALS */}
-        <GoalsSection
-          goalsArray={goalsArray}
-          register={form.register}
-          isReadOnly={isReadOnly}
-          isMobile={isMobile}
-          players={rosterPlayers}
-          setValue={form.setValue}
-          watch={watch}
+        {/* SCOREBOARD */}
+        <ScoreboardSection
           homeTeam={match.home_team}
           awayTeam={match.away_team}
+          homeScore={homeScore}
+          awayScore={awayScore}
         />
 
-        {/* CARDS */}
-        <CardsSection
-          cardsArray={cardsArray}
+        {/* GOALS + CARDS */}
+        <div className="space-y-6">
+          {/* GOALS */}
+          <GoalsSection
+            goalsArray={goalsArray}
+            register={form.register}
+            isReadOnly={isReadOnly}
+            isMobile={isMobile}
+            players={rosterPlayers}
+            setValue={form.setValue}
+            watch={watch}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
+          />
+
+          {/* CARDS */}
+          <CardsSection
+            cardsArray={cardsArray}
+            register={form.register}
+            isReadOnly={isReadOnly}
+            reasons={cardReasons}
+            watch={watch}
+            setValue={setValue}
+            isMobile={isMobile}
+            players={rosterPlayers}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
+          />
+
+        </div>
+
+        {/* TIMELINE */}
+        <TimelinePreviewSection
+          match={match}
+          timelinePreview={timelinePreview}
+        />
+
+        {/* DOCUMENTS */}
+        <RosterUploadSection
+          isReadOnly={isReadOnly}
+          setHomeRosterFile={setHomeRosterFile}
+          setAwayRosterFile={setAwayRosterFile}
+        />
+
+        {/* COMMENTS */}
+        <CommentsSection
           register={form.register}
           isReadOnly={isReadOnly}
-          reasons={cardReasons}
-          watch={watch}
-          setValue={setValue}
-          isMobile={isMobile}
-          players={rosterPlayers}
-          homeTeam={match.home_team}
-          awayTeam={match.away_team}
         />
 
-      </div>
+        {/* ERROR */}
+        {errorMessage && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {errorMessage}
+          </div>
+        )}
 
-      {/* TIMELINE */}
-      <TimelinePreviewSection
-        match={match}
-        timelinePreview={timelinePreview}
-      />
-
-      {/* DOCUMENTS */}
-      <RosterUploadSection
-        isReadOnly={isReadOnly}
-        setHomeRosterFile={setHomeRosterFile}
-        setAwayRosterFile={setAwayRosterFile}
-      />
-
-      {/* COMMENTS */}
-      <CommentsSection
-        register={form.register}
-        isReadOnly={isReadOnly}
-      />
-
-      {/* ERROR */}
-      {errorMessage && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {errorMessage}
+        {hasInvalidRed && (
+        <div className="text-sm text-red-400">
+          Red cards require a description before submitting the report.
         </div>
       )}
 
-      {hasInvalidRed && (
-      <div className="text-sm text-red-400">
-        Red cards require a description before submitting the report.
-      </div>
-    )}
+        {/* SUBMIT */}
+        <SubmitSection
+          submitting={submitting}
+          isReadOnly={isReadOnly}
+          isEdit={isEdit}
+          hasInvalidRed={hasInvalidRed}
+        />
+      </form>
 
-      {/* SUBMIT */}
-      <SubmitSection
-        submitting={submitting}
-        isReadOnly={isReadOnly}
-        isEdit={isEdit}
-        hasInvalidRed={hasInvalidRed}
+      <MatchReportConfirmationDialog
+        open={confirmationType !== null}
+        type={confirmationType}
+        onCancel={() => {
+          setConfirmationType(null)
+
+          toast.info(
+            "Please review and register all relevant match events before submitting the report."
+          )
+        }}
+        onConfirm={handleConfirmation}
       />
-    </form>
+    
+    </>
   )
 }
