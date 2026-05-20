@@ -1,17 +1,43 @@
 import { getReports } from "@/src/lib/queries/get-reports"
+
 import ReportsList from "@/src/components/reports/ReportsList"
+
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
-export default async function ReportsPage() {
+import Pagination from "@/src/components/shared/pagination/Pagination"
 
-  const reports = await getReports()
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string
+  }>
+}) {
 
+  const params = await searchParams
+
+  // 🔥 PAGINATION
+  const page = Number(params.page ?? 0)
+
+  const limit = 6
+
+  // 🔥 DATA
+  const {
+    data: reports,
+    count,
+  } = await getReports({
+    page,
+    limit,
+  })
+
+  // 🔥 PENDING
   const pending = reports.filter(
     (r) =>
       r.status === "pending" ||
       r.status === "revision_required"
   )
 
+  // 🔥 SUBMITTED
   const submitted = reports.filter(
     (r) =>
       r.status === "submitted" ||
@@ -22,31 +48,34 @@ export default async function ReportsPage() {
 
     <div className="space-y-8">
 
-      {/* Header */}
-
+      {/* HEADER */}
       <PortalPageHeader
         title="Match Reports"
         subtitle="Manage and review your match reports"
       />
 
-      {/* Pending */}
-
+      {/* PENDING */}
       <ReportsList
         title="Pending Reports"
         reports={pending}
         type="pending"
       />
 
-
-      {/* Submitted */}
-
+      {/* SUBMITTED */}
       <ReportsList
         title="Submitted Reports"
         reports={submitted}
         type="submitted"
       />
 
-    </div>
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={page}
+        totalItems={count}
+        itemsPerPage={limit}
+        basePath="/portal/reports"
+      />
 
+    </div>
   )
 }

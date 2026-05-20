@@ -13,16 +13,37 @@ export type ReportRow = {
   }
 }
 
-export async function getReports(): Promise<ReportRow[]> {
+export async function getReports(params?: {
+  page?: number
+  limit?: number
+}) {
+
   const supabase = await supabaseServer()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return []
+  if (!user) {
+    return {
+      data: [],
+      count: 0,
+    }
+  }
 
-  const { data, error } = await supabase
+  const page = params?.page ?? 0
+
+  const limit = params?.limit ?? 10
+
+  const from = page * limit
+
+  const to = from + limit - 1
+
+  const {
+    data,
+    error,
+    count,
+  } = await supabase
     .from("matches")
     .select(`
       id,
@@ -35,30 +56,49 @@ export async function getReports(): Promise<ReportRow[]> {
         away_score,
         submitted_at
       )
-    `)
+    `, {
+      count: "exact",
+    })
     .eq("center_referee_id", user.id)
     .lt("kickoff_at", new Date().toISOString())
-    .order("kickoff_at", { ascending: false })
+    .order("kickoff_at", {
+      ascending: false,
+    })
+    .range(from, to)
 
   if (error) {
-    console.error("getReports error:", error)
+
+    console.error(
+      "getReports error:",
+      error
+    )
+
     throw error
   }
 
-  return (data ?? []).map((match: any) => {
-    const report = Array.isArray(match.match_reports)
+  const mappedReports = (data ?? []).map((match: any) => {
+
+    const report = Array.isArray(
+      match.match_reports
+    )
       ? match.match_reports[0]
       : match.match_reports
 
     return {
+
       match_id: match.id,
 
-      // 🔥 FIX REAL
-      status: report?.status ?? "pending",
+      status:
+        report?.status ?? "pending",
 
-      submitted_at: report?.submitted_at ?? null,
-      home_score: report?.home_score ?? null,
-      away_score: report?.away_score ?? null,
+      submitted_at:
+        report?.submitted_at ?? null,
+
+      home_score:
+        report?.home_score ?? null,
+
+      away_score:
+        report?.away_score ?? null,
 
       matches: {
         home_team: match.home_team,
@@ -67,4 +107,9 @@ export async function getReports(): Promise<ReportRow[]> {
       },
     }
   })
+
+  return {
+    data: mappedReports,
+    count: count ?? 0,
+  }
 }
