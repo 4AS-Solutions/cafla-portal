@@ -126,7 +126,7 @@ export function MatchReportForm({
   }, [initialData, form])
 
   // Load card reasons
-  const { cardReasons } = useCardReasons()
+  const { cardReasons, loading: loadingCardReasons } = useCardReasons()
 
   // Automatic Red Card
   useAutoSecondYellow({
@@ -422,6 +422,7 @@ export function MatchReportForm({
             register={form.register}
             isReadOnly={isReadOnly}
             reasons={cardReasons}
+            loadingReasons={loadingCardReasons}
             watch={watch}
             setValue={setValue}
             isMobile={isMobile}

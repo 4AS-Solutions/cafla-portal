@@ -2,11 +2,13 @@ import { getProfile } from "@/src/lib/queries/get-profile"
 import { getPendingEvaluations } from "@/src/lib/queries/evaluations"
 import { EvaluationList } from "@/src/components/evaluations/EvaluationList"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 export default async function EvaluationsPage() {
 
-  const profile = await getProfile()
+  await requireUser();
 
+  const profile = await getProfile()
   const memberId = profile?.profile?.id
 
   const evaluations = memberId

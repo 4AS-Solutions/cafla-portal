@@ -15,8 +15,11 @@ import { getMyDevelopment } from "@/src/lib/queries/dashboard"
 import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
 import { DevelopmentOverview } from "@/src/components/development/DevelopmentOverview"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 export default async function DevelopmentPage() {
+
+  await requireUser();
 
   const profile = await getProfile()
 

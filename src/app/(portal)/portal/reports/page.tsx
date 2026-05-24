@@ -5,6 +5,7 @@ import ReportsList from "@/src/components/reports/ReportsList"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 import Pagination from "@/src/components/shared/pagination/Pagination"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 export default async function ReportsPage({
   searchParams,
@@ -13,6 +14,8 @@ export default async function ReportsPage({
     page?: string
   }>
 }) {
+
+  await requireUser();
 
   const params = await searchParams
 

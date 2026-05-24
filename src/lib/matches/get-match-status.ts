@@ -33,7 +33,7 @@ export function getMatchStatus(match: any) {
   switch (match.report_status) {
 
     case "pending":
-      return "submitted"
+      return "pending_report"
 
     case "submitted":
       return "submitted"

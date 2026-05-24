@@ -7,6 +7,7 @@ type CardsSectionProps = {
   register: any
   isReadOnly: boolean
   reasons: any[]
+  loadingReasons: boolean
   watch: any
   setValue: any
   isMobile: boolean
@@ -20,6 +21,7 @@ cardsArray,
 register,
 isReadOnly,
 reasons,
+loadingReasons,
 watch,
 setValue,
 isMobile,
@@ -40,6 +42,7 @@ awayTeam
                 type="button"
                 variant="ghost"
                 className="gap-2 text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300"
+                disabled={loadingReasons}
                 onClick={() =>
                   cardsArray.prepend({
                     team: "home",
@@ -54,7 +57,9 @@ awayTeam
                 }
               >
                 <Plus size={16} />
-                Add Card
+                {loadingReasons
+                  ? "Loading..."
+                  : "Add Card"}
               </Button>
             )}
           </div>

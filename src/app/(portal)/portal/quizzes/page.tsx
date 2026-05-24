@@ -3,8 +3,11 @@ import QuizList from "@/src/components/quizzes/QuizList"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import Link from "next/link"
 import { Button } from "@/src/components/ui/button"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 export default async function QuizzesPage() {
+
+  await requireUser();
 
   const quizzes = await getQuizzes()
 

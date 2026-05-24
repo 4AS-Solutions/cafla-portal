@@ -6,6 +6,7 @@ import { QuickActions } from "@/src/components/dashboard/QuickActions"
 import { UpcomingMatchesTable } from "@/src/components/dashboard/UpcomingMatchesTable"
 import { RefereeDevelopmentCard } from "@/src/components/development/DevelopmentSummaryCard"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 import {
   getUpcomingMatches,
@@ -28,6 +29,8 @@ import {
 } from "lucide-react"
 
 export default async function PortalDashboard() {
+  await requireUser();
+
   const profileData = await getProfile()
   const memberId = profileData?.profile?.id
 

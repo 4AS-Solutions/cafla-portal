@@ -1,22 +1,12 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
-
-
 import AttendanceScoreCard from "@/src/components/attendance/AttendanceScoreCard"
 import AttendanceHistoryTable from "@/src/components/attendance/AttendanceHistoryTable"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
+import { requireUser } from "@/src/lib/auth/require-user"
 
 export default async function AttendancePage() {
 
-  const supabase = await supabaseServer()
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return <div>Not authenticated</div>
-  }
+  const user = await requireUser();
 
   const { sessions, stats } = await getUserAttendance(user.id)
 
