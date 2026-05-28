@@ -27,13 +27,13 @@ export function useAuth() {
   return useContext(AuthContext)
 }
 
-const supabase = createClient()
-
 export default function AuthProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
+
+  const supabase = createClient()
 
   const router = useRouter()
 
