@@ -6,6 +6,9 @@ import { LogOut } from "lucide-react"
 import { createClient } from "@/src/lib/supabase/client"
 import { useAuth } from "@/src/components/providers/AuthProvider"
 
+
+  const supabase = createClient()
+
 export function UserMenu({
   mobile = false,
   variant = "default",
@@ -27,8 +30,6 @@ export function UserMenu({
   async function logout() {
 
     try {
-
-      const supabase = createClient()
 
       // 🔥 destroy session
       await supabase.auth.signOut()

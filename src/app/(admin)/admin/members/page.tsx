@@ -7,6 +7,7 @@ import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 import Pagination from "@/src/components/shared/pagination/Pagination"
 import QueryFilters from "@/src/components/shared/filters/QueryFilter"
+import { requireBoard } from "@/src/lib/auth/require-board"
 
 
 export default async function MembersPage({
@@ -19,6 +20,8 @@ export default async function MembersPage({
     page?: string
   }>
 }) {
+
+  await requireBoard()
 
   const params = await searchParams
 

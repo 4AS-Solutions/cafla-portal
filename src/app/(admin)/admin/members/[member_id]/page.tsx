@@ -4,12 +4,15 @@ import { Badge } from "@/src/components/ui/badge"
 import { formatMatchDate } from "@/src/lib/utils/format-date"
 import { getMemberDashboard } from "@/src/lib/queries/get-member-dashboard"
 import MemberActivityCard from "@/src/components/members/MemberActivityCard"
+import { requireBoard } from "@/src/lib/auth/require-board"
 
 export default async function MemberPage({
   params,
 }: {
   params: Promise<{ member_id: string }>
 }) {
+
+  await requireBoard()
 
   const { member_id } = await params
   const member = await getMemberById(member_id)

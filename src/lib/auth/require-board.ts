@@ -14,7 +14,7 @@ export async function requireBoard() {
 
   // 🔥 NO PROFILE
   if (!data?.profile) {
-    redirect("/login?reason=session-expired")
+    redirect("/login")
   }
 
   const { profile } = data

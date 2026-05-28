@@ -1,12 +1,15 @@
 import { getMemberById } from "@/src/lib/queries/get-member-by-id"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import EditMemberForm from "@/src/components/members/EditMemberForm"
+import { requireBoard } from "@/src/lib/auth/require-board"
 
 export default async function EditMemberPage({
   params,
 }: {
   params: Promise<{ member_id: string }>
 }) {
+
+  await requireBoard()
   const { member_id } = await params
   const member = await getMemberById(member_id)
 

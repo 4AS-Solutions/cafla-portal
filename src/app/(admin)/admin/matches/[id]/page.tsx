@@ -1,4 +1,5 @@
 import MatchDetail from "@/src/components/admin/MatchDetails"
+import { requireBoard } from "@/src/lib/auth/require-board"
 import { supabaseServer } from "@/src/lib/supabase/server"
 
 export default async function MatchDetailPage({
@@ -6,6 +7,8 @@ export default async function MatchDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+
+  await requireBoard()
 
   const { id } = await params
 
