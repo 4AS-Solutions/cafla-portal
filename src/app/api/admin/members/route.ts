@@ -3,7 +3,7 @@ import { getMembers } from "@/src/lib/queries/get-members"
 
 export async function GET() {
 
-  const members = await getMembers()
+  const { data: members} = await getMembers()
 
   return NextResponse.json({
     members
