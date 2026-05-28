@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
+
 import { useRouter } from "next/navigation"
-import { useSearchParams } from "next/navigation"
 
 import { createClient } from "@/src/lib/supabase/client"
-
-import UnauthorizedAccess from "@/src/components/auth/UnauthorizedAccess"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -16,11 +14,6 @@ export default function LoginPage() {
   const supabase = createClient()
 
   const router = useRouter()
-
-  const searchParams = useSearchParams()
-
-  const reason =
-    searchParams.get("reason")
 
   const [email, setEmail] = useState("")
 
@@ -54,11 +47,6 @@ export default function LoginPage() {
 
     }
 
-  }
-
-  // 🔥 SESSION EXPIRED
-  if (reason === "session-expired") {
-    return <UnauthorizedAccess />
   }
 
   return (
@@ -146,12 +134,9 @@ export default function LoginPage() {
         <p
           className="
           text-center
-
           text-[11px]
           tracking-wide
-
           text-gray-500
-
           mt-8
           "
         >
@@ -169,14 +154,10 @@ export default function LoginPage() {
           <span
             className="
             ml-1
-
             font-semibold
-
             text-yellow-400/90
-
             transition-colors
             duration-200
-
             hover:text-yellow-300
             "
           >
