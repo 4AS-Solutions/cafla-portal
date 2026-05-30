@@ -72,7 +72,13 @@ export function getUniformSet(session: any) {
     ]
   }
 
-  return ["/images/uniforms/short-training.png"]
+  return [
+      "/images/uniforms/friday-jacket.png",
+      "/images/uniforms/friday-shirt.png",
+      "/images/uniforms/friday-pants.png",
+      "/images/uniforms/friday-short.png",
+      "/images/uniforms/friday-sweater.png",
+    ]
 }
 
 export function getUpcomingSessions(sessionsRaw: any[]) {
