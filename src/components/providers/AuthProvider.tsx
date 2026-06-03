@@ -178,7 +178,7 @@ export default function AuthProvider({
 
           setLoading(false)
 
-          router.replace("/login")
+          window.location.href = "/login"
 
           return
         }
@@ -220,13 +220,7 @@ export default function AuthProvider({
       subscription.unsubscribe()
     }
 
-  }, [
-    supabase,
-    router,
-    pathname,
-    isCallbackRoute,
-    isInviteFlow,
-  ])
+  }, [])
 
   // =========================================
   // 🔥 PROVIDER

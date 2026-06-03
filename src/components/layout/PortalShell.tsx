@@ -23,25 +23,37 @@ export function PortalShell({
       <PortalSidebar />
 
       {/* Mobile Sidebar */}
-      {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+      <div
+        className={`
+          fixed inset-0 z-50 md:hidden
+          transition-opacity duration-300
+          ${mobileSidebarOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"}
+        `}
+      >
+        <button
+          aria-label="Close sidebar overlay"
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
 
-          <button
-            aria-label="Close sidebar overlay"
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setMobileSidebarOpen(false)}
+        <div
+          className={`
+            absolute right-0 top-0 h-full w-[84vw] max-w-[340px]
+            transition-transform duration-300 ease-out
+            ${mobileSidebarOpen
+              ? "translate-x-0"
+              : "translate-x-full"}
+          `}
+        >
+          <PortalSidebar
+            mobile
+            onNavigate={() => setMobileSidebarOpen(false)}
+            onClose={() => setMobileSidebarOpen(false)}
           />
-
-          <div className="absolute right-0 top-0 h-full w-[84vw] max-w-[340px]">
-            <PortalSidebar
-              mobile
-              onNavigate={() => setMobileSidebarOpen(false)}
-              onClose={() => setMobileSidebarOpen(false)}
-            />
-          </div>
-
         </div>
-      )}
+      </div>
 
       {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col">

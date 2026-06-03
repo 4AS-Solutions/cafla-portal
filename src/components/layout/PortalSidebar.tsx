@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+
 import {
   LayoutDashboard,
   Users,
@@ -19,8 +20,13 @@ import {
   X,
 } from "lucide-react"
 
-import { usePathname } from "next/navigation"
+import {
+  usePathname,
+  useRouter,
+} from "next/navigation"
+
 import { useAuth } from "@/src/components/providers/AuthProvider"
+
 import { UserMenu } from "./UserMenu"
 
 type NavItem = {
@@ -58,8 +64,12 @@ export function PortalSidebar({
   onNavigate?: () => void
   onClose?: () => void
 }) {
+
   const pathname = usePathname()
-  const { profile } = useAuth()
+
+  const router = useRouter()
+
+  const { profile, loading } = useAuth()
 
   const isBoard = profile?.role === "board"
 
@@ -71,52 +81,105 @@ export function PortalSidebar({
     "sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all"
 
   function isActive(itemHref: string) {
+
     if (itemHref === "/portal") {
       return pathname === "/portal"
     }
+
     return pathname.startsWith(itemHref)
   }
 
+  // =========================================
+  // 🔥 REFRESH SESSION + DASHBOARD
+  // =========================================
+  async function handleLogoClick() {
+    
+    // 🔥 NAVIGATE DASHBOARD
+    router.push("/portal")
+
+    // 🔥 REFRESH SERVER COMPONENTS
+    router.refresh()
+  }
+
+  // =========================================
+  // 🔥 LOADING
+  // =========================================
+  if (loading) {
+    return null
+  }
+
   return (
+
     <aside className={containerClass}>
+
       {/* HEADER */}
       <div className="flex h-16 items-center border-b border-white/10 px-4">
+
         {mobile ? (
+
           <>
             <div className="flex items-center gap-3">
-              <Link href="/portal">
+
+              <button
+                type="button"
+                onClick={handleLogoClick}
+                className="transition hover:scale-[1.02]"
+                aria-label="Refresh session and go to dashboard"
+              >
+
                 <Image
                   src="/logo/cafla-logo.png"
                   alt="CAFLA"
                   width={40}
                   height={40}
                 />
-            </Link> 
-                <span className="text-base font-semibold text-yellow-400">
-                  CAFLA
-                </span>
+
+              </button>
+
+              <span className="text-base font-semibold text-yellow-400">
+                CAFLA
+              </span>
+
             </div>
 
             <button
               onClick={onClose}
-              className="ml-auto rounded-lg p-2 text-gray-400 transition hover:bg-white/5 hover:text-white"
+              className="
+                ml-auto rounded-lg p-2 text-gray-400
+                transition hover:bg-white/5 hover:text-white
+              "
               aria-label="Close sidebar"
             >
+
               <X size={18} />
+
             </button>
           </>
+
         ) : (
+
           <div className="flex w-full justify-center">
-            <Link href="/portal">
+
+            <button
+              type="button"
+              onClick={handleLogoClick}
+              className="transition hover:scale-[1.02] cursor-pointer"
+              aria-label="Refresh session and go to dashboard"
+            >
+
               <Image
                 src="/logo/cafla-logo.png"
                 alt="CAFLA"
                 width={48}
                 height={48}
               />
-            </Link>
+
+            </button>
+
           </div>
+
         )}
+
       </div>
 
       {/* USER INFO (MOBILE) */}
@@ -128,12 +191,17 @@ export function PortalSidebar({
 
       {/* NAV */}
       <div className="flex-1 overflow-y-auto px-3 py-4">
+
         <nav className="flex flex-col gap-1">
+
           {memberItems.map((item) => {
+
             const Icon = item.icon
+
             const active = isActive(item.href)
 
             return (
+
               <Link
                 key={item.name}
                 href={item.href}
@@ -144,6 +212,7 @@ export function PortalSidebar({
                     : "text-gray-300 hover:bg-white/5 hover:text-yellow-400"
                 }`}
               >
+
                 <Icon
                   size={18}
                   className={
@@ -152,24 +221,39 @@ export function PortalSidebar({
                       : "text-gray-400 group-hover:text-yellow-400"
                   }
                 />
+
                 <span>{item.name}</span>
+
               </Link>
+
             )
           })}
+
         </nav>
 
         {isBoard && (
+
           <div className="mt-6">
-            <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-yellow-400/90">
+
+            <div className="
+              px-3 pb-2 text-[11px]
+              font-semibold uppercase
+              tracking-[0.22em]
+              text-yellow-400/90
+            ">
               Admin
             </div>
 
             <nav className="flex flex-col gap-1">
+
               {boardItems.map((item) => {
+
                 const Icon = item.icon
+
                 const active = isActive(item.href)
 
                 return (
+
                   <Link
                     key={item.name}
                     href={item.href}
@@ -180,6 +264,7 @@ export function PortalSidebar({
                         : "text-gray-300 hover:bg-white/5 hover:text-yellow-400"
                     }`}
                   >
+
                     <Icon
                       size={18}
                       className={
@@ -188,21 +273,33 @@ export function PortalSidebar({
                           : "text-gray-400 group-hover:text-yellow-400"
                       }
                     />
+
                     <span>{item.name}</span>
+
                   </Link>
+
                 )
               })}
+
             </nav>
+
           </div>
+
         )}
+
       </div>
 
       {/* LOGOUT MOBILE */}
       {mobile && (
-        <div className="border-t border-white/10 p-4 hover:bg-red-600/10 rounded-lg transition">
+        <div className="
+          border-t border-white/10
+          p-4 hover:bg-red-600/10
+          rounded-lg transition
+        ">
           <UserMenu mobile variant="logout" />
         </div>
       )}
+
     </aside>
   )
 }

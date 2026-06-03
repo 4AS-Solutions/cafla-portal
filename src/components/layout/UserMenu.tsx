@@ -29,18 +29,15 @@ export function UserMenu({
 
     try {
 
-      // 🔥 destroy session
+      console.log("LOGOUT READY")
+
       await supabase.auth.signOut()
 
-      // 🔥 clear next cache
-      router.refresh()
-
-      // 🔥 hard redirect
-      window.location.replace("/login")
+      console.log("Logout Already")
 
     } catch (err) {
 
-      console.error("Logout error:", err)
+      console.error("Logout error")
 
     }
 
