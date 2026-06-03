@@ -398,3 +398,23 @@
 .input-dark {
   @apply bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-white/30;
 }
+
+
+/* ---------------- SELECT SCROLLBAR ---------------- */
+
+[data-slot="select-content"] ::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-slot="select-content"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="select-content"] ::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.4);
+  border-radius: 999px;
+}
+
+[data-slot="select-content"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.7);
+}

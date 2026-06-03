@@ -78,7 +78,8 @@ export async function PATCH(
       .eq("report_id", report_id)
       .select()
 
-    console.log(`DELETED ${table.toUpperCase()}:`, deleted)
+    // console.log(`DELETED ${table.toUpperCase()}:`, deleted)
+    console.log(`DELETED reports`)
 
     if (deleteError) {
       throw new Error(`Delete failed on ${table}: ${deleteError.message}`)

@@ -3,11 +3,9 @@
 import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
 
-import { createClient } from "@/src/lib/supabase/client"
+import { supabase } from "@/src/lib/supabase/client"
 import { useAuth } from "@/src/components/providers/AuthProvider"
 
-
-  const supabase = createClient()
 
 export function UserMenu({
   mobile = false,

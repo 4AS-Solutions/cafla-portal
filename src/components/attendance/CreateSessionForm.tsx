@@ -1,13 +1,18 @@
 "use client"
 
+import { useRouter } from "next/navigation";
 import { useState } from "react"
 
 export default function CreateSessionForm() {
+
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+
+    const form = e.currentTarget;
 
     setLoading(true)
 
@@ -19,7 +24,10 @@ export default function CreateSessionForm() {
     })
 
     if (res.ok) {
-      location.reload()
+      form.reset();
+      setLoading(false)
+      router.refresh()
+      return
     }
 
     setLoading(false)

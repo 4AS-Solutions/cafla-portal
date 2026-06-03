@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
-import { createClient } from "@/src/lib/supabase/client"
+import { supabase } from "@/src/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ScoreboardSection from "./components/match-report-form/ScoreboardSection"
@@ -50,7 +50,6 @@ export function MatchReportForm({
   mode,
   initialData,
 }: MatchReportFormProps) {
-  const supabase = createClient()
   const router = useRouter()
 
   // Detect mobile for better form UX
@@ -155,19 +154,38 @@ export function MatchReportForm({
   async function submitReport(values: MatchReportFormData) {
     if (isReadOnly) return
 
+    console.log("🚀🚀🚀🚀 START submitReport ")
+
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
 
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
+      console.log("🔐 Getting session...")
 
-      if (userError || !user) {
-        throw new Error("You must be logged in to submit this report.")
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      const user = session?.user ?? null
+
+      // console.log(
+      //   "✅ Session user:",
+      //   user?.id ?? "NO USER"
+      // )
+      console.log(
+        "✅ Session user:"
+      )
+
+      if (sessionError || !user) {
+        throw new Error(
+          "You must be logged in to submit this report."
+        )
       }
+
+      // console.log("✅✅✅✅ User loaded", user?.id)
+      console.log("✅✅✅✅ User loaded ")
 
       if (!match.center_referee_id || user.id !== match.center_referee_id) {
         throw new Error("Only the center referee can submit this report.")
@@ -228,6 +246,7 @@ export function MatchReportForm({
       // PAYLOAD
       // ---------------------------------------------
 
+      console.log("📦📦📦📦 Building payload...")
       const payload = {
         match_id: match.id,
         home_score: homeScore,
@@ -239,7 +258,8 @@ export function MatchReportForm({
         away_roster_path: awayRosterPath,
       }
 
-      console.log("Submitting report payload...", payload)
+      // console.log("✔️✔️✔️✔️ Payload ready", payload)
+      console.log("✔️✔️✔️✔️ Payload ready")
 
       const endpoint =
         isEdit && initialData?.id
@@ -247,6 +267,12 @@ export function MatchReportForm({
           : "/api/reports/submit"
 
       const method = isEdit ? "PATCH" : "POST"
+
+      console.log("📡 Sending request...")
+      // console.log("🔺🔺🔺🔺🔺 Endpoint:", endpoint)
+      console.log("🔺🔺🔺🔺🔺 Endpoint: ")
+      // console.log("❗❗❗❗❗ Method:", method)
+      console.log("❗❗❗❗❗ Method: ")
 
       const res = await fetch(endpoint, {
         method,
@@ -256,11 +282,16 @@ export function MatchReportForm({
         body: JSON.stringify(payload),
       })
 
+      // console.log("☑️☑️☑️☑️☑️ Response received: ", res.status)
+      console.log("☑️☑️☑️☑️☑️ Response received: ")
+
       // ---------------------------------------------
       // SAFER RESPONSE HANDLING
       // ---------------------------------------------
 
+      console.log("📥📥📥📥 Reading response body...")
       const text = await res.text()
+      console.log("📨📨📨📨📨 Response body read.")
 
       let data: any = null
 
@@ -290,8 +321,10 @@ export function MatchReportForm({
       // REMOVE router.refresh()
       // ---------------------------------------------
 
+      console.log("🎊🎊🎊🎊 SUCCESS redirecting...")
       router.push("/portal/reports")
     } catch (error) {
+      console.log("❌ SUBMIT FAILED")
       console.error(error)
 
       const message =
@@ -302,6 +335,7 @@ export function MatchReportForm({
       toast.error(message)
       setErrorMessage(message)
     } finally {
+      console.log("🧹 Cleaning submit state...")
       setSubmitting(false)
     }
   }

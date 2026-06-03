@@ -79,7 +79,7 @@ export default function AdminReportCard({ report }: any) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: "approved" })
                   })
-                  location.reload()
+                  router.refresh()
                 }}
                 className="
                   text-xs px-3 py-1.5 rounded-lg
@@ -96,7 +96,7 @@ export default function AdminReportCard({ report }: any) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: "revision_required" })
                   })
-                  location.reload()
+                  router.refresh()
                 }}
                 className="
                   text-xs px-3 py-1.5 rounded-lg

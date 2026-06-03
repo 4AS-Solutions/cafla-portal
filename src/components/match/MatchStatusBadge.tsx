@@ -3,7 +3,8 @@ export default function MatchStatusBadge({
 }: {
   status: string
 }) {
-  console.log("MatchStatusBadge status:", status)
+  // console.log("MatchStatusBadge status:", status)
+  console.log("MatchStatusBadge status: ON")
 
   /*
   -----------------------------

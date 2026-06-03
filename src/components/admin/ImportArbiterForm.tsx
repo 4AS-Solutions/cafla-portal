@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { toast } from "sonner"
+import RefereeSelect from "../shared/RefereeSelect"
 
 type ArbiterGame = {
   game_id: string
@@ -62,8 +63,9 @@ export default function ImportArbiterForm() {
 
       setPreview(data.games)
 
-      const membersRes = await fetch("/api/admin/members")
+      const membersRes = await fetch("/api/admin/members/all")
       const membersData = await membersRes.json()
+
 
       setMembers(membersData.members)
 
@@ -274,6 +276,7 @@ export default function ImportArbiterForm() {
             grid-cols-1
             md:grid-cols-2
             xl:grid-cols-3
+            overflow-visible
           ">
 
             {preview.map((g, index) => (
@@ -288,6 +291,7 @@ export default function ImportArbiterForm() {
                   space-y-3
                   hover:border-emerald-500/30
                   transition
+                  overflow-visible
                 "
               >
 
@@ -329,21 +333,18 @@ export default function ImportArbiterForm() {
                     ["ar1", g.ar1],
                     ["ar2", g.ar2]].map(([field, value]) => (
 
-                    <select
+                    <RefereeSelect
                       key={field}
                       value={value}
-                      onChange={(e) =>
-                        updateRow(index, field as keyof ArbiterGame, e.target.value)
+                      members={members}
+                      onChange={(selectedValue) =>
+                        updateRow(
+                          index,
+                          field as keyof ArbiterGame,
+                          selectedValue
+                        )
                       }
-                      className="w-full bg-[#071f1c] border border-white/10 rounded px-2 py-1 text-xs text-white"
-                    >
-                      <option value={value}>{value}</option>
-                      {members.map(m => (
-                        <option key={m.id} value={m.full_name}>
-                          {m.full_name}
-                        </option>
-                      ))}
-                    </select>
+                    />
 
                   ))}
 

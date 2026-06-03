@@ -16,6 +16,8 @@ export type ReportRow = {
 export async function getReports(params?: {
   page?: number
   limit?: number
+  search?: string
+  status?: string
 }) {
 
   const supabase = await supabaseServer()
@@ -38,12 +40,10 @@ export async function getReports(params?: {
   const from = page * limit
 
   const to = from + limit - 1
+  const search = params?.search?.trim()
+  const status = params?.status
 
-  const {
-    data,
-    error,
-    count,
-  } = await supabase
+  let query = supabase
     .from("matches")
     .select(`
       id,
@@ -61,6 +61,32 @@ export async function getReports(params?: {
     })
     .eq("center_referee_id", user.id)
     .lt("kickoff_at", new Date().toISOString())
+
+  // 🔥 SEARCH
+  if (search) {
+
+    query = query.or(` home_team.ilike.%${search}%, away_team.ilike.%${search}%`)
+
+  }
+
+  // 🔥 STATUS
+  if (
+    status &&
+    status !== "all"
+  ) {
+
+    query = query.eq(
+      "match_reports.status",
+      status
+    )
+
+  }
+
+  const {
+    data,
+    error,
+    count,
+  } = await query
     .order("kickoff_at", {
       ascending: false,
     })

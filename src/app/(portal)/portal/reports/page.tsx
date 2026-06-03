@@ -6,12 +6,15 @@ import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 
 import Pagination from "@/src/components/shared/pagination/Pagination"
 import { requireUser } from "@/src/lib/auth/require-user"
+import QueryFilters from "@/src/components/shared/filters/QueryFilter"
 
 export default async function ReportsPage({
   searchParams,
 }: {
   searchParams: Promise<{
     page?: string
+    search?: string
+    status?: string
   }>
 }) {
 
@@ -24,6 +27,9 @@ export default async function ReportsPage({
 
   const limit = 6
 
+  const search = params.search;
+  const status = params.status;
+
   // 🔥 DATA
   const {
     data: reports,
@@ -31,6 +37,9 @@ export default async function ReportsPage({
   } = await getReports({
     page,
     limit,
+
+    search,
+    status
   })
 
   // 🔥 PENDING
@@ -55,6 +64,39 @@ export default async function ReportsPage({
       <PortalPageHeader
         title="Match Reports"
         subtitle="Manage and review your match reports"
+      />
+
+      <QueryFilters
+        filters={[
+          {
+            type: "search",
+            key: "search",
+            placeholder: "Search reports...",
+          },
+          {
+            type: "select",
+            key: "status",
+            placeholder: "Status",
+            options: [
+              {
+                label: "Pending",
+                value: "pending",
+              },
+              {
+                label: "Revision Required",
+                value: "revision_required",
+              },
+              {
+                label: "Submitted",
+                value: "submitted",
+              },
+              {
+                label: "Approved",
+                value: "approved",
+              },
+            ],
+          },
+        ]}
       />
 
       {/* PENDING */}

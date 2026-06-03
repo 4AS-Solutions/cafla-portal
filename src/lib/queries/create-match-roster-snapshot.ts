@@ -59,7 +59,10 @@ export async function createMatchRosterSnapshot(
     console.error("Roster snapshot error:", rosterError)
   }
 
+  // console.log(
+  //   `Roster snapshot created for match ${matchId}`
+  // )
   console.log(
-    `Roster snapshot created for match ${matchId}`
+    `Roster snapshot created for match`
   )
 }

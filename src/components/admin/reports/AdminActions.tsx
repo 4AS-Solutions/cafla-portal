@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function AdminActions({
@@ -9,6 +10,8 @@ export default function AdminActions({
   reportId: string
   status: string
 }) {
+
+  const router = useRouter()
 
   const [revisionNotes, setRevisionNotes] = useState("")
   const [showReviewBox, setShowReviewBox] = useState(false)
@@ -28,7 +31,7 @@ export default function AdminActions({
       }),
     })
 
-    location.reload()
+    router.refresh()
   }
 
   return (

@@ -3,12 +3,10 @@ import {
   useState,
 } from "react"
 
-import { createClient } from "@/src/lib/supabase/client"
+import { supabase } from "@/src/lib/supabase/client"
 
 export function useCardReasons() {
 
-  const supabase =
-    createClient()
 
   const [
     cardReasons,

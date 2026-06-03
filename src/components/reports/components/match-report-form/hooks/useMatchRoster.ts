@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { createClient } from "@/src/lib/supabase/client"
+import { supabase } from "@/src/lib/supabase/client"
 
 type MatchRosterPlayer = {
   id: string
@@ -17,7 +17,6 @@ type MatchRosterPlayer = {
 }
 
 export function useMatchRoster(matchId?: string) {
-  const supabase = createClient()
 
   const [players, setPlayers] = useState<MatchRosterPlayer[]>([])
   const [loading, setLoading] = useState(true)

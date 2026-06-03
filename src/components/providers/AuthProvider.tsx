@@ -9,7 +9,7 @@ import {
 
 import { usePathname, useRouter } from "next/navigation"
 
-import { createClient } from "@/src/lib/supabase/client"
+import { supabase } from "@/src/lib/supabase/client"
 
 type AuthContextType = {
   user: any
@@ -33,7 +33,6 @@ export default function AuthProvider({
   children: React.ReactNode
 }) {
 
-  const supabase = createClient()
 
   const router = useRouter()
 
@@ -105,10 +104,17 @@ export default function AuthProvider({
 
       try {
 
+        console.log("🔐 Initializing auth session...")
+
         const {
-          data: { user },
+          data: { session },
           error,
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getSession()
+
+        const user = session?.user ?? null
+
+        // console.log( "✅ Session loaded:", user?.id ?? "NO USER" )
+        console.log( "✅ Session loaded:")
 
         if (!mounted) return
 
@@ -130,7 +136,10 @@ export default function AuthProvider({
 
       } catch (error) {
 
-        console.error("❌ Auth initialization error:", error)
+        console.error(
+          "❌ Auth initialization error:",
+          error
+        )
 
         setUser(null)
 
