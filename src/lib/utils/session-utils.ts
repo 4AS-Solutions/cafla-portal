@@ -55,7 +55,7 @@ export function getUniformSet(session: any) {
     ]
   }
 
-  if (day === 4) {
+  if (day === 3) {
     return [
       "/images/uniforms/thursday-shirt.png",
       "/images/uniforms/short-training.png",
