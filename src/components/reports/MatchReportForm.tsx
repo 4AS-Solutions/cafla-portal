@@ -18,6 +18,7 @@ import { useIsMobile } from "./components/match-report-form/hooks/useIsMobile"
 import { TimelinePreviewSection } from "./components/match-report-form/TimelinePreviewSection"
 import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRoster"
 import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
+import { useAuth } from "../providers/AuthProvider"
 
 type InitialReportData = {
   id: string
@@ -51,6 +52,7 @@ export function MatchReportForm({
   initialData,
 }: MatchReportFormProps) {
   const router = useRouter()
+  const { user } = useAuth()
 
   // Detect mobile for better form UX
   const isMobile = useIsMobile()
@@ -154,38 +156,22 @@ export function MatchReportForm({
   async function submitReport(values: MatchReportFormData) {
     if (isReadOnly) return
 
-    console.log("🚀🚀🚀🚀 START submitReport ")
+    console.log("[REPORT] submit started")
 
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
 
     try {
-      console.log("🔐 Getting session...")
+      console.log("[REPORT] validating current user")
 
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-
-      const user = session?.user ?? null
-
-      // console.log(
-      //   "✅ Session user:",
-      //   user?.id ?? "NO USER"
-      // )
-      console.log(
-        "✅ Session user:"
-      )
-
-      if (sessionError || !user) {
+      if (!user) {
         throw new Error(
-          "You must be logged in to submit this report."
+          "Your session is unavailable. Please refresh the page and try again."
         )
       }
 
-      // console.log("✅✅✅✅ User loaded", user?.id)
-      console.log("✅✅✅✅ User loaded ")
+      console.log("[REPORT] current user available")
 
       if (!match.center_referee_id || user.id !== match.center_referee_id) {
         throw new Error("Only the center referee can submit this report.")

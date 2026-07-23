@@ -1,8 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
-
 import { supabase } from "@/src/lib/supabase/client"
 import { useAuth } from "@/src/components/providers/AuthProvider"
 
@@ -17,8 +15,6 @@ export function UserMenu({
   className?: string
 }) {
 
-  const router = useRouter()
-
   const { profile, user } = useAuth() as any
 
   const name = profile?.full_name ?? "User"
@@ -26,21 +22,21 @@ export function UserMenu({
   const role = (profile?.role ?? "member").toUpperCase()
 
   async function logout() {
+    console.log("[LOGOUT] click")
 
     try {
+      console.log("[LOGOUT] before signOut")
 
-      console.log("LOGOUT READY")
+      const { error } = await supabase.auth.signOut()
 
-      await supabase.auth.signOut()
+      console.log("[LOGOUT] after signOut", { error })
 
-      console.log("Logout Already")
-
-    } catch (err) {
-
-      console.error("Logout error")
-
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      console.error("[LOGOUT] failed", error)
     }
-
   }
 
   if (mobile && variant === "info") {

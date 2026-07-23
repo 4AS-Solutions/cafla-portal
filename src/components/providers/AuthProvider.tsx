@@ -159,17 +159,13 @@ export default function AuthProvider({
     // 🔥 AUTH LISTENER
     // =========================================
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
 
         if (!mounted) return
 
         console.log("🔐 Auth event:", event)
 
-        // =========================================
-        // 🚪 SIGNED OUT
-        // =========================================
         if (event === "SIGNED_OUT") {
 
           setUser(null)
@@ -178,14 +174,11 @@ export default function AuthProvider({
 
           setLoading(false)
 
-          window.location.href = "/login"
+          window.location.replace("/login")
 
           return
         }
 
-        // =========================================
-        // 🔄 TOKEN REFRESH / SIGN IN
-        // =========================================
         if (
           event === "SIGNED_IN" ||
           event === "TOKEN_REFRESHED" ||
@@ -196,19 +189,41 @@ export default function AuthProvider({
 
           setUser(currentUser)
 
-          if (currentUser) {
-
-            await loadProfile(currentUser.id)
-
-          } else {
+          if (!currentUser) {
 
             setProfile(null)
+
+            setLoading(false)
+
+            return
           }
 
-          setLoading(false)
+          setTimeout(() => {
+
+            if (!mounted) return
+
+            void loadProfile(currentUser.id)
+              .catch((error) => {
+
+                console.error(
+                  "❌ Listener profile error:",
+                  error
+                )
+
+                if (mounted) {
+                  setProfile(null)
+                }
+              })
+              .finally(() => {
+
+                if (mounted) {
+                  setLoading(false)
+                }
+              })
+
+          }, 0)
         }
-      }
-    )
+      })
 
     // =========================================
     // 🔥 CLEANUP
