@@ -1,19 +1,51 @@
-
-import { MatchEventIcon } from "../icons/MatchEventIcon"
 import { MatchStage } from "./MatchStage"
-import { TimelineEvent } from "./MatchTimelineEvent"
+import {
+  TimelineEvent,
+  type TimelineEventData,
+} from "./MatchTimelineEvent"
 
-type Event = {
-  minute: number
-  type: "goal" | "card"
-  player: string
-  number: string
-  team: "home" | "away"
-  card_type?: string
+function combineSecondYellowCards(
+  events: TimelineEventData[]
+): TimelineEventData[] {
+  const combinedEvents: TimelineEventData[] = []
+
+  for (let index = 0; index < events.length; index += 1) {
+    const currentEvent = events[index]
+    const nextEvent = events[index + 1]
+
+    const isSecondYellowSequence =
+      currentEvent.type === "card" &&
+      currentEvent.card_type === "yellow" &&
+      nextEvent?.type === "card" &&
+      nextEvent.card_type === "red" &&
+      currentEvent.minute === nextEvent.minute &&
+      currentEvent.team === nextEvent.team &&
+      currentEvent.player === nextEvent.player &&
+      currentEvent.number === nextEvent.number
+
+    if (isSecondYellowSequence) {
+      combinedEvents.push({
+        ...currentEvent,
+        card_type: "second_yellow",
+      })
+
+      // Skip the following red-card event because both cards
+      // are now represented by one combined timeline event.
+      index += 1
+      continue
+    }
+
+    combinedEvents.push(currentEvent)
+  }
+
+  return combinedEvents
 }
 
-export function MatchTimeline({ events }: { events: Event[] }) {
-
+export function MatchTimeline({
+  events,
+}: {
+  events: TimelineEventData[]
+}) {
   if (!events.length) {
     return (
       <div className="rounded-xl border border-white/10 bg-black/30 p-6 text-sm text-gray-400">
@@ -22,15 +54,34 @@ export function MatchTimeline({ events }: { events: Event[] }) {
     )
   }
 
-  const sortedEvents = [...events].sort(
-    (a, b) => a.minute - b.minute
-  )
+  /*
+   * Keep the original order when multiple events
+   * occurred during the same minute.
+   */
+  const sortedEvents = events
+    .map((event, originalIndex) => ({
+      event,
+      originalIndex,
+    }))
+    .sort(
+      (a, b) =>
+        a.event.minute - b.event.minute ||
+        a.originalIndex - b.originalIndex
+    )
+    .map(({ event }) => event)
 
-  const firstHalfEvents = sortedEvents.filter(
+  /*
+   * Combine consecutive yellow + red cards when they
+   * belong to the same player, team, and minute.
+   */
+  const timelineEvents =
+    combineSecondYellowCards(sortedEvents)
+
+  const firstHalfEvents = timelineEvents.filter(
     (event) => event.minute <= 45
   )
 
-  const secondHalfEvents = sortedEvents.filter(
+  const secondHalfEvents = timelineEvents.filter(
     (event) => event.minute >= 46
   )
 
@@ -54,7 +105,7 @@ export function MatchTimeline({ events }: { events: Event[] }) {
 
           {firstHalfEvents.map((event, index) => (
             <TimelineEvent
-              key={`first-half-${event.minute}-${index}`}
+              key={`first-half-${event.minute}-${event.player}-${event.card_type ?? event.type}-${index}`}
               event={event}
             />
           ))}
@@ -71,7 +122,7 @@ export function MatchTimeline({ events }: { events: Event[] }) {
 
           {secondHalfEvents.map((event, index) => (
             <TimelineEvent
-              key={`second-half-${event.minute}-${index}`}
+              key={`second-half-${event.minute}-${event.player}-${event.card_type ?? event.type}-${index}`}
               event={event}
             />
           ))}

@@ -21,9 +21,11 @@ export function TimelineEvent({
   const eventIconType =
     event.type === "goal"
       ? "goal"
-      : event.card_type === "red"
-        ? "red"
-        : "yellow"
+      : event.card_type === "second_yellow"
+        ? "second_yellow"
+        : event.card_type === "red"
+          ? "red"
+          : "yellow"
 
   return (
     <div
