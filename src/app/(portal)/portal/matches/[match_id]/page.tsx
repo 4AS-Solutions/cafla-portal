@@ -67,7 +67,10 @@ export default async function MatchDetailsPage({
         {/* ================= COL 1 ================= */}
         <div className="space-y-6">
 
-          <MatchScore report={report} />
+          <MatchScore report={report} 
+                        homeTeam={match.home_team}
+                        awayTeam={match.away_team}
+          />
 
           <MatchTimeline events={timeline} />
 

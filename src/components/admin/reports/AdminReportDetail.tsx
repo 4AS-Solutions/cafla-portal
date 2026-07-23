@@ -58,7 +58,10 @@ export default function AdminReportDetail({
         {/* ================= COL 1 ================= */}
         <div className="space-y-6">
 
-          <MatchScore report={report} />
+          <MatchScore report={report} 
+                      homeTeam={match.home_team}
+                      awayTeam={match.away_team}
+          />
 
           {/* 🔥 Timeline SIN doble box */}
           <MatchTimeline events={timeline} />
