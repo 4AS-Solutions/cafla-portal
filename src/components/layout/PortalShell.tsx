@@ -34,13 +34,14 @@ export function PortalShell({
       >
         <button
           aria-label="Close sidebar overlay"
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/70"
           onClick={() => setMobileSidebarOpen(false)}
         />
 
         <div
           className={`
             absolute right-0 top-0 h-full w-[84vw] max-w-[340px]
+            transform-gpu will-change-transform
             transition-transform duration-300 ease-out
             ${mobileSidebarOpen
               ? "translate-x-0"
