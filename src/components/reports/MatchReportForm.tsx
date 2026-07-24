@@ -8,7 +8,6 @@ import { toast } from "sonner"
 import ScoreboardSection from "./components/match-report-form/ScoreboardSection"
 import CommentsSection from "./components/match-report-form/CommentsSection"
 import SubmitSection from "./components/match-report-form/SubmitSetion"
-import RosterUploadSection from "./components/match-report-form/RosterUploadSection"
 import {GoalsSection} from "./components/match-report-form/GoalsSection"
 import { CardsSection } from "./components/match-report-form/CardsSection"
 import { useAutoSecondYellow } from "./components/match-report-form/hooks/useAutoSecondYellow"
@@ -19,6 +18,7 @@ import { TimelinePreviewSection } from "./components/match-report-form/TimelineP
 import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRoster"
 import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
 import { useAuth } from "../providers/AuthProvider"
+import MatchRosterAttachmentSection, { RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
 
 type InitialReportData = {
   id: string
@@ -72,8 +72,17 @@ export function MatchReportForm({
   const [pendingSubmitValues, setPendingSubmitValues] =
     useState<MatchReportFormData | null>(null)
 
-  const [homeRosterFile, setHomeRosterFile] = useState<File | null>(null)
-  const [awayRosterFile, setAwayRosterFile] = useState<File | null>(null)
+  const [rosterUploadMode, setRosterUploadMode] =
+    useState<RosterUploadMode>(null)
+
+  const [combinedRosterFile, setCombinedRosterFile] =
+    useState<File | null>(null)
+
+  const [homeRosterFile, setHomeRosterFile] =
+    useState<File | null>(null)
+
+  const [awayRosterFile, setAwayRosterFile] =
+    useState<File | null>(null)
 
   const form = useForm<MatchReportFormData>({
     defaultValues: {
@@ -460,9 +469,15 @@ export function MatchReportForm({
         />
 
         {/* DOCUMENTS */}
-        <RosterUploadSection
+        <MatchRosterAttachmentSection
           isReadOnly={isReadOnly}
+          rosterUploadMode={rosterUploadMode}
+          setRosterUploadMode={setRosterUploadMode}
+          combinedRosterFile={combinedRosterFile}
+          setCombinedRosterFile={setCombinedRosterFile}
+          homeRosterFile={homeRosterFile}
           setHomeRosterFile={setHomeRosterFile}
+          awayRosterFile={awayRosterFile}
           setAwayRosterFile={setAwayRosterFile}
         />
 
