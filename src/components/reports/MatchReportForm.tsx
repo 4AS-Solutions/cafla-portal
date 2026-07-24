@@ -19,7 +19,7 @@ import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRos
 import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
 import { useAuth } from "../providers/AuthProvider"
 import MatchRosterAttachmentSection, { RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
-import { uploadMatchRoster } from "@/src/lib/storage/match-rosters"
+import { deleteMatchRoster, uploadMatchRoster } from "@/src/lib/storage/match-rosters"
 
 type InitialReportData = {
   id: string
@@ -173,6 +173,9 @@ export function MatchReportForm({
     setMessage(null)
     setErrorMessage(null)
 
+    const uploadedRosterPaths: string[] = []
+
+
     try {
       console.log("[REPORT] validating current user")
 
@@ -191,8 +194,6 @@ export function MatchReportForm({
       let combinedRosterPath: string | null = null
       let homeRosterPath: string | null = null
       let awayRosterPath: string | null = null
-
-      const uploadedRosterPaths: string[] = []
 
       // ---------------------------------------------
       // ROSTER VALIDATION AND UPLOAD
@@ -347,6 +348,29 @@ export function MatchReportForm({
     } catch (error) {
       console.log("❌ SUBMIT FAILED")
       console.error(error)
+
+      // ---------------------------------------------
+      // ROLLBACK NEWLY UPLOADED ROSTERS
+      // ---------------------------------------------
+
+      if (uploadedRosterPaths.length > 0) {
+        console.log("[REPORT] rolling back uploaded roster files")
+
+        const rollbackResults = await Promise.allSettled(
+          uploadedRosterPaths.map((path) =>
+            deleteMatchRoster(supabase, path)
+          )
+        )
+
+        rollbackResults.forEach((result, index) => {
+          if (result.status === "rejected") {
+            console.error(
+              `[REPORT] failed to delete roster during rollback: ${uploadedRosterPaths[index]}`,
+              result.reason
+            )
+          }
+        })
+      }
 
       const message =
         error instanceof Error
