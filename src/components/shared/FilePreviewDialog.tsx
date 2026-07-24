@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog"
-import { FileQuestion, Loader2 } from "lucide-react"
+import { FileQuestion, FileText, Loader2 } from "lucide-react"
 
 type FilePreviewDialogProps = {
   open: boolean
@@ -118,6 +118,12 @@ export default function FilePreviewDialog({
     onOpenChange(false)
   }
 
+  const openPdf = () => {
+    if (!previewUrl) return
+
+    window.open(previewUrl, "_blank", "noopener,noreferrer")
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[92vh] w-[calc(100%-2rem)] max-w-5xl flex-col overflow-hidden border-white/10 bg-[#0B0F0F] p-0 text-white">
@@ -162,18 +168,49 @@ export default function FilePreviewDialog({
             </>
           ) : previewType === "pdf" ? (
             <>
-              {isLoading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0F0F]/80">
-                  <Loader2 className="h-7 w-7 animate-spin text-[#D4A93A]" />
-                </div>
-              )}
+              {/* Mobile */}
+              <div className="flex w-full md:hidden items-center justify-center">
+                <div className="w-full max-w-sm rounded-xl border border-white/10 bg-white/[0.03] p-6 text-center">
+                  <FileText className="mx-auto h-12 w-12 text-[#D4A93A]" />
 
-              <iframe
-                src={previewUrl}
-                title={title}
-                onLoad={handleContentLoaded}
-                className="h-[65vh] min-h-[500px] w-full rounded-lg border border-white/10 bg-white"
-              />
+                  <h3 className="mt-4 text-lg font-semibold text-white">
+                    PDF Document
+                  </h3>
+
+                  <p className="mt-2 break-all text-sm text-gray-400">
+                    {fileName}
+                  </p>
+
+                  <p className="mt-4 text-sm text-gray-500">
+                    This document will open using your device's PDF viewer for a better
+                    reading experience.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={openPdf}
+                    className="mt-6 w-full rounded-lg bg-[#D4A93A] px-4 py-3 font-medium text-black transition hover:bg-[#e7c35d]"
+                  >
+                    Open in PDF Viewer
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop */}
+              <div className="hidden h-full w-full md:block">
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0F0F]/80">
+                    <Loader2 className="h-7 w-7 animate-spin text-[#D4A93A]" />
+                  </div>
+                )}
+
+                <iframe
+                  src={previewUrl}
+                  title={title}
+                  onLoad={handleContentLoaded}
+                  className="h-[70vh] w-full rounded-lg border border-white/10 bg-white"
+                />
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center text-center">
