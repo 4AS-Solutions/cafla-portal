@@ -31,6 +31,8 @@ type SubmitPayload = {
   comments: string
   goals: GoalRow[]
   cards: CardRow[]
+  roster_upload_mode?: "combined" | "separate" | null
+  combined_roster_path?: string | null
   home_roster_path?: string | null
   away_roster_path?: string | null
 }
@@ -167,6 +169,14 @@ export async function POST(req: Request) {
       asset_type: string
       storage_path: string
     }> = []
+
+    if (body.combined_roster_path) {
+      assetsPayload.push({
+        report_id: reportId,
+        asset_type: "roster_combined",
+        storage_path: body.combined_roster_path,
+      })
+    }
 
     if (body.home_roster_path) {
       assetsPayload.push({

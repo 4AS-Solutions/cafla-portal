@@ -19,6 +19,7 @@ import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRos
 import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
 import { useAuth } from "../providers/AuthProvider"
 import MatchRosterAttachmentSection, { RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
+import { uploadMatchRoster } from "@/src/lib/storage/match-rosters"
 
 type InitialReportData = {
   id: string
@@ -33,6 +34,7 @@ type InitialReportData = {
 type MatchReportFormProps = {
   match: {
     id: string
+    arbiter_match_id: string
     home_team: string
     away_team: string
     center_referee_id: string | null
@@ -186,55 +188,75 @@ export function MatchReportForm({
         throw new Error("Only the center referee can submit this report.")
       }
 
+      let combinedRosterPath: string | null = null
       let homeRosterPath: string | null = null
       let awayRosterPath: string | null = null
 
+      const uploadedRosterPaths: string[] = []
+
       // ---------------------------------------------
-      // HOME ROSTER UPLOAD
+      // ROSTER VALIDATION AND UPLOAD
       // ---------------------------------------------
 
-      if (homeRosterFile) {
-        console.log("Uploading home roster...")
-
-        homeRosterPath = `${match.id}/home-${Date.now()}-${homeRosterFile.name}`
-
-        const { error: uploadHomeError } = await supabase.storage
-          .from("match-rosters")
-          .upload(homeRosterPath, homeRosterFile, {
-            cacheControl: "3600",
-            upsert: false,
-          })
-
-        if (uploadHomeError) {
-          console.error(uploadHomeError)
-          throw new Error("Failed to upload home roster.")
-        }
-
-        console.log("Home roster uploaded successfully")
+      if (!match.arbiter_match_id) {
+        throw new Error(
+          "This match does not have a valid Arbiter match ID.",
+        )
       }
 
-      // ---------------------------------------------
-      // AWAY ROSTER UPLOAD
-      // ---------------------------------------------
-
-      if (awayRosterFile) {
-        console.log("Uploading away roster...")
-
-        awayRosterPath = `${match.id}/away-${Date.now()}-${awayRosterFile.name}`
-
-        const { error: uploadAwayError } = await supabase.storage
-          .from("match-rosters")
-          .upload(awayRosterPath, awayRosterFile, {
-            cacheControl: "3600",
-            upsert: false,
-          })
-
-        if (uploadAwayError) {
-          console.error(uploadAwayError)
-          throw new Error("Failed to upload away roster.")
+      if (rosterUploadMode === "combined") {
+        if (!combinedRosterFile) {
+          throw new Error(
+            "Please attach the file containing both team rosters.",
+          )
         }
 
-        console.log("Away roster uploaded successfully")
+        console.log("[REPORT] uploading combined roster")
+
+        combinedRosterPath = await uploadMatchRoster({
+          supabase,
+          arbiterMatchId: String(match.arbiter_match_id),
+          type: "combined",
+          file: combinedRosterFile,
+        })
+
+        uploadedRosterPaths.push(combinedRosterPath)
+
+        console.log("[REPORT] combined roster uploaded successfully")
+      }
+
+      if (rosterUploadMode === "separate") {
+        if (!homeRosterFile || !awayRosterFile) {
+          throw new Error(
+            "Please attach both the Home and Away team rosters.",
+          )
+        }
+
+        console.log("[REPORT] uploading home roster")
+
+        homeRosterPath = await uploadMatchRoster({
+          supabase,
+          arbiterMatchId: String(match.arbiter_match_id),
+          type: "home",
+          file: homeRosterFile,
+        })
+
+        uploadedRosterPaths.push(homeRosterPath)
+
+        console.log("[REPORT] home roster uploaded successfully")
+
+        console.log("[REPORT] uploading away roster")
+
+        awayRosterPath = await uploadMatchRoster({
+          supabase,
+          arbiterMatchId: String(match.arbiter_match_id),
+          type: "away",
+          file: awayRosterFile,
+        })
+
+        uploadedRosterPaths.push(awayRosterPath)
+
+        console.log("[REPORT] away roster uploaded successfully")
       }
 
       // ---------------------------------------------
@@ -249,6 +271,10 @@ export function MatchReportForm({
         comments: values.comments,
         goals: values.goals,
         cards: values.cards,
+
+        roster_upload_mode: rosterUploadMode,
+
+        combined_roster_path: combinedRosterPath,
         home_roster_path: homeRosterPath,
         away_roster_path: awayRosterPath,
       }
