@@ -20,6 +20,7 @@ import { MatchReportConfirmationDialog } from "./components/match-report-form/Co
 import { useAuth } from "../providers/AuthProvider"
 import MatchRosterAttachmentSection, { RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
 import { deleteMatchRoster, uploadMatchRoster } from "@/src/lib/storage/match-rosters"
+import { MatchReportValidationError, validateMatchReport } from "./components/match-report-form/utils/validateMatchReport"
 
 type InitialReportData = {
   id: string
@@ -85,6 +86,9 @@ export function MatchReportForm({
 
   const [awayRosterFile, setAwayRosterFile] =
     useState<File | null>(null)
+
+  const [validationErrors, setValidationErrors] =
+    useState<MatchReportValidationError[]>([])
 
   const form = useForm<MatchReportFormData>({
     defaultValues: {
@@ -392,38 +396,45 @@ export function MatchReportForm({
   )
 
   function handlePreSubmit(values: MatchReportFormData) {
+    const validation = validateMatchReport(values)
 
-    // ---------------------------------------------
-    // NO GOALS CONFIRMATION
-    // ---------------------------------------------
+      if (!validation.valid) {
+        setValidationErrors(validation.errors)
 
-    if ((values.goals || []).length === 0) {
+        toast.error(
+          "Please complete all required goal and card fields."
+        )
 
-      setPendingSubmitValues(values)
+        return
+      }
 
-      setConfirmationType("no-goals")
+      setValidationErrors([])
 
-      return
-    }
+      // ---------------------------------------------
+      // NO GOALS CONFIRMATION
+      // ---------------------------------------------
 
-    // ---------------------------------------------
-    // NO CARDS CONFIRMATION
-    // ---------------------------------------------
+      if ((values.goals || []).length === 0) {
+        setPendingSubmitValues(values)
+        setConfirmationType("no-goals")
+        return
+      }
 
-    if ((values.cards || []).length === 0) {
+      // ---------------------------------------------
+      // NO CARDS CONFIRMATION
+      // ---------------------------------------------
 
-      setPendingSubmitValues(values)
+      if ((values.cards || []).length === 0) {
+        setPendingSubmitValues(values)
+        setConfirmationType("no-cards")
+        return
+      }
 
-      setConfirmationType("no-cards")
+      // ---------------------------------------------
+      // DIRECT SUBMIT
+      // ---------------------------------------------
 
-      return
-    }
-
-    // ---------------------------------------------
-    // DIRECT SUBMIT
-    // ---------------------------------------------
-
-    submitReport(values)
+      submitReport(values)
   }
 
   async function handleConfirmation() {
@@ -545,10 +556,32 @@ export function MatchReportForm({
         )}
 
         {hasInvalidRed && (
-        <div className="text-sm text-red-400">
-          Red cards require a description before submitting the report.
-        </div>
-      )}
+          <div className="text-sm text-red-400">
+            Red cards require a description before submitting the report.
+          </div>
+        )}
+
+        {validationErrors.length > 0 && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <p className="font-medium">
+              Please review the following fields:
+            </p>
+
+            <div className="mt-3 space-y-3">
+              {validationErrors.map((error, index) => (
+                <div key={`${error.section}-${error.row}-${error.field}-${index}`}>
+                  <p className="font-medium capitalize">
+                    {error.section} #{error.row}
+                  </p>
+
+                  <p className="text-red-200">
+                    {error.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* SUBMIT */}
         <SubmitSection
