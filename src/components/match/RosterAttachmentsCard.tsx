@@ -109,7 +109,7 @@ function AttachmentRow({
           </p>
 
           <p
-            className="mt-0.5 truncate text-xs text-gray-400"
+            className="mt-0.5 block max-w-full truncate text-xs text-gray-400"
             title={fileName}
           >
             {fileName}
@@ -123,11 +123,11 @@ function AttachmentRow({
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => onPreview(attachment)}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-gray-200 transition hover:bg-white/10"
+          className="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-gray-200 transition hover:bg-white/10"
         >
           <Eye className="h-3.5 w-3.5" />
           Preview
@@ -137,7 +137,7 @@ function AttachmentRow({
           href={attachment.signedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-gray-200 transition hover:bg-white/10"
+          className="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-gray-200 transition hover:bg-white/10"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Open
