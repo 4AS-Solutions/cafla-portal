@@ -7,6 +7,7 @@ import {
   MapPin,
   Users,
 } from "lucide-react"
+import { MatchRoleIcon } from "../icons/MatchRoleIcon"
 
 export default function MatchCard({ match }: { match: any }) {
 
@@ -184,7 +185,7 @@ export default function MatchCard({ match }: { match: any }) {
 
             <Users size={14} />
 
-            Crew
+            Match Officials
 
           </div>
 
@@ -213,10 +214,14 @@ export default function MatchCard({ match }: { match: any }) {
         {/* ACTION FOOTER */}
 
         <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-yellow-400">
+            <MatchRoleIcon
+              role={match.role === "CR" ? "cr" : "ar"}
+              size={16}
+            />
 
-          <span className="text-[11px] text-yellow-400 font-semibold">
-            {match.role}
-          </span>
+            <span>{match.role}</span>
+          </div>
 
           {actionLabel}
 
