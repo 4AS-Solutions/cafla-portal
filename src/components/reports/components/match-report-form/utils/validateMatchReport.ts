@@ -24,11 +24,22 @@ function hasText(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0
 }
 
-function hasValidMinute(value: unknown): value is number {
+function hasValidMinute(value: unknown): boolean {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return false
+  }
+
+  const minute = Number(value)
+
   return (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    value >= 0
+    Number.isFinite(minute) &&
+    Number.isInteger(minute) &&
+    minute >= 1 &&
+    minute <= 90
   )
 }
 

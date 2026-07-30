@@ -19,7 +19,7 @@ export default async function Page({
   const cardReasons = await getCardReasons();
 
   return (
-    <div className="w-full max-w[1400px]- mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
       <AdminReportDetail {...data} cardReasons={cardReasons} />
     </div>
   )

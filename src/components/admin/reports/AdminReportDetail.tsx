@@ -8,6 +8,7 @@ import { MatchTimeline } from "@/src/components/match/MatchTimeline"
 import StatusBadge from "./StatusBadge"
 import AdminActions from "./AdminActions"
 import MatchNarrativeSummary from "../../reports/MatchNarrativeSummary"
+import { RosterAttachment, RosterAttachmentsCard } from "../../match/RosterAttachmentsCard"
 
 export default function AdminReportDetail({
   match,
@@ -20,7 +21,10 @@ export default function AdminReportDetail({
   assets,
   comments,
   cardReasons,
+  rosterAttachments
 }: any) {
+
+  console.log(rosterAttachments)
 
   if (!match) {
     return <div>Match not found</div>
@@ -66,8 +70,6 @@ export default function AdminReportDetail({
           {/* 🔥 Timeline SIN doble box */}
           <MatchTimeline events={timeline} />
 
-          <MatchAssets assets={assets} />
-
         </div>
 
         {/* ================= COL 2 ================= */}
@@ -86,6 +88,17 @@ export default function AdminReportDetail({
         <div className="space-y-6">
 
           <MatchOfficials center={center} ar1={ar1} ar2={ar2} />
+
+          <RosterAttachmentsCard
+            attachments={rosterAttachments}
+            onPreview={(attachment: RosterAttachment) => {
+              window.open(
+                attachment.signedUrl,
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }}
+          />
 
           {/* 🔥 COMMENTS */}
           {comments && (

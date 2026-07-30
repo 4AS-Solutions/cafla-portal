@@ -411,6 +411,48 @@ export function MatchReportForm({
       setValidationErrors([])
 
       // ---------------------------------------------
+      // ROSTER ATTACHMENT VALIDATION
+      // ---------------------------------------------
+
+      if (!rosterUploadMode) {
+        const message =
+          "Please select how you will attach the team rosters."
+
+        setErrorMessage(message)
+        toast.error(message)
+
+        return
+      }
+
+      if (
+        rosterUploadMode === "combined" &&
+        !combinedRosterFile
+      ) {
+        const message =
+          "Please attach the file containing both team rosters."
+
+        setErrorMessage(message)
+        toast.error(message)
+
+        return
+      }
+
+      if (
+        rosterUploadMode === "separate" &&
+        (!homeRosterFile || !awayRosterFile)
+      ) {
+        const message =
+          "Please attach both the Home and Away team rosters."
+
+        setErrorMessage(message)
+        toast.error(message)
+
+        return
+      }
+
+      setErrorMessage(null)
+
+      // ---------------------------------------------
       // NO GOALS CONFIRMATION
       // ---------------------------------------------
 
@@ -429,10 +471,6 @@ export function MatchReportForm({
         setConfirmationType("no-cards")
         return
       }
-
-      // ---------------------------------------------
-      // DIRECT SUBMIT
-      // ---------------------------------------------
 
       submitReport(values)
   }
@@ -466,6 +504,20 @@ export function MatchReportForm({
 
     setPendingSubmitValues(null)
   }
+
+  const groupedValidationErrors = validationErrors.reduce<
+    Record<string, MatchReportValidationError[]>
+  >((groups, error) => {
+    const key = `${error.section}-${error.row}`
+
+    if (!groups[key]) {
+      groups[key] = []
+    }
+
+    groups[key].push(error)
+
+    return groups
+  }, {})
 
   return (
     <>
@@ -567,18 +619,30 @@ export function MatchReportForm({
               Please review the following fields:
             </p>
 
-            <div className="mt-3 space-y-3">
-              {validationErrors.map((error, index) => (
-                <div key={`${error.section}-${error.row}-${error.field}-${index}`}>
-                  <p className="font-medium capitalize">
-                    {error.section} #{error.row}
-                  </p>
+            <div className="mt-3 space-y-4">
+              {Object.entries(groupedValidationErrors).map(
+                ([key, errors]) => {
+                  const firstError = errors[0]
 
-                  <p className="text-red-200">
-                    {error.message}
-                  </p>
-                </div>
-              ))}
+                  return (
+                    <div key={key}>
+                      <p className="font-semibold capitalize text-red-200">
+                        {firstError.section} #{firstError.row}
+                      </p>
+
+                      <ul className="mt-1 list-disc space-y-1 pl-5">
+                        {errors.map((error) => (
+                          <li
+                            key={`${error.section}-${error.row}-${error.field}`}
+                          >
+                            {error.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                }
+              )}
             </div>
           </div>
         )}

@@ -142,6 +142,7 @@ export function GoalRow({
             inputMode="numeric"
             pattern="[0-9]*"
             maxLength={2}
+            min={1}
             placeholder="Minute"
             disabled={disabled}
             className="bg-[#0B0F0F]"
