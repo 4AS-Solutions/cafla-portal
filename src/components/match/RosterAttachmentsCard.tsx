@@ -93,7 +93,7 @@ function AttachmentRow({
   const label = ATTACHMENT_LABELS[attachment.assetType]
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+    <div className="w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black/10 p-3">
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-yellow-500/20 bg-yellow-500/10 text-yellow-400">
           {isImage ? (
@@ -170,7 +170,7 @@ export function RosterAttachmentsCard({
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+    <section className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Paperclip className="h-4 w-4 text-yellow-400" />
