@@ -16,7 +16,6 @@ export default function AdminReportDetail({
   report,
   goals,
   cards,
-  assets,
   comments,
   cardReasons,
   rosterAttachments

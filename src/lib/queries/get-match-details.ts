@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
+import { getSupabaseAdmin } from "../supabase/admin";
 
 export async function getMatchDetails(matchId: string) {
 
