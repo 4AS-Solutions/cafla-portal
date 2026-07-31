@@ -69,47 +69,7 @@ export default function AdminReportCard({ report }: any) {
           >
             View
           </button>
-
-          {report.status === "submitted" && (
-            <>
-              <button
-                onClick={async () => {
-                  await fetch(`/api/admin/reports/${report.match_id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: "approved" })
-                  })
-                  router.refresh()
-                }}
-                className="
-                  text-xs px-3 py-1.5 rounded-lg
-                  bg-emerald-500 text-black font-medium
-                "
-              >
-                Approve
-              </button>
-
-              <button
-                onClick={async () => {
-                  await fetch(`/api/admin/reports/${report.match_id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: "revision_required" })
-                  })
-                  router.refresh()
-                }}
-                className="
-                  text-xs px-3 py-1.5 rounded-lg
-                  bg-yellow-500 text-black font-medium
-                "
-              >
-                Review
-              </button>
-            </>
-          )}
-
         </div>
-
       </div>
 
     </div>
