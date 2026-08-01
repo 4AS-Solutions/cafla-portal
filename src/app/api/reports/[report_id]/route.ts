@@ -1,157 +1,388 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
 import { NextResponse } from "next/server"
+
+import { supabaseServer } from "@/src/lib/supabase/server"
+
+type RosterAssetType =
+  | "roster_combined"
+  | "roster_home"
+  | "roster_away"
+
+type ReportAssetInput = {
+  asset_type: RosterAssetType
+  storage_path: string
+}
+
+type ReportUpdateBody = {
+  comments?: string | null
+  goals?: any[]
+  cards?: any[]
+  injuries?: any[]
+  assets?: ReportAssetInput[]
+}
+
+const VALID_ROSTER_ASSET_TYPES: RosterAssetType[] = [
+  "roster_combined",
+  "roster_home",
+  "roster_away",
+]
 
 export async function PATCH(
   req: Request,
-  context: { params: Promise<{ report_id: string }> }
+  context: {
+    params: Promise<{ report_id: string }>
+  }
 ) {
-  const { report_id } = await context.params
+  try {
+    const { report_id } = await context.params
+    const reportId = report_id?.trim()
 
-  const supabase = await supabaseServer()
-  const body = await req.json()
-
-  const {
-    comments,
-    goals,
-    cards,
-    injuries,
-    assets,
-  } = body
-
-  // 🔥 AUTO CALCULATE SCORE
-  const homeScore = (goals || []).filter(
-    (goal: any) => goal.team === "home"
-  ).length
-
-  const awayScore = (goals || []).filter(
-    (goal: any) => goal.team === "away"
-  ).length
-
-  // 🔥 1. UPDATE MAIN REPORT
-  const { data: updatedRows, error: reportError } = await supabase
-    .from("match_reports")
-    .update({
-      home_score: homeScore,
-      away_score: awayScore,
-      comments,
-      status: "submitted",
-      submitted_at: new Date().toISOString(),
-    })
-    .eq("id", report_id)
-    .select("id, match_id, status")
-
-  if (reportError) {
-    return NextResponse.json(
-      { error: reportError.message },
-      { status: 500 }
-    )
-  }
-
-  if (!updatedRows || updatedRows.length === 0) {
-    return NextResponse.json(
-      { error: "Report was not updated or is not accessible by current policies." },
-      { status: 400 }
-    )
-  }
-
-  if (updatedRows.length > 1) {
-    return NextResponse.json(
-      { error: "More than one report row was updated unexpectedly." },
-      { status: 500 }
-    )
-  }
-
-  const updatedReport = updatedRows[0]
-
-  // =====================================================
-  // 🔥 HELPER FUNCTION (EVITA DUPLICADOS SIEMPRE)
-  // =====================================================
-
-  async function replaceTable(
-    table: string,
-    data: any[] | undefined,
-    mapFn: (item: any) => any
-  ) {
-    const { data: deleted, error: deleteError } = await supabase
-      .from(table)
-      .delete()
-      .eq("report_id", report_id)
-      .select()
-
-    // console.log(`DELETED ${table.toUpperCase()}:`, deleted)
-    console.log(`DELETED reports`)
-
-    if (deleteError) {
-      throw new Error(`Delete failed on ${table}: ${deleteError.message}`)
+    if (!reportId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Report ID is required.",
+        },
+        {
+          status: 400,
+        }
+      )
     }
 
-    if (data && data.length > 0) {
-      const { error: insertError } = await supabase
-        .from(table)
-        .insert(data.map(mapFn))
+    const supabase = await supabaseServer()
 
-      if (insertError) {
-        throw new Error(`Insert failed on ${table}: ${insertError.message}`)
+    let body: ReportUpdateBody
+
+    try {
+      body = (await req.json()) as ReportUpdateBody
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "A valid JSON body is required.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const {
+      comments,
+      goals = [],
+      cards = [],
+      injuries,
+      assets,
+    } = body
+
+    // =============================================
+    // VALIDATE CURRENT REPORT
+    // =============================================
+
+    const {
+      data: currentReport,
+      error: currentReportError,
+    } = await supabase
+      .from("match_reports")
+      .select("id, match_id, status")
+      .eq("id", reportId)
+      .maybeSingle()
+
+    if (currentReportError) {
+      console.error(
+        "Unable to load report before resubmission:",
+        currentReportError
+      )
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unable to load the report.",
+        },
+        {
+          status: 500,
+        }
+      )
+    }
+
+    if (!currentReport) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Report not found.",
+        },
+        {
+          status: 404,
+        }
+      )
+    }
+
+    if (
+      currentReport.status !== "revision_required"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Only reports requiring revision can be edited and resubmitted.",
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    // =============================================
+    // VALIDATE ASSETS
+    // =============================================
+
+    if (assets !== undefined) {
+      const invalidAsset = assets.find(
+        (asset) =>
+          !VALID_ROSTER_ASSET_TYPES.includes(
+            asset.asset_type
+          ) ||
+          typeof asset.storage_path !== "string" ||
+          asset.storage_path.trim().length === 0
+      )
+
+      if (invalidAsset) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "One or more roster attachments are invalid.",
+          },
+          {
+            status: 400,
+          }
+        )
+      }
+
+      const assetTypes = assets.map(
+        (asset) => asset.asset_type
+      )
+
+      if (
+        new Set(assetTypes).size !==
+        assetTypes.length
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Duplicate roster attachment types are not allowed.",
+          },
+          {
+            status: 400,
+          }
+        )
       }
     }
-  }
 
-  try {
-    // 🔥 GOALS
-    if (goals !== undefined) {
-      await replaceTable("report_goals", goals, (g) => ({
-        report_id,
-        team: g.team,
-        player_id: g.player_id ?? null,
-        player_name: g.player_name,
-        player_number: g.player_number,
-        minute: Number(g.minute),
-        half: g.half,
-        goal_type: g.goal_type,
-      }))
+    // =============================================
+    // AUTO-CALCULATE SCORE
+    // =============================================
+
+    const homeScore = goals.filter(
+      (goal: any) => goal.team === "home"
+    ).length
+
+    const awayScore = goals.filter(
+      (goal: any) => goal.team === "away"
+    ).length
+
+    // =============================================
+    // REPLACE CHILD TABLE HELPER
+    // =============================================
+
+    async function replaceTable(
+      table: string,
+      rows: any[] | undefined,
+      mapRow: (item: any) => any
+    ) {
+      if (rows === undefined) {
+        return
+      }
+
+      const { error: deleteError } =
+        await supabase
+          .from(table)
+          .delete()
+          .eq("report_id", reportId)
+
+      if (deleteError) {
+        throw new Error(
+          `Delete failed on ${table}: ${deleteError.message}`
+        )
+      }
+
+      if (rows.length === 0) {
+        return
+      }
+
+      const { error: insertError } =
+        await supabase
+          .from(table)
+          .insert(rows.map(mapRow))
+
+      if (insertError) {
+        throw new Error(
+          `Insert failed on ${table}: ${insertError.message}`
+        )
+      }
     }
 
-    // 🔥 CARDS
-    if (cards !== undefined) {
-      await replaceTable("report_cards", cards, (c) => ({
-        report_id,
-        team: c.team,
-        player_id: c.player_id ?? null,        
-        player_name: c.player_name,
-        player_number: c.player_number,
-        minute: Number(c.minute),
-        card_type: c.card_type,
-        reason_code: c.reason_code,
-        notes: c.notes || null,
-      }))
+    // =============================================
+    // UPDATE REPORT DATA
+    // =============================================
+
+    try {
+      await replaceTable(
+        "report_goals",
+        goals,
+        (goal) => ({
+          report_id: reportId,
+          team: goal.team,
+          player_id: goal.player_id ?? null,
+          player_name: goal.player_name,
+          player_number: goal.player_number,
+          minute: Number(goal.minute),
+          half: goal.half,
+          goal_type: goal.goal_type,
+        })
+      )
+
+      await replaceTable(
+        "report_cards",
+        cards,
+        (card) => ({
+          report_id: reportId,
+          team: card.team,
+          player_id: card.player_id ?? null,
+          player_name: card.player_name,
+          player_number: card.player_number,
+          minute: Number(card.minute),
+          card_type: card.card_type,
+          reason_code: card.reason_code,
+          notes: card.notes?.trim() || null,
+        })
+      )
+
+      await replaceTable(
+        "report_injuries",
+        injuries,
+        (injury) => ({
+          report_id: reportId,
+          ...injury,
+        })
+      )
+
+      await replaceTable(
+        "report_assets",
+        assets,
+        (asset: ReportAssetInput) => ({
+          report_id: reportId,
+          asset_type: asset.asset_type,
+          storage_path:
+            asset.storage_path.trim(),
+        })
+      )
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update report details."
+
+      console.error(
+        "Unable to replace report details:",
+        error
+      )
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: message,
+        },
+        {
+          status: 500,
+        }
+      )
     }
 
-    // 🔥 INJURIES
-    if (injuries !== undefined) {
-      await replaceTable("report_injuries", injuries, (i) => ({
-        report_id,
-        ...i,
-      }))
+    // =============================================
+    // UPDATE MAIN REPORT
+    // =============================================
+
+    const {
+      data: updatedReport,
+      error: reportUpdateError,
+    } = await supabase
+      .from("match_reports")
+      .update({
+        home_score: homeScore,
+        away_score: awayScore,
+        comments: comments?.trim() || "",
+        status: "submitted",
+        revision_notes: null,
+        submitted_at: new Date().toISOString(),
+      })
+      .eq("id", reportId)
+      .select("id, match_id, status")
+      .maybeSingle()
+
+    if (reportUpdateError) {
+      console.error(
+        "Unable to resubmit report:",
+        reportUpdateError
+      )
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Unable to resubmit the report.",
+        },
+        {
+          status: 500,
+        }
+      )
     }
 
-    // 🔥 ASSETS
-    if (assets !== undefined) {
-      await replaceTable("report_assets", assets, (a) => ({
-        report_id,
-        ...a,
-      }))
+    if (!updatedReport) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "The report was not updated or is not accessible.",
+        },
+        {
+          status: 400,
+        }
+      )
     }
 
-  } catch (error: any) {
+    return NextResponse.json({
+      success: true,
+      report_id: updatedReport.id,
+      match_id: updatedReport.match_id,
+      status: updatedReport.status,
+      message:
+        "Match report updated and resubmitted successfully.",
+    })
+  } catch (error) {
+    console.error(
+      "Report resubmission route error:",
+      error
+    )
+
     return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        error: "Server error.",
+      },
+      {
+        status: 500,
+      }
     )
   }
-
-  return NextResponse.json({
-    success: true,
-    report_id: updatedReport.id,
-    status: updatedReport.status,
-  })
 }

@@ -51,21 +51,59 @@ export function CardRow({
     (reason: any) => reason.card_type === cardType
   )
 
+  console.log(`CARD ${index}`, {
+    cardType,
+    reasonCode,
+    allReasons: reasons,
+    filteredReasons,
+  })
+
   const selectedReason = (reasons || []).find(
     (reason: any) => reason.code === reasonCode
   )
 
-  const prevTypeRef = useRef(cardType)
+  const prevTypeRef = useRef<string | undefined>( undefined )
+
+  const hasInitializedCardTypeRef = useRef(false)
+
 
   useEffect(() => {
+    /*
+    * During initial form hydration, preserve the
+    * reason_code loaded from the existing report.
+    */
+    if (!hasInitializedCardTypeRef.current) {
+      if (!cardType) return
+
+      prevTypeRef.current = cardType
+      hasInitializedCardTypeRef.current = true
+
+      return
+    }
+
+    /*
+    * Clear the reason only when the referee manually
+    * changes the card type after initialization.
+    */
     if (prevTypeRef.current !== cardType) {
       prevTypeRef.current = cardType
 
       if (!isAuto) {
-        setValue(`cards.${index}.reason_code`, "")
+        setValue(
+          `cards.${index}.reason_code`,
+          "",
+          {
+            shouldDirty: true,
+          }
+        )
       }
     }
-  }, [cardType, isAuto, index, setValue])
+  }, [
+    cardType,
+    isAuto,
+    index,
+    setValue,
+  ])
 
   useEffect(() => {
     if (
@@ -104,6 +142,10 @@ export function CardRow({
 
   const minuteRegistration = register(
     `cards.${index}.minute`
+  )
+
+  const reasonRegistration = register(
+    `cards.${index}.reason_code`
   )
 
   const handlePlayerNumberChange = (
@@ -241,10 +283,23 @@ export function CardRow({
             </div>
           ) : (
             <select
+              name={reasonRegistration.name}
+              ref={reasonRegistration.ref}
+              onBlur={reasonRegistration.onBlur}
+              value={reasonCode ?? ""}
+              onChange={(event) => {
+                reasonRegistration.onChange(event)
+
+                setValue(
+                  `cards.${index}.reason_code`,
+                  event.target.value,
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  }
+                )
+              }}
               className={darkSelectClass}
-              {...register(
-                `cards.${index}.reason_code`
-              )}
             >
               <option value="">
                 Select Reason
@@ -355,13 +410,26 @@ export function CardRow({
             </div>
           ) : (
             <select
+              name={reasonRegistration.name}
+              ref={reasonRegistration.ref}
+              onBlur={reasonRegistration.onBlur}
+              value={reasonCode ?? ""}
+              onChange={(event) => {
+                reasonRegistration.onChange(event)
+
+                setValue(
+                  `cards.${index}.reason_code`,
+                  event.target.value,
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  }
+                )
+              }}
               className={darkSelectClass}
-              {...register(
-                `cards.${index}.reason_code`
-              )}
             >
               <option value="">
-                Select
+                Select Reason
               </option>
 
               {filteredReasons.map((reason: any) => (

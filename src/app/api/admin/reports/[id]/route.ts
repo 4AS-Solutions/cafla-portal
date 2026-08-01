@@ -191,64 +191,6 @@ export async function PATCH(
     }
 
     // =========================================
-    // 🔄 KEEP MATCH STATUS SYNCHRONIZED
-    // =========================================
-    const { error: matchUpdateError } =
-      await supabase
-        .from("matches")
-        .update({
-          report_status: status,
-        })
-        .eq("id", currentReport.match_id)
-
-    if (matchUpdateError) {
-      console.error(
-        "Unable to synchronize match report status:",
-        matchUpdateError
-      )
-
-      /*
-       * Attempt to restore the previous report status
-       * because the two records must stay synchronized.
-       */
-      const rollbackUpdate =
-        currentReport.status ===
-        "revision_required"
-          ? {
-              status: "revision_required",
-              revision_notes:
-                revisionNotes || null,
-            }
-          : {
-              status: currentReport.status,
-            }
-
-      const { error: rollbackError } =
-        await supabase
-          .from("match_reports")
-          .update(rollbackUpdate)
-          .eq("id", reportId)
-
-      if (rollbackError) {
-        console.error(
-          "Unable to roll back report status:",
-          rollbackError
-        )
-      }
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "The report could not be synchronized with the match.",
-        },
-        {
-          status: 500,
-        }
-      )
-    }
-
-    // =========================================
     // ✉️ APPROVED REPORT EMAIL
     // =========================================
     if (status === "approved") {

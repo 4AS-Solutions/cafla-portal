@@ -1,6 +1,31 @@
 import { supabaseServer } from "@/src/lib/supabase/server"
 
-export async function getMatchForReport(matchId: string) {
+const ROSTER_BUCKET = "match-rosters"
+const SIGNED_URL_EXPIRATION_SECONDS = 60 * 10
+
+const ROSTER_ASSET_TYPES = [
+  "roster_combined",
+  "roster_home",
+  "roster_away",
+] as const
+
+type RosterAssetType =
+  (typeof ROSTER_ASSET_TYPES)[number]
+
+function isRosterAssetType(
+  value: unknown
+): value is RosterAssetType {
+  return (
+    typeof value === "string" &&
+    ROSTER_ASSET_TYPES.includes(
+      value as RosterAssetType
+    )
+  )
+}
+
+export async function getMatchForReport(
+  matchId: string
+) {
   const supabase = await supabaseServer()
 
   const { data, error } = await supabase
@@ -32,15 +57,68 @@ export async function getMatchForReport(matchId: string) {
 
   const rawReport = data?.match_reports ?? null
 
-  const report = rawReport
-    ? {
-        ...rawReport,
-        goals: rawReport.report_goals ?? [],
-        cards: rawReport.report_cards ?? [],
-        injuries: rawReport.report_injuries ?? [],
-        assets: rawReport.report_assets ?? [],
-      }
-    : null
+  if (!rawReport) {
+    return {
+      match: data,
+      report: null,
+    }
+  }
+
+  const rosterAssets =
+    (rawReport.report_assets ?? []).filter(
+      (asset: any) =>
+        isRosterAssetType(asset.asset_type) &&
+        typeof asset.storage_path === "string" &&
+        asset.storage_path.trim().length > 0
+    )
+
+  const signedRosterAssets =
+    await Promise.all(
+      rosterAssets.map(async (asset: any) => {
+        const { data: signedData, error: signedError } =
+          await supabase.storage
+            .from(ROSTER_BUCKET)
+            .createSignedUrl(
+              asset.storage_path,
+              SIGNED_URL_EXPIRATION_SECONDS
+            )
+
+        if (signedError) {
+          console.error(
+            `Unable to create signed URL for roster asset ${asset.id}:`,
+            signedError
+          )
+
+          return {
+            id: asset.id,
+            asset_type: asset.asset_type,
+            storage_path: asset.storage_path,
+            uploaded_at:
+              asset.uploaded_at ?? null,
+            signed_url: null,
+          }
+        }
+
+        return {
+          id: asset.id,
+          asset_type: asset.asset_type,
+          storage_path: asset.storage_path,
+          uploaded_at:
+            asset.uploaded_at ?? null,
+          signed_url: signedData.signedUrl,
+        }
+      })
+    )
+
+  const report = {
+    ...rawReport,
+    goals: rawReport.report_goals ?? [],
+    cards: rawReport.report_cards ?? [],
+    injuries:
+      rawReport.report_injuries ?? [],
+
+    assets: signedRosterAssets,
+  }
 
   return {
     match: data,
