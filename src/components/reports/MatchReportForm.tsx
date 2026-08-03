@@ -18,9 +18,11 @@ import { TimelinePreviewSection } from "./components/match-report-form/TimelineP
 import { useMatchRoster } from "./components/match-report-form/hooks/useMatchRoster"
 import { MatchReportConfirmationDialog } from "./components/match-report-form/ConfirmDialog"
 import { useAuth } from "../providers/AuthProvider"
-import MatchRosterAttachmentSection, { RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
+import MatchRosterAttachmentSection, { ExistingRosterAttachment, RosterUploadMode } from "./components/match-report-form/MatchRosterAttachmentSection"
 import { deleteMatchRoster, uploadMatchRoster } from "@/src/lib/storage/match-rosters"
 import { MatchReportValidationError, validateMatchReport } from "./components/match-report-form/utils/validateMatchReport"
+
+
 
 type InitialReportData = {
   id: string
@@ -30,6 +32,7 @@ type InitialReportData = {
   comments?: string | null
   goals?: Goal[]
   cards?: Card[]
+  assets: ExistingRosterAttachment[]
 }
 
 type MatchReportFormProps = {
@@ -64,6 +67,27 @@ export function MatchReportForm({
 
   const isReadOnly = mode === "read"
   const isEdit = mode === "edit"
+
+  const existingRosterAttachments =
+  initialData?.assets ?? []
+
+  const existingCombinedAttachment =
+    existingRosterAttachments.find(
+      (asset) =>
+        asset.asset_type === "roster_combined"
+    ) ?? null
+
+  const existingHomeAttachment =
+    existingRosterAttachments.find(
+      (asset) =>
+        asset.asset_type === "roster_home"
+    ) ?? null
+
+  const existingAwayAttachment =
+    existingRosterAttachments.find(
+      (asset) =>
+        asset.asset_type === "roster_away"
+    ) ?? null
 
   const [submitting, setSubmitting] = useState(false)
   const [, setMessage] = useState<string | null>(null)
@@ -139,6 +163,25 @@ export function MatchReportForm({
       goals: initialData.goals ?? [],
       cards: initialData.cards ?? [],
     })
+
+    const assets = initialData.assets ?? []
+
+    const hasCombined = assets.some(
+      (asset) =>
+        asset.asset_type === "roster_combined"
+    )
+
+    const hasSeparate = assets.some(
+      (asset) =>
+        asset.asset_type === "roster_home" ||
+        asset.asset_type === "roster_away"
+    )
+
+    if (hasCombined) {
+      setRosterUploadMode("combined")
+    } else if (hasSeparate) {
+      setRosterUploadMode("separate")
+    }
   }, [initialData, form])
 
   // Load card reasons
@@ -168,137 +211,238 @@ export function MatchReportForm({
     })),
   ].sort((a, b) => a.minute - b.minute)
 
-  async function submitReport(values: MatchReportFormData) {
+  async function submitReport(
+    values: MatchReportFormData
+  ) {
     if (isReadOnly) return
-
-    console.log("[REPORT] submit started")
 
     setSubmitting(true)
     setMessage(null)
     setErrorMessage(null)
 
+    /*
+    * Guarda solamente los archivos nuevos subidos
+    * durante este intento. Si el request falla,
+    * estos son los únicos que debemos eliminar.
+    */
     const uploadedRosterPaths: string[] = []
 
-
     try {
-      console.log("[REPORT] validating current user")
-
       if (!user) {
         throw new Error(
           "Your session is unavailable. Please refresh the page and try again."
         )
       }
 
-      console.log("[REPORT] current user available")
-
-      if (!match.center_referee_id || user.id !== match.center_referee_id) {
-        throw new Error("Only the center referee can submit this report.")
-      }
-
-      let combinedRosterPath: string | null = null
-      let homeRosterPath: string | null = null
-      let awayRosterPath: string | null = null
-
-      // ---------------------------------------------
-      // ROSTER VALIDATION AND UPLOAD
-      // ---------------------------------------------
-
-      if (!match.arbiter_match_id) {
+      if (
+        !match.center_referee_id ||
+        user.id !== match.center_referee_id
+      ) {
         throw new Error(
-          "This match does not have a valid Arbiter match ID.",
+          "Only the center referee can submit this report."
         )
       }
 
+      if (!match.arbiter_match_id) {
+        throw new Error(
+          "This match does not have a valid Arbiter match ID."
+        )
+      }
+
+      let combinedRosterPath: string | null =
+        null
+
+      let homeRosterPath: string | null =
+        null
+
+      let awayRosterPath: string | null =
+        null
+
+      // =============================================
+      // ROSTER VALIDATION AND UPLOAD
+      // =============================================
+
       if (rosterUploadMode === "combined") {
-        if (!combinedRosterFile) {
+        /*
+        * Debe existir un archivo nuevo o uno previo.
+        */
+        if (
+          !combinedRosterFile &&
+          !existingCombinedAttachment
+        ) {
           throw new Error(
-            "Please attach the file containing both team rosters.",
+            "Please attach the file containing both team rosters."
           )
         }
 
-        console.log("[REPORT] uploading combined roster")
+        /*
+        * Si eligió reemplazo, subimos el archivo nuevo.
+        * Si no, conservamos el storage_path existente.
+        */
+        if (combinedRosterFile) {
+          combinedRosterPath =
+            await uploadMatchRoster({
+              supabase,
+              arbiterMatchId: String(
+                match.arbiter_match_id
+              ),
+              type: "combined",
+              file: combinedRosterFile,
+            })
 
-        combinedRosterPath = await uploadMatchRoster({
-          supabase,
-          arbiterMatchId: String(match.arbiter_match_id),
-          type: "combined",
-          file: combinedRosterFile,
-        })
-
-        uploadedRosterPaths.push(combinedRosterPath)
-
-        console.log("[REPORT] combined roster uploaded successfully")
+          uploadedRosterPaths.push(
+            combinedRosterPath
+          )
+        } else {
+          combinedRosterPath =
+            existingCombinedAttachment
+              ?.storage_path ?? null
+        }
       }
 
       if (rosterUploadMode === "separate") {
-        if (!homeRosterFile || !awayRosterFile) {
+        const hasHomeRoster =
+          Boolean(homeRosterFile) ||
+          Boolean(existingHomeAttachment)
+
+        const hasAwayRoster =
+          Boolean(awayRosterFile) ||
+          Boolean(existingAwayAttachment)
+
+        if (!hasHomeRoster || !hasAwayRoster) {
           throw new Error(
-            "Please attach both the Home and Away team rosters.",
+            "Please attach both the Home and Away team rosters."
           )
         }
 
-        console.log("[REPORT] uploading home roster")
+        /*
+        * Home: subir reemplazo o conservar actual.
+        */
+        if (homeRosterFile) {
+          homeRosterPath =
+            await uploadMatchRoster({
+              supabase,
+              arbiterMatchId: String(
+                match.arbiter_match_id
+              ),
+              type: "home",
+              file: homeRosterFile,
+            })
 
-        homeRosterPath = await uploadMatchRoster({
-          supabase,
-          arbiterMatchId: String(match.arbiter_match_id),
-          type: "home",
-          file: homeRosterFile,
-        })
+          uploadedRosterPaths.push(
+            homeRosterPath
+          )
+        } else {
+          homeRosterPath =
+            existingHomeAttachment
+              ?.storage_path ?? null
+        }
 
-        uploadedRosterPaths.push(homeRosterPath)
+        /*
+        * Away: subir reemplazo o conservar actual.
+        */
+        if (awayRosterFile) {
+          awayRosterPath =
+            await uploadMatchRoster({
+              supabase,
+              arbiterMatchId: String(
+                match.arbiter_match_id
+              ),
+              type: "away",
+              file: awayRosterFile,
+            })
 
-        console.log("[REPORT] home roster uploaded successfully")
-
-        console.log("[REPORT] uploading away roster")
-
-        awayRosterPath = await uploadMatchRoster({
-          supabase,
-          arbiterMatchId: String(match.arbiter_match_id),
-          type: "away",
-          file: awayRosterFile,
-        })
-
-        uploadedRosterPaths.push(awayRosterPath)
-
-        console.log("[REPORT] away roster uploaded successfully")
+          uploadedRosterPaths.push(
+            awayRosterPath
+          )
+        } else {
+          awayRosterPath =
+            existingAwayAttachment
+              ?.storage_path ?? null
+        }
       }
 
-      // ---------------------------------------------
-      // PAYLOAD
-      // ---------------------------------------------
+      // =============================================
+      // FINAL ASSET LIST
+      // =============================================
 
-      console.log("📦📦📦📦 Building payload...")
-      const payload = {
+      const finalAssets: Array<{
+        asset_type:
+          | "roster_combined"
+          | "roster_home"
+          | "roster_away"
+        storage_path: string
+      }> = []
+
+      if (
+        rosterUploadMode === "combined" &&
+        combinedRosterPath
+      ) {
+        finalAssets.push({
+          asset_type: "roster_combined",
+          storage_path: combinedRosterPath,
+        })
+      }
+
+      if (rosterUploadMode === "separate") {
+        if (homeRosterPath) {
+          finalAssets.push({
+            asset_type: "roster_home",
+            storage_path: homeRosterPath,
+          })
+        }
+
+        if (awayRosterPath) {
+          finalAssets.push({
+            asset_type: "roster_away",
+            storage_path: awayRosterPath,
+          })
+        }
+      }
+
+      // =============================================
+      // PAYLOAD
+      // =============================================
+
+      const basePayload = {
         match_id: match.id,
         home_score: homeScore,
         away_score: awayScore,
         comments: values.comments,
         goals: values.goals,
         cards: values.cards,
-
-        roster_upload_mode: rosterUploadMode,
-
-        combined_roster_path: combinedRosterPath,
-        home_roster_path: homeRosterPath,
-        away_roster_path: awayRosterPath,
       }
 
-      // console.log("✔️✔️✔️✔️ Payload ready", payload)
-      console.log("✔️✔️✔️✔️ Payload ready")
+      /*
+      * Create conserva el contrato actual.
+      * Edit envía assets, porque eso es lo que
+      * espera /api/reports/[report_id].
+      */
+      const payload = isEdit
+        ? {
+            ...basePayload,
+            assets: finalAssets,
+          }
+        : {
+            ...basePayload,
+            roster_upload_mode:
+              rosterUploadMode,
+            combined_roster_path:
+              combinedRosterPath,
+            home_roster_path:
+              homeRosterPath,
+            away_roster_path:
+              awayRosterPath,
+          }
 
       const endpoint =
         isEdit && initialData?.id
           ? `/api/reports/${initialData.id}`
           : "/api/reports/submit"
 
-      const method = isEdit ? "PATCH" : "POST"
-
-      console.log("📡 Sending request...")
-      // console.log("🔺🔺🔺🔺🔺 Endpoint:", endpoint)
-      console.log("🔺🔺🔺🔺🔺 Endpoint: ")
-      // console.log("❗❗❗❗❗ Method:", method)
-      console.log("❗❗❗❗❗ Method: ")
+      const method = isEdit
+        ? "PATCH"
+        : "POST"
 
       const res = await fetch(endpoint, {
         method,
@@ -308,72 +452,137 @@ export function MatchReportForm({
         body: JSON.stringify(payload),
       })
 
-      // console.log("☑️☑️☑️☑️☑️ Response received: ", res.status)
-      console.log("☑️☑️☑️☑️☑️ Response received: ")
+      // =============================================
+      // RESPONSE HANDLING
+      // =============================================
 
-      // ---------------------------------------------
-      // SAFER RESPONSE HANDLING
-      // ---------------------------------------------
-
-      console.log("📥📥📥📥 Reading response body...")
       const text = await res.text()
-      console.log("📨📨📨📨📨 Response body read.")
 
       let data: any = null
 
       try {
-        data = text ? JSON.parse(text) : null
+        data = text
+          ? JSON.parse(text)
+          : null
       } catch {
-        throw new Error("Invalid server response.")
+        throw new Error(
+          "Invalid server response."
+        )
       }
 
       if (!res.ok) {
-        throw new Error(data?.error || "Failed to submit report.")
+        throw new Error(
+          data?.error ||
+            "Failed to submit report."
+        )
       }
 
-      console.log("Report submitted successfully")
+      // =============================================
+      // DELETE REPLACED OLD FILES
+      // ONLY AFTER SUCCESSFUL PATCH
+      // =============================================
 
-      toast.success(
-        isEdit
-          ? "Match report updated successfully"
-          : "Match report submitted successfully"
-      )
-
-      setHomeRosterFile(null)
-      setAwayRosterFile(null)
-
-      // ---------------------------------------------
-      // IMPORTANT:
-      // REMOVE router.refresh()
-      // ---------------------------------------------
-
-      console.log("🎊🎊🎊🎊 SUCCESS redirecting...")
-      router.push("/portal/reports")
-    } catch (error) {
-      console.log("❌ SUBMIT FAILED")
-      console.error(error)
-
-      // ---------------------------------------------
-      // ROLLBACK NEWLY UPLOADED ROSTERS
-      // ---------------------------------------------
-
-      if (uploadedRosterPaths.length > 0) {
-        console.log("[REPORT] rolling back uploaded roster files")
-
-        const rollbackResults = await Promise.allSettled(
-          uploadedRosterPaths.map((path) =>
-            deleteMatchRoster(supabase, path)
+      if (isEdit) {
+        const finalStoragePaths = new Set(
+          finalAssets.map(
+            (asset) =>
+              asset.storage_path
           )
         )
 
-        rollbackResults.forEach((result, index) => {
-          if (result.status === "rejected") {
-            console.error(
-              `[REPORT] failed to delete roster during rollback: ${uploadedRosterPaths[index]}`,
-              result.reason
+        /*
+        * Cualquier path anterior que ya no esté
+        * en finalAssets fue sustituido.
+        */
+        const replacedOldPaths =
+          existingRosterAttachments
+            .map(
+              (asset) =>
+                asset.storage_path
             )
+            .filter(
+              (storagePath) =>
+                !finalStoragePaths.has(
+                  storagePath
+                )
+            )
+
+        if (replacedOldPaths.length > 0) {
+          const cleanupResults =
+            await Promise.allSettled(
+              replacedOldPaths.map(
+                (storagePath) =>
+                  deleteMatchRoster(
+                    supabase,
+                    storagePath
+                  )
+              )
+            )
+
+          cleanupResults.forEach(
+            (result, index) => {
+              if (
+                result.status ===
+                "rejected"
+              ) {
+                console.error(
+                  `[REPORT] report updated, but old roster could not be deleted: ${replacedOldPaths[index]}`,
+                  result.reason
+                )
+              }
+            }
+          )
+        }
+      }
+
+      toast.success(
+        isEdit
+          ? "Match report updated and resubmitted successfully"
+          : "Match report submitted successfully"
+      )
+
+      setCombinedRosterFile(null)
+      setHomeRosterFile(null)
+      setAwayRosterFile(null)
+
+      router.push("/portal/reports")
+    } catch (error) {
+      console.error(
+        "[REPORT] submit failed:",
+        error
+      )
+
+      // =============================================
+      // ROLLBACK NEWLY UPLOADED FILES
+      // =============================================
+
+      if (
+        uploadedRosterPaths.length > 0
+      ) {
+        const rollbackResults =
+          await Promise.allSettled(
+            uploadedRosterPaths.map(
+              (storagePath) =>
+                deleteMatchRoster(
+                  supabase,
+                  storagePath
+                )
+            )
+          )
+
+        rollbackResults.forEach(
+          (result, index) => {
+            if (
+              result.status ===
+              "rejected"
+            ) {
+              console.error(
+                `[REPORT] failed to delete roster during rollback: ${uploadedRosterPaths[index]}`,
+                result.reason
+              )
+            }
           }
-        })
+        )
       }
 
       const message =
@@ -384,7 +593,6 @@ export function MatchReportForm({
       toast.error(message)
       setErrorMessage(message)
     } finally {
-      console.log("🧹 Cleaning submit state...")
       setSubmitting(false)
     }
   }
@@ -426,7 +634,8 @@ export function MatchReportForm({
 
       if (
         rosterUploadMode === "combined" &&
-        !combinedRosterFile
+        !combinedRosterFile &&
+        !existingCombinedAttachment
       ) {
         const message =
           "Please attach the file containing both team rosters."
@@ -437,17 +646,24 @@ export function MatchReportForm({
         return
       }
 
-      if (
-        rosterUploadMode === "separate" &&
-        (!homeRosterFile || !awayRosterFile)
-      ) {
-        const message =
-          "Please attach both the Home and Away team rosters."
+      if (rosterUploadMode === "separate") {
+        const hasHomeRoster =
+          Boolean(homeRosterFile) ||
+          Boolean(existingHomeAttachment)
 
-        setErrorMessage(message)
-        toast.error(message)
+        const hasAwayRoster =
+          Boolean(awayRosterFile) ||
+          Boolean(existingAwayAttachment)
 
-        return
+        if (!hasHomeRoster || !hasAwayRoster) {
+          const message =
+            "Please attach both the Home and Away team rosters."
+
+          setErrorMessage(message)
+          toast.error(message)
+
+          return
+        }
       }
 
       setErrorMessage(null)
@@ -592,6 +808,7 @@ export function MatchReportForm({
           setHomeRosterFile={setHomeRosterFile}
           awayRosterFile={awayRosterFile}
           setAwayRosterFile={setAwayRosterFile}
+          existingAttachments={ existingRosterAttachments}
         />
 
         {/* COMMENTS */}

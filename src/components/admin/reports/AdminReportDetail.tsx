@@ -1,11 +1,9 @@
 "use client"
 
-import MatchAssets from "@/src/components/match/MatchAssets"
 import MatchHeader from "@/src/components/match/MatchHeader"
 import MatchOfficials from "@/src/components/match/MatchOfficials"
 import MatchScore from "@/src/components/match/MatchScore"
 import { MatchTimeline } from "@/src/components/match/MatchTimeline"
-import StatusBadge from "./StatusBadge"
 import AdminActions from "./AdminActions"
 import MatchNarrativeSummary from "../../reports/MatchNarrativeSummary"
 import { RosterAttachment, RosterAttachmentsCard } from "../../match/RosterAttachmentsCard"
@@ -18,13 +16,10 @@ export default function AdminReportDetail({
   report,
   goals,
   cards,
-  assets,
   comments,
   cardReasons,
   rosterAttachments
 }: any) {
-
-  console.log(rosterAttachments)
 
   if (!match) {
     return <div>Match not found</div>
@@ -49,7 +44,7 @@ export default function AdminReportDetail({
   ].sort((a, b) => a.minute - b.minute)
 
   return (
-    <div className="space-y-8">
+    <div className="w-full min-w-0 space-y-8">
 
       {/* HEADER */}
       <div className="flex items-center justify-between">
@@ -57,10 +52,10 @@ export default function AdminReportDetail({
       </div>
 
       {/* 🔥 GRID REAL 3 COLUMNAS */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid w-full min-w-0 gap-6 lg:grid-cols-3">
 
         {/* ================= COL 1 ================= */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
 
           <MatchScore report={report} 
                       homeTeam={match.home_team}
@@ -73,7 +68,7 @@ export default function AdminReportDetail({
         </div>
 
         {/* ================= COL 2 ================= */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
 
           {cards && cards.length > 0 && (
             <MatchNarrativeSummary
@@ -85,7 +80,7 @@ export default function AdminReportDetail({
         </div>
 
         {/* ================= COL 3 ================= */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
 
           <MatchOfficials center={center} ar1={ar1} ar2={ar2} />
 

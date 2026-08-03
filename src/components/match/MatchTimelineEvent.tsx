@@ -27,41 +27,51 @@ export function TimelineEvent({
           ? "red"
           : "yellow"
 
+  const playerLabel = `#${event.number} ${event.player}`
+
   return (
     <div
       className="
-        grid grid-cols-[1fr_auto_1fr] items-center
-        rounded-md px-2 py-2
+        grid min-w-0
+        grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]
+        items-center rounded-md px-2 py-2
         transition-all duration-200
         hover:scale-[1.01] hover:bg-white/5
       "
     >
       {/* HOME EVENT */}
-      <div className="flex min-w-0 justify-end pr-3">
+      <div className="flex min-w-0 justify-end pr-2 sm:pr-3">
         {isHome && (
-          <div className="flex min-w-0 flex-col items-end">
-            <div className="flex min-w-0 items-center justify-end gap-2">
-              <span className="truncate text-sm font-medium tracking-tight text-white">
-                {event.player} #{event.number}
-              </span>
+          <div className="flex w-full min-w-0 items-center justify-end gap-2">
+            <span
+              title={playerLabel}
+              className="
+                min-w-0 flex-1 truncate
+                text-right text-sm font-medium
+                tracking-tight text-white
+              "
+            >
+              {playerLabel}
+            </span>
 
+            <span className="shrink-0">
               <MatchEventIcon
                 type={eventIconType}
                 size={18}
               />
-            </div>
+            </span>
           </div>
         )}
       </div>
 
       {/* MINUTE */}
-      <div className="relative z-10 flex items-center justify-center">
+      <div className="relative z-10 flex shrink-0 items-center justify-center">
         <div
           className="
-            rounded-md border border-white/10
-            bg-[#18231f] px-2 py-[2px]
-            text-[11px] text-gray-300
-            backdrop-blur-sm
+            whitespace-nowrap rounded-md
+            border border-white/10 bg-[#18231f]
+            px-2 py-[2px] text-[11px]
+            text-gray-300 backdrop-blur-sm
           "
         >
           {event.minute}'
@@ -69,20 +79,26 @@ export function TimelineEvent({
       </div>
 
       {/* AWAY EVENT */}
-      <div className="flex min-w-0 pl-3">
+      <div className="flex min-w-0 pl-2 sm:pl-3">
         {!isHome && (
-          <div className="flex min-w-0 flex-col items-start">
-            <div className="flex min-w-0 items-center gap-2">
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <span className="shrink-0">
               <MatchEventIcon
                 type={eventIconType}
                 size={18}
               />
+            </span>
 
-              <span className="truncate text-sm font-medium tracking-tight text-white">
-                {event.player} #{event.number}
-              </span>
-            </div>
-
+            <span
+              title={playerLabel}
+              className="
+                min-w-0 flex-1 truncate
+                text-left text-sm font-medium
+                tracking-tight text-white
+              "
+            >
+              {playerLabel}
+            </span>
           </div>
         )}
       </div>
