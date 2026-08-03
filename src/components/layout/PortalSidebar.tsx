@@ -18,6 +18,7 @@ import {
   ClipboardType,
   SquareStar,
   X,
+  Trophy,
 } from "lucide-react"
 
 import {
@@ -38,6 +39,7 @@ type NavItem = {
 const memberItems: NavItem[] = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
   { name: "Matches", href: "/portal/matches", icon: CalendarDays },
+  { name: "Competition", href: "/portal/competition", icon: Trophy},
   { name: "Reports", href: "/portal/reports", icon: FileText },
   { name: "Attendance", href: "/portal/attendance", icon: ClipboardList },
   { name: "Quizzes", href: "/portal/quizzes", icon: BookOpenText },

@@ -29,9 +29,11 @@ export function GoalRow({
         ? player.team_name === homeTeam
         : player.team_name === awayTeam
     )
-    .sort((a: any, b: any) =>
-      a.last_name.localeCompare(b.last_name)
-    )
+    .sort((a: any, b: any) => {
+        const last = a.last_name.localeCompare(b.last_name)
+        if (last !== 0) return last
+        return a.first_name.localeCompare(b.first_name)
+    })
 
   const hasRosterPlayers = filteredPlayers.length > 0
 
