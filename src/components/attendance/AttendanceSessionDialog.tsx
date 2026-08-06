@@ -1,72 +1,354 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Loader2,
+  Users,
+  XCircle,
+} from "lucide-react"
 
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/src/components/ui/dialog"
 
 import AttendanceStatusBadge from "./AttendanceStatusBadge"
 
+type AttendanceStatus =
+  | "present"
+  | "late"
+  | "excused"
+  | "absent"
+
+type AttendanceMember = {
+  memberId?: string
+  name: string
+  status: AttendanceStatus
+}
+
+type AttendanceSessionDialogProps = {
+  sessionId: string
+  open: boolean
+  onClose: () => void
+}
+
+const attendanceStatusOrder: Record<AttendanceStatus, number> = {
+  present: 0,
+  late: 1,
+  excused: 2,
+  absent: 3,
+}
+
 export default function AttendanceSessionDialog({
   sessionId,
   open,
-  onClose
-}: any) {
-
-  const [list, setList] = useState<any[]>([])
+  onClose,
+}: AttendanceSessionDialogProps) {
+  const [list, setList] = useState<AttendanceMember[]>([])
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null)
 
   useEffect(() => {
+    if (!open || !sessionId) return
 
-    if (!open) return
+    const controller = new AbortController()
 
-    fetch(`/api/attendance/session-list?session_id=${sessionId}`)
-      .then(res => res.json())
-      .then(data => setList(data))
+    async function loadSessionAttendance() {
+      setLoading(true)
+      setErrorMessage(null)
 
+      try {
+        const params = new URLSearchParams({
+          session_id: sessionId,
+        })
+
+        const response = await fetch(
+          `/api/attendance/session-list?${params.toString()}`,
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          }
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error ||
+              "Unable to load session attendance."
+          )
+        }
+
+        /*
+         * Supports either:
+         *   [...]
+         * or:
+         *   { members: [...] }
+         */
+        const members = Array.isArray(data)
+          ? data
+          : data?.members
+
+        setList(
+          Array.isArray(members)
+            ? members
+            : []
+        )
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
+          return
+        }
+
+        setList([])
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Unable to load session attendance."
+        )
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadSessionAttendance()
+
+    return () => {
+      controller.abort()
+    }
   }, [open, sessionId])
 
+  const summary = useMemo(() => {
+    return list.reduce(
+      (result, member) => {
+        result.total += 1
+        result[member.status] += 1
+
+        return result
+      },
+      {
+        total: 0,
+        present: 0,
+        late: 0,
+        excused: 0,
+        absent: 0,
+      }
+    )
+  }, [list])
+
+  const sortedList = useMemo(() => {
+    return [...list].sort((a, b) => {
+      const statusDifference =
+        attendanceStatusOrder[a.status] -
+        attendanceStatusOrder[b.status]
+
+      if (statusDifference !== 0) {
+        return statusDifference
+      }
+
+      return a.name.localeCompare(b.name, "en", {
+        sensitivity: "base",
+      })
+    })
+  }, [list])
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      onClose()
+    }
+  }
+
   return (
-
-    <Dialog open={open} onOpenChange={onClose}>
-
-      <DialogContent className="max-w-md">
-
-        <DialogHeader>
-
-          <DialogTitle>
-            Session Attendance
-          </DialogTitle>
-
-        </DialogHeader>
-
-        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-
-          {list.map((m, i) => (
-
-            <div
-              key={i}
-              className="flex justify-between items-center border-b border-white/10 pb-2"
-            >
-
-              <span className="text-sm">
-                {m.name}
-              </span>
-
-              <AttendanceStatusBadge status={m.status} />
-
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+    >
+      <DialogContent
+        className="
+          w-[95vw]
+          max-w-3xl
+          overflow-hidden
+          rounded-2xl
+          border
+          border-white/10
+          bg-[#07100E]
+          p-0
+          text-white
+          shadow-2xl
+        "
+      >
+        <DialogHeader className="border-b border-white/10 bg-gradient-to-r from-emerald-950/70 to-[#07100E] px-5 py-5 text-left sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
+              <Users className="h-5 w-5 text-emerald-400" />
             </div>
 
-          ))}
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-semibold text-white">
+                Session Attendance
+              </DialogTitle>
 
+              <DialogDescription className="mt-1 text-sm text-gray-400">
+                Review the recorded attendance for this activity.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="px-4 py-4 sm:px-6">
+          {!loading && !errorMessage && list.length > 0 && (
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <SummaryItem
+                label="Present"
+                value={summary.present}
+                icon={
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                }
+              />
+
+              <SummaryItem
+                label="Late"
+                value={summary.late}
+                icon={
+                  <Clock3 className="h-4 w-4 text-amber-400" />
+                }
+              />
+
+              <SummaryItem
+                label="Excused"
+                value={summary.excused}
+                icon={
+                  <CheckCircle2 className="h-4 w-4 text-sky-400" />
+                }
+              />
+
+              <SummaryItem
+                label="Absent"
+                value={summary.absent}
+                icon={
+                  <XCircle className="h-4 w-4 text-red-400" />
+                }
+              />
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex min-h-56 items-center justify-center">
+              <div className="flex items-center gap-3 text-sm text-gray-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading attendance...
+              </div>
+            </div>
+          ) : errorMessage ? (
+            <div className="flex min-h-48 items-center justify-center">
+              <div className="max-w-sm rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm text-red-300">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              </div>
+            </div>
+          ) : list.length === 0 ? (
+            <div className="flex min-h-48 items-center justify-center text-center">
+              <div>
+                <Users className="mx-auto h-8 w-8 text-gray-600" />
+
+                <p className="mt-3 font-medium text-white">
+                  No attendance data
+                </p>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  No participants were found for this session.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="max-h-[65vh] space-y-2 overflow-y-auto pr-1 sm:max-h-[420px]">
+              {sortedList.map((member, index) => (
+                <div
+                  key={
+                    member.memberId ??
+                    `${member.name}-${index}`
+                  }
+                  className="
+                    flex
+                    min-h-14
+                    items-center
+                    justify-between
+                    gap-3
+                    rounded-xl
+                    border
+                    border-white/5
+                    bg-white/[0.025]
+                    px-4
+                    py-3
+                    transition
+                    hover:border-white/10
+                    hover:bg-white/[0.04]
+                  "
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {member.name}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0">
+                    <AttendanceStatusBadge
+                      status={member.status}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
+        <div className="border-t border-white/10 bg-black/20 px-4 py-3 sm:px-6">
+          <p className="text-center text-xs text-gray-500">
+            {summary.total} participant
+            {summary.total === 1 ? "" : "s"}
+          </p>
+        </div>
       </DialogContent>
-
     </Dialog>
+  )
+}
 
+function SummaryItem({
+  label,
+  value,
+  icon,
+}: {
+  label: string
+  value: number
+  icon: React.ReactNode
+}) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.025] px-3 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] uppercase tracking-[0.12em] text-gray-500">
+          {label}
+        </span>
+
+        {icon}
+      </div>
+
+      <p className="mt-1 text-xl font-bold text-white">
+        {value}
+      </p>
+    </div>
   )
 }

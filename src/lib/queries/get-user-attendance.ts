@@ -1,93 +1,177 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
-import { pre } from "framer-motion/client"
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
-export async function getUserAttendance(userId: string) {
+type AttendanceStatus =
+  | "present"
+  | "late"
+  | "excused"
+  | "absent"
 
-  const supabase = await supabaseServer()
+type AttendanceDetailRow = {
+  session_id: string
+  session_title: string
+  session_type:
+    | "class"
+    | "training"
+    | "meeting"
+    | "special"
+    | "other"
+  scheduled_at: string
+  location: string | null
+  attendance_status: AttendanceStatus
+}
 
-  // 🔥 FECHA ACTUAL (solo sesiones pasadas)
-  const now = new Date().toISOString()
+type AttendanceSummaryRow = {
+  cycle_id: string
+  cycle_name: string
+  cycle_status: "draft" | "active" | "closed" | "archived"
 
-  const { data, error } = await supabase
-    .from("attendance_sessions")
+  sessions_total: number
+  sessions_present: number
+  sessions_late: number
+  sessions_excused: number
+  sessions_absent: number
+
+  attendance_points: number | string
+  attendance_percentage: number | string
+}
+
+export async function getUserAttendance(
+  userId: string
+) {
+  const supabaseAdmin = getSupabaseAdmin()
+
+  /*
+   * Primero obtenemos el resumen del usuario
+   * dentro del ciclo activo.
+   */
+  const {
+    data: summaryData,
+    error: summaryError,
+  } = await supabaseAdmin
+    .schema("development")
+    .from("referee_attendance")
     .select(`
-      id,
-      title,
-      session_type,
-      session_date,
-      location,
-      attendance_records (
-        member_id,
-        status
-      )
+      cycle_id,
+      cycle_name,
+      cycle_status,
+      sessions_total,
+      sessions_present,
+      sessions_late,
+      sessions_excused,
+      sessions_absent,
+      attendance_points,
+      attendance_percentage
     `)
-    .lte("session_date", now) // ✅ solo sesiones pasadas
-    .order("session_date", { ascending: false })
+    .eq("member_id", userId)
+    .eq("cycle_status", "active")
+    .maybeSingle()
 
-  if (error) {
-    console.error("attendance error", error)
-    throw error
-  }
-
-  // 🔥 NORMALIZAR DATA
-  const sessions = (data ?? []).map((session: any) => {
-
-    // 🔥 buscar el record del usuario
-    const record = session.attendance_records.find(
-      (r: any) => r.member_id === userId
+  if (summaryError) {
+    console.error(
+      "[ATTENDANCE] Unable to load attendance summary:",
+      summaryError
     )
 
-    let status: "present" | "late" | "excused" | "absent" = "absent"
+    throw new Error(
+      "Unable to load attendance summary."
+    )
+  }
 
-    if (record) {
-      if (record.status === "present") status = "present"
-      else if (record.status === "late") status = "late"
-      else if (record.status === "excused") status = "excused"
-    }
-
+  /*
+   * Si el miembro no está inscrito en el ciclo activo,
+   * devolvemos una página vacía en lugar de fallar.
+   */
+  if (!summaryData) {
     return {
-      id: session.id,
-      title: session.title,
-      session_type: session.session_type,
-      session_date: session.session_date,
-      location: session.location,
-      status,
+      cycle: null,
+
+      sessions: [],
+
+      stats: {
+        total: 0,
+        present: 0,
+        late: 0,
+        excused: 0,
+        absent: 0,
+        points: 0,
+        percentage: 0,
+      },
     }
-  })
+  }
 
-  // 🔥 MÉTRICAS
-  const total = sessions.length
+  const summary =
+    summaryData as AttendanceSummaryRow
 
-  const present = sessions.filter(
-    (s) => s.status === "present"
-  ).length
+  /*
+   * Después obtenemos el historial detallado
+   * solamente para ese usuario y ese ciclo.
+   */
+  const {
+    data: detailData,
+    error: detailError,
+  } = await supabaseAdmin
+    .schema("development")
+    .from("referee_attendance_detail")
+    .select(`
+      session_id,
+      session_title,
+      session_type,
+      scheduled_at,
+      location,
+      attendance_status
+    `)
+    .eq("member_id", userId)
+    .eq("cycle_id", summary.cycle_id)
+    .order("scheduled_at", {
+      ascending: false,
+    })
 
-  const late = sessions.filter(
-    (s) => s.status === "late"
-  ).length
+  if (detailError) {
+    console.error(
+      "[ATTENDANCE] Unable to load attendance history:",
+      detailError
+    )
 
-  const excused = sessions.filter(
-    (s) => s.status === "excused"
-  ).length
+    throw new Error(
+      "Unable to load attendance history."
+    )
+  }
 
-  // 💡 puedes ajustar pesos aquí
-  const scoreRaw =
-    present * 1 +
-    late * 0.5 +
-    excused * 0.75
+  const detailRows =
+    (detailData ?? []) as AttendanceDetailRow[]
 
-  const percentage =
-    total === 0 ? 0 : Math.round((scoreRaw / total) * 100)
+  /*
+   * Conservamos temporalmente la misma estructura
+   * que espera AttendanceHistoryTable.
+   */
+  const sessions = detailRows.map((row) => ({
+    id: row.session_id,
+    title: row.session_title,
+    session_type: row.session_type,
+    session_date: row.scheduled_at,
+    location: row.location,
+    status: row.attendance_status,
+  }))
 
   return {
+    cycle: {
+      id: summary.cycle_id,
+      name: summary.cycle_name,
+      status: summary.cycle_status,
+    },
+
     sessions,
+
     stats: {
-      total,
-      present,
-      late,
-      excused,
-      absent: total - present - late - excused,
-      percentage,
+      total: Number(summary.sessions_total),
+      present: Number(summary.sessions_present),
+      late: Number(summary.sessions_late),
+      excused: Number(summary.sessions_excused),
+      absent: Number(summary.sessions_absent),
+      points: Number(summary.attendance_points),
+      percentage: Number(
+        summary.attendance_percentage
+      ),
     },
   }
 }

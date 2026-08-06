@@ -1,31 +1,174 @@
 import { NextResponse } from "next/server"
+
+import { requireBoardApi } from "@/src/lib/auth/require-board-api"
 import { createAttendanceSession } from "@/src/lib/queries/create-attendance-session"
-import { requireBoard } from "@/src/lib/auth/require-board"
+import { localLosAngelesDateTimeToUTC } from "@/src/lib/utils/session-utils"
 
-export async function POST(req: Request) {
+const allowedSessionTypes = [
+  "class",
+  "training",
+  "meeting",
+  "special",
+  "other",
+] as const
 
-  const profile = await requireBoard()
+type AttendanceSessionType =
+  (typeof allowedSessionTypes)[number]
 
-  const formData = await req.formData()
+export async function POST(
+  request: Request
+) {
+  try {
+    const profile =
+      await requireBoardApi()
 
-  const title = formData.get("title") as string
-  const session_type = formData.get("session_type") as string
+    const formData =
+      await request.formData()
 
-  // 🔥 FIX REAL TIMEZONE
-  const rawDate = formData.get("session_date") as string
+    const title = String(
+      formData.get("title") ?? ""
+    ).trim()
 
-  const session_date =
-    rawDate.replace("T", " ") + ":00-07:00"
+    const sessionType = String(
+      formData.get(
+        "session_type"
+      ) ?? ""
+    ).toLowerCase()
 
-  const location = formData.get("location") as string
+    const rawDate = String(
+      formData.get(
+        "session_date"
+      ) ?? ""
+    ).trim()
 
-  const session = await createAttendanceSession({
-    title,
-    session_type,
-    session_date,
-    location,
-    created_by: profile.id
-  })
+    const location = String(
+      formData.get("location") ?? ""
+    ).trim()
 
-  return NextResponse.json(session)
+    const countsForScore =
+      formData.get(
+        "counts_for_score"
+      ) !== null
+
+    if (!title) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Session title is required.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (
+      !allowedSessionTypes.includes(
+        sessionType as AttendanceSessionType
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Invalid attendance session type.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (!rawDate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Session date is required.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    let scheduledAt: string
+
+    try {
+      scheduledAt =
+        localLosAngelesDateTimeToUTC(
+          rawDate
+        )
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Invalid session date and time.",
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const session =
+      await createAttendanceSession({
+        title,
+        sessionType:
+          sessionType as AttendanceSessionType,
+        scheduledAt,
+        location,
+        countsForScore,
+        createdBy: profile.id,
+      })
+
+    return NextResponse.json(
+      {
+        success: true,
+        session,
+      },
+      {
+        status: 201,
+      }
+    )
+  } catch (error) {
+    console.error(
+      "[ATTENDANCE] Create session API failed:",
+      error
+    )
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to create attendance session."
+
+    const status =
+      message === "Unauthorized"
+        ? 401
+        : message === "Forbidden"
+          ? 403
+          : message.includes(
+                "future"
+              ) ||
+              message.includes(
+                "scheduled within"
+              ) ||
+              message.includes(
+                "active development cycle"
+              )
+            ? 400
+            : 500
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: message,
+      },
+      {
+        status,
+      }
+    )
+  }
 }

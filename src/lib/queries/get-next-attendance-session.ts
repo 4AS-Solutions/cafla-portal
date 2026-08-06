@@ -1,60 +1,125 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
-import { getPacificISOString } from "../utils/session-utils"
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
-export type AttendanceSession = {
-  id: string
-  title: string
-  session_type: string
-  session_date: string
-  location: string | null
-  created_by: string
-  created_by_user: {
-    full_name: string
-  } | null
-}
+import {
+  type AdminAttendanceSession,
+  type AttendanceSessionRow,
+  getActiveDevelopmentCycle,
+  normalizeAttendanceSessions,
+} from "./attendance-session-helpers"
 
+export type AttendanceSession = AdminAttendanceSession
 
 export async function getNextAttendanceSessions(): Promise<AttendanceSession | null> {
-  const supabase = await supabaseServer()
+  const supabaseAdmin = getSupabaseAdmin()
 
-  const { data, error } = await supabase
+  const activeCycle =
+    await getActiveDevelopmentCycle()
+
+  if (!activeCycle) {
+    return null
+  }
+
+  /*
+   * Una sesión abierta tiene prioridad porque el Board
+   * todavía debe terminar de capturar o cerrar la lista.
+   */
+  const {
+    data: openSessionData,
+    error: openSessionError,
+  } = await supabaseAdmin
+    .schema("development")
     .from("attendance_sessions")
     .select(`
       id,
+      cycle_id,
       title,
       session_type,
-      session_date,
+      scheduled_at,
       location,
-      created_by,
-      creator:members!attendance_sessions_created_by_fkey (
-        full_name
-      )
+      status,
+      counts_for_score,
+      created_by
     `)
-    .gte( "session_date", getPacificISOString())
-    .order("session_date", { ascending: true })
+    .eq("cycle_id", activeCycle.id)
+    .eq("status", "open")
+    .order("scheduled_at", {
+      ascending: true,
+    })
     .limit(1)
     .maybeSingle()
 
-  if (error) {
-    console.error("getNextAttendanceSession error:", error)
-    throw error
+  if (openSessionError) {
+    console.error(
+      "[ATTENDANCE] Unable to load open attendance session:",
+      openSessionError
+    )
+
+    throw new Error(
+      "Unable to load the open attendance session."
+    )
   }
 
-  if (!data) return null
+  if (openSessionData) {
+    const normalized =
+      await normalizeAttendanceSessions(
+        [openSessionData as AttendanceSessionRow],
+        activeCycle
+      )
 
-  const rawCreator = Array.isArray(data.creator)
-    ? data.creator[0]
-    : data.creator
-
-  return {
-    id: data.id,
-    title: data.title,
-    session_type: data.session_type,
-    session_date: data.session_date,
-    location: data.location,
-    created_by: data.created_by,
-    created_by_user: rawCreator
-      ? { full_name: rawCreator.full_name }
-      : null
+    return normalized[0] ?? null
   }
+
+  /*
+   * Si no hay una sesión abierta, mostramos la próxima
+   * sesión programada. Incluimos sesiones scheduled cuya
+   * fecha haya pasado, porque pueden estar pendientes de
+   * abrirse y requieren atención del Board.
+   */
+  const {
+    data: scheduledSessionData,
+    error: scheduledSessionError,
+  } = await supabaseAdmin
+    .schema("development")
+    .from("attendance_sessions")
+    .select(`
+      id,
+      cycle_id,
+      title,
+      session_type,
+      scheduled_at,
+      location,
+      status,
+      counts_for_score,
+      created_by
+    `)
+    .eq("cycle_id", activeCycle.id)
+    .eq("status", "scheduled")
+    .order("scheduled_at", {
+      ascending: true,
+    })
+    .limit(1)
+    .maybeSingle()
+
+  if (scheduledSessionError) {
+    console.error(
+      "[ATTENDANCE] Unable to load next attendance session:",
+      scheduledSessionError
+    )
+
+    throw new Error(
+      "Unable to load the next attendance session."
+    )
+  }
+
+  if (!scheduledSessionData) {
+    return null
+  }
+
+  const normalized =
+    await normalizeAttendanceSessions(
+      [scheduledSessionData as AttendanceSessionRow],
+      activeCycle
+    )
+
+  return normalized[0] ?? null
 }
