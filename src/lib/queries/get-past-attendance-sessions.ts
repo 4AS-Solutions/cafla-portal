@@ -1,64 +1,99 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
-import { getPacificISOString } from "../utils/session-utils"
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
+
+import {
+  type AdminAttendanceSession,
+  type AttendanceSessionRow,
+  getActiveDevelopmentCycle,
+  normalizeAttendanceSessions,
+} from "./attendance-session-helpers"
 
 export async function getPastAttendanceSessions({
   page = 0,
-  limit = 6
+  limit = 6,
 }: {
   page?: number
   limit?: number
 }): Promise<{
-  data: any[]
+  data: AdminAttendanceSession[]
   count: number
 }> {
+  const supabaseAdmin = getSupabaseAdmin()
 
-  const supabase = await supabaseServer()
+  const activeCycle =
+    await getActiveDevelopmentCycle()
 
-  const from = page * limit
-  const to = from + limit - 1
+  if (!activeCycle) {
+    return {
+      data: [],
+      count: 0,
+    }
+  }
 
-  const { data, count, error } = await supabase
+  const safePage =
+    Number.isFinite(page) && page >= 0
+      ? Math.floor(page)
+      : 0
+
+  const safeLimit =
+    Number.isFinite(limit) && limit > 0
+      ? Math.floor(limit)
+      : 6
+
+  const from = safePage * safeLimit
+  const to = from + safeLimit - 1
+
+  const {
+    data,
+    count,
+    error,
+  } = await supabaseAdmin
+    .schema("development")
     .from("attendance_sessions")
-    .select(`
-      id,
-      title,
-      session_type,
-      session_date,
-      location,
-      created_by,
-      creator:members!attendance_sessions_created_by_fkey (
-        full_name
-      )
-    `, { count: "exact" })
-    .lt( "session_date", getPacificISOString())
-    .order("session_date", { ascending: false })
+    .select(
+      `
+        id,
+        cycle_id,
+        title,
+        session_type,
+        scheduled_at,
+        location,
+        status,
+        counts_for_score,
+        created_by
+      `,
+      {
+        count: "exact",
+      }
+    )
+    .eq("cycle_id", activeCycle.id)
+    .in("status", [
+      "completed",
+      "cancelled",
+    ])
+    .order("scheduled_at", {
+      ascending: false,
+    })
     .range(from, to)
 
   if (error) {
-    console.error("getPastAttendanceSessions error:", error)
-    throw error
+    console.error(
+      "[ATTENDANCE] Unable to load past sessions:",
+      error
+    )
+
+    throw new Error(
+      "Unable to load past attendance sessions."
+    )
   }
 
-  const normalized: any[] = (data ?? []).map((row: any) => {
-    const rawCreator = Array.isArray(row.creator)
-      ? row.creator[0]
-      : row.creator
-
-    return {
-      id: row.id,
-      title: row.title,
-      session_type: row.session_type,
-      session_date: row.session_date,
-      location: row.location,
-      created_by: row.created_by,
-      created_by_user: rawCreator
-        ? { full_name: rawCreator.full_name }
-        : null
-    }
-  })
+  const normalized =
+    await normalizeAttendanceSessions(
+      (data ?? []) as AttendanceSessionRow[],
+      activeCycle
+    )
 
   return {
     data: normalized,
-    count: count ?? 0
+    count: count ?? 0,
   }
 }

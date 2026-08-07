@@ -1,47 +1,110 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
-import { getPacificISOString } from "../utils/session-utils"
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
-export async function getUpcomingAttendanceSessions(): Promise<any[]> {
+import {
+  type AdminAttendanceSession,
+  type AttendanceSessionRow,
+  getActiveDevelopmentCycle,
+  normalizeAttendanceSessions,
+} from "./attendance-session-helpers"
 
-  const supabase = await supabaseServer()
+export async function getUpcomingAttendanceSessions(): Promise<
+  AdminAttendanceSession[]
+> {
+  const supabaseAdmin = getSupabaseAdmin()
 
-  const { data, error } = await supabase
+  const activeCycle =
+    await getActiveDevelopmentCycle()
+
+  if (!activeCycle) {
+    return []
+  }
+
+  const now = new Date().toISOString()
+
+  /*
+   * Averiguamos si existe una sesión abierta.
+   *
+   * Si existe, NextAttendanceSessionCard mostrará esa
+   * sesión y Upcoming puede mostrar todas las scheduled.
+   *
+   * Si no existe, NextAttendanceSessionCard mostrará la
+   * primera scheduled y la excluimos de Upcoming para no
+   * repetir la misma sesión en ambas secciones.
+   */
+  const {
+    data: openSession,
+    error: openSessionError,
+  } = await supabaseAdmin
+    .schema("development")
+    .from("attendance_sessions")
+    .select("id")
+    .eq("cycle_id", activeCycle.id)
+    .eq("status", "open")
+    .limit(1)
+    .maybeSingle()
+
+  if (openSessionError) {
+    console.error(
+      "[ATTENDANCE] Unable to verify open sessions:",
+      openSessionError
+    )
+
+    throw new Error(
+      "Unable to load upcoming attendance sessions."
+    )
+  }
+
+  const limit = openSession ? 6 : 7
+
+  const {
+    data,
+    error,
+  } = await supabaseAdmin
+    .schema("development")
     .from("attendance_sessions")
     .select(`
       id,
+      cycle_id,
       title,
       session_type,
-      session_date,
+      scheduled_at,
       location,
-      created_by,
-      creator:members!attendance_sessions_created_by_fkey (
-        full_name
-      )
+      status,
+      counts_for_score,
+      created_by
     `)
-    .gte( "session_date", getPacificISOString())
-    .order("session_date", { ascending: true })
-    .limit(6)
+    .eq("cycle_id", activeCycle.id)
+    .eq("status", "scheduled")
+    .gte("scheduled_at", now)
+    .order("scheduled_at", {
+      ascending: true,
+    })
+    .limit(limit)
 
   if (error) {
-    console.error("getUpcomingAttendanceSessions error:", error)
-    throw error
+    console.error(
+      "[ATTENDANCE] Unable to load upcoming sessions:",
+      error
+    )
+
+    throw new Error(
+      "Unable to load upcoming attendance sessions."
+    )
   }
 
-  return (data ?? []).map((row: any) => {
-    const rawCreator = Array.isArray(row.creator)
-      ? row.creator[0]
-      : row.creator
+  let rows =
+    (data ?? []) as AttendanceSessionRow[]
 
-    return {
-      id: row.id,
-      title: row.title,
-      session_type: row.session_type,
-      session_date: row.session_date,
-      location: row.location,
-      created_by: row.created_by,
-      created_by_user: rawCreator
-        ? { full_name: rawCreator.full_name }
-        : null
-    }
-  })
+  /*
+   * Sin una sesión open, la primera scheduled ya aparece
+   * en Next Session. La retiramos de Upcoming.
+   */
+  if (!openSession) {
+    rows = rows.slice(1)
+  }
+
+  return normalizeAttendanceSessions(
+    rows.slice(0, 6),
+    activeCycle
+  )
 }
