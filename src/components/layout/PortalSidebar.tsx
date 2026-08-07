@@ -80,7 +80,7 @@ export function PortalSidebar({
   : "hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0B0F0F] md:flex"
 
   const linkBase =
-    "sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all"
+  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors"
 
   function isActive(itemHref: string) {
 
