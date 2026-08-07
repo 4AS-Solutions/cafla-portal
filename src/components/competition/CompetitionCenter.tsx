@@ -354,32 +354,30 @@ export default function CompetitionCenter() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-[850px] w-full">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.025] text-left text-[11px] uppercase tracking-[0.16em] text-gray-500">
-                  <th className="px-5 py-3 text-center">Pos</th>
-                  <th className="px-5 py-3">Team</th>
-                  <th className="px-3 py-3 text-center">PJ</th>
-                  <th className="px-3 py-3 text-center">PG</th>
-                  <th className="px-3 py-3 text-center">PE</th>
-                  <th className="px-3 py-3 text-center">PP</th>
-                  <th className="px-3 py-3 text-center">GF</th>
-                  <th className="px-3 py-3 text-center">GC</th>
-                  <th className="px-3 py-3 text-center">DG</th>
-                  <th className="px-5 py-3 text-center">PTS</th>
-                </tr>
-              </thead>
+            <>
+              {/* MOBILE STANDINGS */}
+              <div className="md:hidden">
+                <div className="grid grid-cols-[52px_1fr_42px_48px_52px] border-b border-white/10 bg-white/[0.025] px-3 py-3 text-[10px] uppercase tracking-[0.14em] text-gray-500">
+                  <div className="text-center">Pos</div>
+                  <div>Team</div>
+                  <div className="text-center">PJ</div>
+                  <div className="text-center">DG</div>
+                  <div className="text-center">PTS</div>
+                </div>
 
-              <tbody>
                 {standings.map((standing) => (
-                  <tr
+                  <div
                     key={standing.teamRegistrationId}
                     className={`
-                      border-b border-white/5
-                      text-sm transition
+                      grid
+                      grid-cols-[52px_1fr_42px_48px_52px]
+                      items-center
+                      border-b
+                      border-white/5
+                      px-3
+                      py-3
+                      text-sm
                       last:border-b-0
-                      hover:bg-white/[0.035]
 
                       ${
                         standing.position <= 4
@@ -394,94 +392,56 @@ export default function CompetitionCenter() {
                       }
                     `}
                   >
-                    <td className="px-5 py-4 text-center">
+                    <div className="text-center">
                       <span
                         className={`
-                          inline-flex h-8 min-w-8
-                          items-center justify-center
-                          rounded-full px-2
-                          text-xs font-bold
+                          inline-flex
+                          h-7
+                          min-w-7
+                          items-center
+                          justify-center
+                          rounded-full
+                          px-2
+                          text-xs
+                          font-bold
                           ring-1
 
                           ${
                             standing.position === 1
-                              ? `
-                                bg-yellow-400/15
-                                text-yellow-300
-                                ring-yellow-400/30
-                                shadow-[0_0_18px_rgba(250,204,21,0.12)]
-                              `
+                              ? "bg-yellow-400/15 text-yellow-300 ring-yellow-400/30"
                               : standing.position === 2
-                                ? `
-                                  bg-slate-300/10
-                                  text-slate-200
-                                  ring-slate-300/20
-                                `
+                                ? "bg-slate-300/10 text-slate-200 ring-slate-300/20"
                                 : standing.position === 3
-                                  ? `
-                                    bg-emerald-500/15
-                                    text-emerald-300
-                                    ring-emerald-500/25
-                                  `
+                                  ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25"
                                   : standing.position === 4
-                                    ? `
-                                      bg-cyan-500/10
-                                      text-cyan-300
-                                      ring-cyan-500/20
-                                    `
-                                    : `
-                                      bg-white/5
-                                      text-gray-400
-                                      ring-white/5
-                                    `
+                                    ? "bg-cyan-500/10 text-cyan-300 ring-cyan-500/20"
+                                    : "bg-white/5 text-gray-400 ring-white/5"
                           }
                         `}
                       >
                         {standing.position}
                       </span>
-                    </td>
+                    </div>
 
-                    <td className="px-5 py-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          router.push(
-                            `/portal/competition/teams/${standing.teamRegistrationId}`
-                          )
-                        }
-                        className="font-medium text-white transition hover:text-emerald-300 cursor-pointer"
-                      >
-                        {standing.teamName}
-                      </button>
-                    </td>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/portal/competition/teams/${standing.teamRegistrationId}`
+                        )
+                      }
+                      className="truncate pr-2 text-left font-medium text-white transition hover:text-emerald-300"
+                    >
+                      {standing.teamName}
+                    </button>
 
-                    <td className="px-3 py-4 text-center text-gray-300">
+                    <div className="text-center text-gray-300">
                       {standing.played}
-                    </td>
+                    </div>
 
-                    <td className="px-3 py-4 text-center text-gray-300">
-                      {standing.won}
-                    </td>
-
-                    <td className="px-3 py-4 text-center text-gray-300">
-                      {standing.drawn}
-                    </td>
-
-                    <td className="px-3 py-4 text-center text-gray-300">
-                      {standing.lost}
-                    </td>
-
-                    <td className="px-3 py-4 text-center text-gray-300">
-                      {standing.goalsFor}
-                    </td>
-
-                    <td className="px-3 py-4 text-center text-gray-300">
-                      {standing.goalsAgainst}
-                    </td>
-
-                    <td
+                    <div
                       className={`
-                        px-3 py-4 text-center font-medium
+                        text-center font-medium
                         ${
                           standing.goalDifference > 0
                             ? "text-emerald-400"
@@ -494,17 +454,168 @@ export default function CompetitionCenter() {
                       {formatGoalDifference(
                         standing.goalDifference
                       )}
-                    </td>
+                    </div>
 
-                    <td className="px-5 py-4 text-center text-base font-bold text-yellow-300">
+                    <div className="text-center font-bold text-yellow-300">
                       {standing.totalPoints}
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+
+              {/* DESKTOP STANDINGS */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="min-w-[850px] w-full">
+                  <thead>
+                    <tr className="border-b border-white/10 bg-white/[0.025] text-left text-[11px] uppercase tracking-[0.16em] text-gray-500">
+                      <th className="px-5 py-3 text-center">Pos</th>
+                      <th className="px-5 py-3">Team</th>
+                      <th className="px-3 py-3 text-center">PJ</th>
+                      <th className="px-3 py-3 text-center">PG</th>
+                      <th className="px-3 py-3 text-center">PE</th>
+                      <th className="px-3 py-3 text-center">PP</th>
+                      <th className="px-3 py-3 text-center">GF</th>
+                      <th className="px-3 py-3 text-center">GC</th>
+                      <th className="px-3 py-3 text-center">DG</th>
+                      <th className="px-5 py-3 text-center">PTS</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {standings.map((standing) => (
+                      <tr
+                        key={standing.teamRegistrationId}
+                        className={`
+                          border-b border-white/5
+                          text-sm transition
+                          last:border-b-0
+                          hover:bg-white/[0.035]
+
+                          ${
+                            standing.position <= 4
+                              ? "bg-emerald-500/[0.035]"
+                              : ""
+                          }
+
+                          ${
+                            standing.position === 4
+                              ? "border-b-2 border-b-cyan-500/30"
+                              : ""
+                          }
+                        `}
+                      >
+                        <td className="px-5 py-4 text-center">
+                          <span
+                            className={`
+                              inline-flex h-8 min-w-8
+                              items-center justify-center
+                              rounded-full px-2
+                              text-xs font-bold
+                              ring-1
+
+                              ${
+                                standing.position === 1
+                                  ? `
+                                    bg-yellow-400/15
+                                    text-yellow-300
+                                    ring-yellow-400/30
+                                    shadow-[0_0_18px_rgba(250,204,21,0.12)]
+                                  `
+                                  : standing.position === 2
+                                    ? `
+                                      bg-slate-300/10
+                                      text-slate-200
+                                      ring-slate-300/20
+                                    `
+                                    : standing.position === 3
+                                      ? `
+                                        bg-emerald-500/15
+                                        text-emerald-300
+                                        ring-emerald-500/25
+                                      `
+                                      : standing.position === 4
+                                        ? `
+                                          bg-cyan-500/10
+                                          text-cyan-300
+                                          ring-cyan-500/20
+                                        `
+                                        : `
+                                          bg-white/5
+                                          text-gray-400
+                                          ring-white/5
+                                        `
+                              }
+                            `}
+                          >
+                            {standing.position}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              router.push(
+                                `/portal/competition/teams/${standing.teamRegistrationId}`
+                              )
+                            }
+                            className="cursor-pointer font-medium text-white transition hover:text-emerald-300"
+                          >
+                            {standing.teamName}
+                          </button>
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.played}
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.won}
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.drawn}
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.lost}
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.goalsFor}
+                        </td>
+
+                        <td className="px-3 py-4 text-center text-gray-300">
+                          {standing.goalsAgainst}
+                        </td>
+
+                        <td
+                          className={`
+                            px-3 py-4 text-center font-medium
+                            ${
+                              standing.goalDifference > 0
+                                ? "text-emerald-400"
+                                : standing.goalDifference < 0
+                                  ? "text-red-400"
+                                  : "text-gray-400"
+                            }
+                          `}
+                        >
+                          {formatGoalDifference(
+                            standing.goalDifference
+                          )}
+                        </td>
+
+                        <td className="px-5 py-4 text-center text-base font-bold text-yellow-300">
+                          {standing.totalPoints}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
       </section>
     </div>
   )
