@@ -1,14 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import {
+  useEffect,
+  useState,
+} from "react"
 
 import { PortalSidebar } from "./PortalSidebar"
 import { PortalTopbar } from "./PortalTopbar"
-
-import {
-  Sheet,
-  SheetContent,
-} from "@/src/components/ui/sheet"
 
 export function PortalShell({
   children,
@@ -20,8 +18,26 @@ export function PortalShell({
     setMobileSidebarOpen,
   ] = useState(false)
 
+  // =========================================
+  // MOBILE BODY SCROLL LOCK
+  // =========================================
+  useEffect(() => {
+    document.body.style.overflow =
+      mobileSidebarOpen
+        ? "hidden"
+        : ""
+
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [mobileSidebarOpen])
+
+  function closeMobileSidebar() {
+    setMobileSidebarOpen(false)
+  }
+
   return (
-    <div className="portal-layout relative flex min-h-screen overflow-hidden text-white">
+    <div className="portal-layout relative flex min-h-screen text-white">
 
       {/* AMBIENT LIGHT */}
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -32,37 +48,32 @@ export function PortalShell({
       <PortalSidebar />
 
       {/* MOBILE SIDEBAR */}
-      <Sheet
-        open={mobileSidebarOpen}
-        onOpenChange={
-          setMobileSidebarOpen
-        }
-      >
-        <SheetContent
-          side="right"
-          showCloseButton={false}
-          className="
-            w-[84vw]
-            max-w-[340px]
-            gap-0
-            border-l
-            border-white/10
-            bg-[#0B0F0F]
-            p-0
-            text-white
-          "
-        >
-          <PortalSidebar
-            mobile
-            onNavigate={() =>
-              setMobileSidebarOpen(false)
-            }
-            onClose={() =>
-              setMobileSidebarOpen(false)
-            }
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+
+          {/* OVERLAY */}
+          <button
+            type="button"
+            aria-label="Close sidebar overlay"
+            className="flex-1 bg-black/70"
+            onClick={closeMobileSidebar}
           />
-        </SheetContent>
-      </Sheet>
+
+          {/* SIDEBAR */}
+          <div className="h-full w-[84vw] max-w-[340px]">
+            <PortalSidebar
+              mobile
+              onNavigate={
+                closeMobileSidebar
+              }
+              onClose={
+                closeMobileSidebar
+              }
+            />
+          </div>
+
+        </div>
+      )}
 
       {/* CONTENT */}
       <div className="flex min-w-0 flex-1 flex-col">
