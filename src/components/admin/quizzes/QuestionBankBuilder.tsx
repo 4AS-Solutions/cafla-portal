@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   FileQuestion,
   Languages,
+  Loader2,
   LockKeyhole,
   Pencil,
   Plus,
@@ -19,6 +20,18 @@ import type {
   QuestionBankGroup,
   QuestionBankLanguage,
 } from "@/src/lib/queries/get-admin-quiz-question-bank"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog"
+import { toast } from "sonner"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 type QuestionBankBuilderProps = {
   bank: AdminQuizQuestionBank
@@ -436,10 +449,192 @@ function QuestionGroupRow({
           </Link>
 
           {canEdit && (
+            <DeleteQuestionButton
+              assessmentId={
+                assessmentId
+              }
+              questionGroupId={
+                group.id
+              }
+              questionText={
+                primaryTranslation
+                  ?.questionText ??
+                "this question"
+              }
+            />
+          )}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function DeleteQuestionButton({
+  assessmentId,
+  questionGroupId,
+  questionText,
+}: {
+  assessmentId: string
+  questionGroupId: string
+  questionText: string
+}) {
+  const router = useRouter()
+
+  const [open, setOpen] =
+    useState(false)
+
+  const [deleting, setDeleting] =
+    useState(false)
+
+  async function deleteQuestion() {
+    if (deleting) {
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      const response = await fetch(
+        `/api/admin/quizzes/${assessmentId}/questions/${questionGroupId}`,
+        {
+          method: "DELETE",
+        }
+      )
+
+      const result =
+        await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ||
+            "Unable to delete the question."
+        )
+      }
+
+      toast.success(
+        "Question group deleted."
+      )
+
+      setOpen(false)
+
+      /*
+       * Reload the Server Component
+       * question bank so counters,
+       * readiness and question rows
+       * are recalculated.
+       */
+      router.refresh()
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete the question."
+      )
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          setOpen(true)
+        }
+        title="Delete question"
+        className="
+          inline-flex
+          min-h-10
+          items-center
+          justify-center
+          rounded-xl
+          border
+          border-red-500/15
+          bg-red-500/[0.06]
+          px-3
+          text-red-300
+          transition
+          hover:border-red-400/30
+          hover:bg-red-500/10
+          hover:text-red-200
+        "
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (deleting) {
+            return
+          }
+
+          setOpen(nextOpen)
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="
+            max-w-md
+            overflow-hidden
+            rounded-2xl
+            border
+            border-red-500/20
+            bg-[#07100E]
+            p-0
+            text-white
+            shadow-2xl
+          "
+        >
+          <DialogHeader className="border-b border-white/10 bg-red-500/[0.045] px-6 py-5 text-left">
+
+            <div className="flex items-start gap-3">
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10">
+                <Trash2 className="h-5 w-5 text-red-300" />
+              </div>
+
+              <div>
+                <DialogTitle className="text-base font-semibold text-white">
+                  Delete this question?
+                </DialogTitle>
+
+                <DialogDescription className="mt-1 text-sm leading-5 text-gray-400">
+                  This action permanently removes the question and all of its language versions and answer options.
+                </DialogDescription>
+              </div>
+
+            </div>
+
+          </DialogHeader>
+
+          <div className="space-y-4 px-6 py-5">
+
+            <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+                Question
+              </p>
+
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-200">
+                {questionText}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.07] px-4 py-3 text-sm leading-6 text-amber-100/70">
+              The question bank totals and publish readiness will be recalculated after deletion.
+            </div>
+
+          </div>
+
+          <DialogFooter className="border-t border-white/10 px-6 py-4">
+
             <button
               type="button"
-              disabled
-              title="Delete action will be connected next."
+              onClick={() =>
+                setOpen(false)
+              }
+              disabled={deleting}
               className="
                 inline-flex
                 min-h-10
@@ -447,19 +642,63 @@ function QuestionGroupRow({
                 justify-center
                 rounded-xl
                 border
-                border-red-500/15
-                bg-red-500/[0.06]
-                px-3
-                text-red-300
-                opacity-40
+                border-white/10
+                bg-white/[0.03]
+                px-4
+                text-sm
+                font-medium
+                text-gray-300
+                transition
+                hover:bg-white/[0.07]
+                hover:text-white
+                disabled:opacity-50
               "
             >
-              <Trash2 className="h-4 w-4" />
+              Cancel
             </button>
-          )}
-        </div>
-      </div>
-    </article>
+
+            <button
+              type="button"
+              onClick={
+                deleteQuestion
+              }
+              disabled={deleting}
+              className="
+                inline-flex
+                min-h-10
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-red-500
+                px-4
+                text-sm
+                font-semibold
+                text-white
+                transition
+                hover:bg-red-400
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Delete Question
+                </>
+              )}
+            </button>
+
+          </DialogFooter>
+
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

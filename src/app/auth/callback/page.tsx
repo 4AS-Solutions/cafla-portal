@@ -1,58 +1,243 @@
 "use client"
 
 import { useEffect } from "react"
+
 import { createClient } from "@/src/lib/supabase/client"
 
 export default function AuthCallbackPage() {
   useEffect(() => {
-    const run = async () => {
+    async function run() {
+      const supabase =
+        createClient()
 
-      const supabase = createClient()
+      const url =
+        new URL(
+          window.location.href
+        )
 
-      const hash = window.location.hash
+      const next =
+        url.searchParams.get(
+          "next"
+        )
+
+      const code =
+        url.searchParams.get(
+          "code"
+        )
+
+      // =========================================
+      // PKCE FLOW
+      // =========================================
+
+      if (code) {
+        /*
+        * Depending on the Supabase browser-client flow,
+        * the PKCE code may already have been exchanged
+        * before this effect executes.
+        *
+        * First check whether a valid session already exists.
+        */
+        let {
+          data: {
+            session,
+          },
+        } =
+          await supabase.auth
+            .getSession()
+
+        if (!session) {
+          const {
+            data,
+            error,
+          } =
+            await supabase.auth
+              .exchangeCodeForSession(
+                code
+              )
+
+          if (error) {
+            console.error(
+              "[AUTH CALLBACK] Unable to exchange auth code:",
+              error
+            )
+
+            /*
+            * Re-check once in case another
+            * auth handler completed the exchange.
+            */
+            const {
+              data: {
+                session:
+                  recoveredSession,
+              },
+            } =
+              await supabase.auth
+                .getSession()
+
+            if (!recoveredSession) {
+              window.location.href =
+                "/login"
+
+              return
+            }
+
+            session =
+              recoveredSession
+          } else {
+            session =
+              data.session
+          }
+        }
+
+        if (!session) {
+          console.error(
+            "[AUTH CALLBACK] No authenticated session was established."
+          )
+
+          window.location.href =
+            "/login"
+
+          return
+        }
+
+        window.history.replaceState(
+          {},
+          "",
+          "/auth/callback"
+        )
+
+        // =========================================
+        // PASSWORD RECOVERY
+        // =========================================
+
+        if (
+          next ===
+          "/reset-password"
+        ) {
+          window.location.href =
+            "/reset-password"
+
+          return
+        }
+
+        // =========================================
+        // INVITATION / ONBOARDING
+        // =========================================
+
+        window.location.href =
+          "/complete-profile"
+
+        return
+      }
+
+      // =========================================
+      // LEGACY / IMPLICIT TOKEN FLOW
+      // =========================================
+
+      const hash =
+        window.location.hash
 
       if (!hash) {
+        console.error(
+          "[AUTH CALLBACK] No auth code or token hash was provided."
+        )
 
-        window.location.href = "/login"
+        window.location.href =
+          "/login"
+
         return
       }
 
-      const params = new URLSearchParams(hash.replace("#", ""))
+      const params =
+        new URLSearchParams(
+          hash.replace("#", "")
+        )
 
-      const access_token = params.get("access_token")
-      const refresh_token = params.get("refresh_token")
+      const accessToken =
+        params.get(
+          "access_token"
+        )
 
-      if (!access_token || !refresh_token) {
+      const refreshToken =
+        params.get(
+          "refresh_token"
+        )
 
-        window.location.href = "/login"
+      const type =
+        params.get("type")
+
+      if (
+        !accessToken ||
+        !refreshToken
+      ) {
+        console.error(
+          "[AUTH CALLBACK] Missing access or refresh token."
+        )
+
+        window.location.href =
+          "/login"
+
         return
       }
 
+      const {
+        error,
+      } =
+        await supabase.auth
+          .setSession({
+            access_token:
+              accessToken,
 
-      const { error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
-      })
+            refresh_token:
+              refreshToken,
+          })
 
       if (error) {
-        console.error("❌ ERROR:", error)
-        window.location.href = "/login"
+        console.error(
+          "[AUTH CALLBACK] Unable to establish session:",
+          error
+        )
+
+        window.location.href =
+          "/login"
+
         return
       }
 
+      window.history.replaceState(
+        {},
+        "",
+        "/auth/callback"
+      )
 
-      // limpiar URL
-      window.history.replaceState({}, "", "/auth/callback")
+      // =========================================
+      // PASSWORD RECOVERY
+      // =========================================
 
-      // 🔥 REDIRECT DURO (NO router)
-      window.location.href = "/complete-profile"
+      if (
+        type === "recovery" ||
+        next ===
+          "/reset-password"
+      ) {
+        window.location.href =
+          "/reset-password"
+
+        return
+      }
+
+      // =========================================
+      // INVITATION / ONBOARDING
+      // =========================================
+
+      window.location.href =
+        "/complete-profile"
     }
 
-    run()
+    void run()
   }, [])
 
   return (
-    <div className="text-white flex h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-[#07100E] text-sm text-gray-400">
       Setting up your session...
     </div>
   )

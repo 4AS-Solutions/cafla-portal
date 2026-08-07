@@ -4,11 +4,9 @@ import Link from "next/link"
 import {
   ArrowLeft,
   BookOpenCheck,
-  CalendarClock,
   Clock3,
   Languages,
   LockKeyhole,
-  RotateCcw,
   Settings2,
   ShieldCheck,
 } from "lucide-react"
@@ -16,21 +14,12 @@ import {
 import { getAdminQuizEditor } from "@/src/lib/queries/get-admin-quiz-editor"
 import AssessmentAvailabilityEditor from "@/src/components/admin/quizzes/AssessmentAvailabilityEditor"
 import { AssessmentLifecycleControls } from "@/src/components/admin/quizzes/AssessmentLifecycleControls"
+import AssessmentRulesEditor from "@/src/components/admin/quizzes/AssessmentRulesEditor"
 
 type PageProps = {
   params: Promise<{
     assessment_id: string
   }>
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) return "Not configured"
-
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "America/Los_Angeles",
-  }).format(new Date(value))
 }
 
 export default async function ManageAssessmentPage({
@@ -272,69 +261,18 @@ export default async function ManageAssessmentPage({
         </section>
 
         {/* RULES */}
-        <section
-          className="
-            overflow-hidden rounded-2xl
-            border border-white/10
-            bg-[#0B0F0F]/80
-          "
-        >
-          <div className="border-b border-white/10 p-6">
-            <div className="flex items-center gap-3">
-              <RotateCcw className="h-5 w-5 text-sky-400" />
-
-              <div>
-                <h2 className="font-semibold text-white">
-                  Assessment Rules
-                </h2>
-
-                <p className="text-sm text-gray-400">
-                  Rules currently applied to member attempts.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-3 p-6 sm:grid-cols-2">
-            <Rule
-              label="Maximum Attempts"
-              value={String(assessment.maxAttempts)}
-            />
-
-            <Rule
-              label="Time Limit"
-              value={`${assessment.timeLimitMinutes} min`}
-            />
-
-            <Rule
-              label="Questions / Attempt"
-              value={String(assessment.questionsPerAttempt)}
-            />
-
-            <Rule
-              label="Required"
-              value={assessment.required ? "Yes" : "No"}
-            />
-
-            <Rule
-              label="Question Order"
-              value={
-                assessment.randomizeQuestions
-                  ? "Randomized"
-                  : "Fixed"
-              }
-            />
-
-            <Rule
-              label="Option Order"
-              value={
-                assessment.randomizeOptions
-                  ? "Randomized"
-                  : "Fixed"
-              }
-            />
-          </div>
-        </section>
+        <AssessmentRulesEditor
+          assessmentId={assessment.id}
+          required={assessment.required}
+          countsForScore={assessment.countsForScore}
+          maxAttempts={assessment.maxAttempts}
+          timeLimitMinutes={assessment.timeLimitMinutes}
+          questionsPerAttempt={assessment.questionsPerAttempt}
+          randomizeQuestions={assessment.randomizeQuestions}
+          randomizeOptions={assessment.randomizeOptions}
+          contentLocked={assessment.contentLocked}
+          status={assessment.status}
+        />
       </div>
 
       {/* LANGUAGE VERSIONS */}
@@ -432,26 +370,6 @@ export default async function ManageAssessmentPage({
         </div>
       </section>
 
-    </div>
-  )
-}
-
-function Rule({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
-      <p className="text-xs uppercase tracking-wide text-gray-500">
-        {label}
-      </p>
-
-      <p className="mt-2 font-semibold text-white">
-        {value}
-      </p>
     </div>
   )
 }

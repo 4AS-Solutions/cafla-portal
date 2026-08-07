@@ -7,11 +7,13 @@ import {
   Clock3,
   Loader2,
   Users,
+  X,
   XCircle,
 } from "lucide-react"
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -176,9 +178,10 @@ export default function AttendanceSessionDialog({
       onOpenChange={handleOpenChange}
     >
       <DialogContent
+        showCloseButton={false}
         className="
-          w-[95vw]
-          max-w-3xl
+          w-[94vw]
+          max-w-2xl
           overflow-hidden
           rounded-2xl
           border
@@ -187,24 +190,70 @@ export default function AttendanceSessionDialog({
           p-0
           text-white
           shadow-2xl
+          sm:w-full
         "
       >
-        <DialogHeader className="border-b border-white/10 bg-gradient-to-r from-emerald-950/70 to-[#07100E] px-5 py-5 text-left sm:px-6">
+        <DialogHeader
+          className="
+            relative
+            shrink-0
+            border-b
+            border-white/10
+            bg-gradient-to-r
+            from-emerald-950/70
+            to-[#07100E]
+            px-5
+            py-4
+            pr-16
+            text-left
+            sm:px-6
+          "
+        >
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
               <Users className="h-5 w-5 text-emerald-400" />
             </div>
 
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold text-white">
+              <DialogTitle className="text-base font-semibold text-white sm:text-lg">
                 Session Attendance
               </DialogTitle>
 
-              <DialogDescription className="mt-1 text-sm text-gray-400">
+              <DialogDescription className="mt-1 text-sm leading-5 text-gray-400">
                 Review the recorded attendance for this activity.
               </DialogDescription>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close attendance details"
+            className="
+              absolute
+              right-4
+              top-4
+              z-20
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-white/15
+              bg-[#111a18]
+              text-white
+              shadow-lg
+              transition-colors
+              hover:bg-white/10
+              focus:outline-none
+              focus:ring-2
+              focus:ring-emerald-500/30
+            "
+          >
+            <X className="h-5 w-5" />
+          </button>
         </DialogHeader>
 
         <div className="px-4 py-4 sm:px-6">
@@ -275,7 +324,13 @@ export default function AttendanceSessionDialog({
               </div>
             </div>
           ) : (
-            <div className="max-h-[65vh] space-y-2 overflow-y-auto pr-1 sm:max-h-[420px]">
+            <div className="
+              max-h-[42vh]
+              space-y-2
+              overflow-y-auto
+              pr-1
+              sm:max-h-[360px]
+            ">
               {sortedList.map((member, index) => (
                 <div
                   key={
@@ -284,7 +339,7 @@ export default function AttendanceSessionDialog({
                   }
                   className="
                     flex
-                    min-h-14
+                    min-h-12
                     items-center
                     justify-between
                     gap-3
@@ -292,8 +347,8 @@ export default function AttendanceSessionDialog({
                     border
                     border-white/5
                     bg-white/[0.025]
-                    px-4
-                    py-3
+                    px-3
+                    py-2.5
                     transition
                     hover:border-white/10
                     hover:bg-white/[0.04]
@@ -337,7 +392,7 @@ function SummaryItem({
   icon: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.025] px-3 py-3">
+    <div className="rounded-xl border border-white/5 bg-white/[0.025] px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] uppercase tracking-[0.12em] text-gray-500">
           {label}
@@ -346,7 +401,7 @@ function SummaryItem({
         {icon}
       </div>
 
-      <p className="mt-1 text-xl font-bold text-white">
+      <p className="mt-1 text-lg font-bold text-white">
         {value}
       </p>
     </div>

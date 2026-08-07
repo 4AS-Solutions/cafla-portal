@@ -19,6 +19,7 @@ import { toast } from "sonner"
 
 import type {
   AdminQuizQuestionBank,
+  QuestionBankGroup,
   QuestionBankLanguage,
 } from "@/src/lib/queries/get-admin-quiz-question-bank"
 
@@ -45,29 +46,73 @@ type QuestionGroupEditorProps = {
   assessmentTitle: string
   versions:
     AdminQuizQuestionBank["versions"]
+
+  initialGroup?: QuestionBankGroup
 }
 
 export default function QuestionGroupEditor({
   assessmentId,
   assessmentTitle,
   versions,
+  initialGroup
 }: QuestionGroupEditorProps) {
   const router = useRouter()
 
+  const editing = Boolean(initialGroup)
+
   const [questionType, setQuestionType] =
     useState<QuestionType>(
-      "multiple_choice"
+      initialGroup?.questionType ??
+        "multiple_choice"
     )
 
   const [translations, setTranslations] =
     useState<TranslationState[]>(() =>
-      versions.map((version) =>
-        createTranslation(
+      versions.map((version) => {
+        const existingTranslation =
+          initialGroup?.translations.find(
+            (translation) =>
+              translation.versionId ===
+              version.id
+          )
+
+        if (existingTranslation) {
+          return {
+            versionId:
+              version.id,
+
+            language:
+              version.language,
+
+            questionText:
+              existingTranslation.questionText,
+
+            explanation:
+              existingTranslation.explanation,
+
+            options:
+              existingTranslation.options.map(
+                (option) => ({
+                  localId:
+                    option.id,
+
+                  text:
+                    option.text,
+
+                  isCorrect:
+                    option.isCorrect,
+                })
+              ),
+          }
+        }
+
+        return createTranslation(
           version.id,
           version.language,
-          "multiple_choice"
+          initialGroup?.questionType ??
+            "multiple_choice"
         )
-      )
+      })
     )
 
   const [submitting, setSubmitting] =
@@ -238,10 +283,18 @@ export default function QuestionGroupEditor({
     setSubmitting(true)
 
     try {
+      const endpoint =
+        editing && initialGroup
+          ? `/api/admin/quizzes/${assessmentId}/questions/${initialGroup.id}`
+          : `/api/admin/quizzes/${assessmentId}/questions`
+
       const response = await fetch(
-        `/api/admin/quizzes/${assessmentId}/questions`,
+        endpoint,
         {
-          method: "POST",
+          method:
+            editing
+              ? "PATCH"
+              : "POST",
           headers: {
             "Content-Type":
               "application/json",
@@ -285,12 +338,16 @@ export default function QuestionGroupEditor({
       if (!response.ok) {
         throw new Error(
           result?.error ||
-            "Unable to create the question."
+            (editing
+              ? "Unable to update the question."
+              : "Unable to create the question.")
         )
       }
 
       toast.success(
-        "Question group created."
+        editing
+          ? "Question group updated."
+          : "Question group created."
       )
 
       router.push(
@@ -302,6 +359,8 @@ export default function QuestionGroupEditor({
       toast.error(
         error instanceof Error
           ? error.message
+          : editing
+          ? "Unable to update the question."
           : "Unable to create the question."
       )
     } finally {
@@ -326,7 +385,9 @@ export default function QuestionGroupEditor({
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              {assessmentTitle}
+              {editing
+                ? `Editing question · ${assessmentTitle}`
+                : assessmentTitle}
             </p>
           </div>
         </div>
@@ -455,8 +516,12 @@ export default function QuestionGroupEditor({
           )}
 
           {submitting
-            ? "Creating..."
-            : "Save Question Group"}
+            ? editing
+              ? "Saving..."
+              : "Creating..."
+            : editing
+              ? "Save Changes"
+              : "Save Question Group"}
         </button>
       </footer>
     </form>

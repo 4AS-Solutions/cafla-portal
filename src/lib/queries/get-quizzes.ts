@@ -214,6 +214,84 @@ export async function getQuizzes(
     (assessment) => assessment.id
   )
 
+  // ===================================================
+  // FINALIZE EXPIRED IN-PROGRESS ATTEMPTS
+  // ===================================================
+
+  const nowIso =
+    new Date().toISOString()
+
+  const {
+    data: expiredAttempts,
+    error: expiredAttemptsError,
+  } = await supabaseAdmin
+    .schema("development")
+    .from("quiz_attempts")
+    .select("id")
+    .eq("member_id", memberId)
+    .in(
+      "assessment_id",
+      assessmentIds
+    )
+    .eq(
+      "status",
+      "in_progress"
+    )
+    .lte(
+      "expires_at",
+      nowIso
+    )
+
+  if (expiredAttemptsError) {
+    console.error(
+      "[QUIZZES] Unable to detect expired attempts:",
+      expiredAttemptsError
+    )
+
+    throw new Error(
+      "Unable to validate quiz attempts."
+    )
+  }
+
+  for (
+    const expiredAttempt of
+      expiredAttempts ?? []
+  ) {
+    const {
+      error: finalizeError,
+    } = await supabaseAdmin
+      .schema("development")
+      .rpc(
+        "finalize_quiz_attempt",
+        {
+          p_attempt_id:
+            expiredAttempt.id,
+
+          p_member_id:
+            memberId,
+
+          p_finalize_as:
+            "expired",
+        }
+      )
+
+    if (finalizeError) {
+      console.error(
+        "[QUIZZES] Unable to finalize expired attempt:",
+        {
+          attemptId:
+            expiredAttempt.id,
+          error:
+            finalizeError,
+        }
+      )
+
+      throw new Error(
+        "Unable to finalize an expired quiz attempt."
+      )
+    }
+  }
+
   const [
     versionsResponse,
     attemptsResponse,
