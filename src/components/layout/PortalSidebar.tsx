@@ -76,8 +76,8 @@ export function PortalSidebar({
   const isBoard = profile?.role === "board"
 
   const containerClass = mobile
-    ? "flex h-full flex-col bg-[#0B0F0F] border-l border-white/10 shadow-2xl animate-slideInLeft"
-    : "hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0B0F0F] md:flex"
+  ? "flex h-full flex-col bg-[#0B0F0F] border-l border-white/10 shadow-2xl"
+  : "hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0B0F0F] md:flex"
 
   const linkBase =
     "sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all"
