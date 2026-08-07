@@ -145,6 +145,7 @@ function resolveStartStatus(
 
   if (
     normalized.includes("not open") ||
+    normalized.includes("not available for attempts") ||
     normalized.includes("closed") ||
     normalized.includes("no quiz attempts") ||
     normalized.includes("expired")
@@ -199,6 +200,14 @@ function getStartErrorMessage(
     )
   ) {
     return "The selected language is not available."
+  }
+
+  if (
+    normalized.includes(
+      "not available for attempts"
+    )
+  ) {
+    return "This quiz is no longer available for new attempts."
   }
 
   return message

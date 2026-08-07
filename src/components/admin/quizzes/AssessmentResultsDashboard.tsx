@@ -22,6 +22,8 @@ import type {
   AdminQuizResultMember,
   AdminQuizResults,
 } from "@/src/lib/queries/get-admin-quiz-results"
+import QuizAttemptReviewDrawer from "./QuizAttemptReviewDrawer"
+import QuizAttemptHistoryDrawer from "./QuizAttemptHistoryDrawer"
 
 type ResultsFilter =
   | "all"
@@ -54,6 +56,49 @@ export default function AssessmentResultsDashboard({
 
   const [filter, setFilter] =
     useState<ResultsFilter>("all")
+
+  const [
+    selectedAttemptId,
+    setSelectedAttemptId,
+  ] = useState<string | null>(null)
+
+  const [
+    selectedHistoryMemberId,
+    setSelectedHistoryMemberId,
+  ] = useState<string | null>(null)
+
+  const reviewDrawerOpen =
+    selectedAttemptId !== null
+
+  const historyDrawerOpen =
+    selectedHistoryMemberId !== null
+
+  function openAttemptReview(
+    attemptId: string
+  ) {
+    setSelectedAttemptId(attemptId)
+  }
+
+  function closeAttemptReview() {
+    setSelectedAttemptId(null)
+  }
+
+  function openAttemptHistory(
+    memberId: string
+  ) {
+    setSelectedHistoryMemberId(memberId)
+  }
+
+  function closeAttemptHistory() {
+    setSelectedHistoryMemberId(null)
+  }
+
+  function reviewAttemptFromHistory(
+    attemptId: string
+  ) {
+    setSelectedHistoryMemberId(null)
+    setSelectedAttemptId(attemptId)
+  }
 
   const filteredMembers = useMemo(
     () => {
@@ -378,11 +423,11 @@ export default function AssessmentResultsDashboard({
               {filteredMembers.map(
                 (member) => (
                   <MemberTableRow
-                    key={
-                      member.memberId
-                    }
-                    member={member}
-                  />
+                  key={member.memberId}
+                  member={member}
+                  onReview={openAttemptReview}
+                  onHistory={openAttemptHistory}
+                />
                 )
               )}
             </tbody>
@@ -400,6 +445,9 @@ export default function AssessmentResultsDashboard({
             <MemberResultCard
               key={member.memberId}
               member={member}
+              onReview={openAttemptReview}
+              onHistory={openAttemptHistory}
+
             />
           )
         )}
@@ -411,14 +459,39 @@ export default function AssessmentResultsDashboard({
           </div>
         )}
       </section>
+
+      <QuizAttemptHistoryDrawer
+        assessmentId={
+          results.assessment.id
+        }
+        memberId={
+          selectedHistoryMemberId
+        }
+        open={historyDrawerOpen}
+        onClose={closeAttemptHistory}
+        onReviewAttempt={
+          reviewAttemptFromHistory
+        }
+      />
+
+      <QuizAttemptReviewDrawer
+        attemptId={selectedAttemptId}
+        open={reviewDrawerOpen}
+        onClose={closeAttemptReview}
+      />
+
     </div>
   )
 }
 
 function MemberTableRow({
   member,
+  onReview,
+  onHistory
 }: {
   member: AdminQuizResultMember
+  onReview: (attemptId: string) => void
+  onHistory: (memberId: string) => void
 }) {
   return (
     <tr className="transition hover:bg-white/[0.025]">
@@ -508,6 +581,9 @@ function MemberTableRow({
       <TableCell align="right">
         <ResultActions
           member={member}
+          onReview={onReview}
+          onHistory={onHistory}
+
         />
       </TableCell>
     </tr>
@@ -516,8 +592,13 @@ function MemberTableRow({
 
 function MemberResultCard({
   member,
+  onReview,
+  onHistory
 }: {
   member: AdminQuizResultMember
+  onReview: (attemptId: string) => void
+  onHistory: (memberId: string) => void
+
 }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#0B0F0F]/90">
@@ -585,6 +666,9 @@ function MemberResultCard({
         <ResultActions
           member={member}
           mobile
+          onReview={onReview}
+          onHistory={onHistory}
+
         />
       </div>
     </article>
@@ -594,15 +678,28 @@ function MemberResultCard({
 function ResultActions({
   member,
   mobile = false,
+  onReview,
+  onHistory,
 }: {
   member: AdminQuizResultMember
   mobile?: boolean
+
+  onReview: (
+    attemptId: string
+  ) => void
+
+  onHistory: (
+    memberId: string
+  ) => void
 }) {
   const reviewAvailable =
     Boolean(
       member.bestAttemptId &&
       member.reviewUnlocked
     )
+
+  const historyAvailable =
+    member.attemptsUsed > 0
 
   const baseClassName = `
     inline-flex
@@ -618,15 +715,37 @@ function ResultActions({
     transition
   `
 
+  function handleReview() {
+    if (
+      !reviewAvailable ||
+      !member.bestAttemptId
+    ) {
+      return
+    }
+
+    onReview(member.bestAttemptId)
+  }
+
+  function handleHistory() {
+    if (!historyAvailable) {
+      return
+    }
+
+    onHistory(member.memberId)
+  }
+
   return (
     <>
       <button
         type="button"
         disabled={!reviewAvailable}
+        onClick={handleReview}
         title={
           reviewAvailable
-            ? "Review connection is the next step."
-            : "Review is not available yet."
+            ? "Review the member's best attempt."
+            : member.bestAttemptId
+              ? "Detailed review is still locked."
+              : "No completed attempt is available."
         }
         className={`
           ${baseClassName}
@@ -635,11 +754,7 @@ function ResultActions({
               ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15"
               : "cursor-not-allowed border-white/5 bg-white/[0.015] text-gray-700"
           }
-          ${
-            mobile
-              ? "w-full"
-              : ""
-          }
+          ${mobile ? "w-full" : ""}
         `}
       >
         <Eye className="h-3.5 w-3.5" />
@@ -648,14 +763,17 @@ function ResultActions({
 
       <button
         type="button"
-        disabled={
-          member.attemptsUsed === 0
+        disabled={!historyAvailable}
+        onClick={handleHistory}
+        title={
+          historyAvailable
+            ? "View every attempt used by this member."
+            : "This member has no attempts."
         }
-        title="Attempt History will be connected next."
         className={`
           ${baseClassName}
           ${
-            member.attemptsUsed > 0
+            historyAvailable
               ? "border-white/10 bg-white/[0.03] text-gray-300 hover:bg-white/[0.07]"
               : "cursor-not-allowed border-white/5 bg-white/[0.015] text-gray-700"
           }
