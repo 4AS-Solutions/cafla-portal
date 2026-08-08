@@ -140,14 +140,11 @@ export async function POST(request: Request) {
         member_id,
         effective_from,
         effective_until,
+        enrollment_type,
         status
       `)
       .eq("cycle_id", session.cycle_id)
       .eq("member_id", memberId)
-      .lte(
-        "effective_from",
-        localSessionDate
-      )
       .maybeSingle()
 
     if (cycleMemberError) {
@@ -168,12 +165,27 @@ export async function POST(request: Request) {
       )
     }
 
-    const isEligible =
-      cycleMember &&
-      (
-        !cycleMember.effective_until ||
-        cycleMember.effective_until >=
-          localSessionDate
+   const isEligible =
+      Boolean(
+        cycleMember &&
+        (
+          cycleMember.enrollment_type ===
+            "existing_member"
+            ? (
+                !cycleMember.effective_until ||
+                cycleMember.effective_until >=
+                  localSessionDate
+              )
+            : (
+                cycleMember.effective_from <=
+                  localSessionDate &&
+                (
+                  !cycleMember.effective_until ||
+                  cycleMember.effective_until >=
+                    localSessionDate
+                )
+              )
+        )
       )
 
     if (!isEligible) {

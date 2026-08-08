@@ -1,29 +1,22 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
+import { getSessionAttendance } from "@/src/lib/queries/get-session-attendance"
 
-export async function getSessionAttendanceList(sessionId: string) {
+export async function getSessionAttendanceList(
+  sessionId: string
+) {
+  const attendance =
+    await getSessionAttendance(
+      sessionId
+    )
 
-  const supabase = await supabaseServer()
+  return attendance.members.map(
+    (member) => ({
+      member_id: member.id,
+      name: member.full_name,
 
-  const { data: members } = await supabase
-    .from("members")
-    .select("id, full_name")
-    .order("full_name")
-
-  const { data: records } = await supabase
-    .from("attendance_records")
-    .select("member_id, status")
-    .eq("session_id", sessionId)
-
-  const map: Record<string, string> = {}
-
-  records?.forEach((r) => {
-    map[r.member_id] = r.status
-  })
-
-  const result = members?.map((m) => ({
-    name: m.full_name,
-    status: map[m.id] || "absent"
-  }))
-
-  return result ?? []
+      status:
+        attendance.statusMap[
+          member.id
+        ] ?? "absent",
+    })
+  )
 }
