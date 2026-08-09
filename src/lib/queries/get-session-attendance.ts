@@ -42,7 +42,13 @@ type CycleMemberRow = {
   member_id: string
   effective_from: string
   effective_until: string | null
-  status: "active" | "withdrawn" | "ineligible"
+  enrollment_type:
+    | "existing_member"
+    | "new_member"
+  status:
+    | "active"
+    | "withdrawn"
+    | "ineligible"
   eligible_for_ranking: boolean
 }
 
@@ -164,15 +170,18 @@ export async function getSessionAttendance(
       member_id,
       effective_from,
       effective_until,
+      enrollment_type,
       status,
       eligible_for_ranking
     `)
-    .eq("cycle_id", session.cycle_id)
+    .eq(
+      "cycle_id",
+      session.cycle_id
+    )
     .in("status", [
       "active",
       "withdrawn",
     ])
-    .lte("effective_from", sessionLocalDate)
 
   if (cycleMembersError) {
     console.error(
@@ -196,10 +205,34 @@ export async function getSessionAttendance(
    */
   const eligibleMembers =
     eligibleCycleMembers.filter(
-      (cycleMember) =>
-        !cycleMember.effective_until ||
-        cycleMember.effective_until >=
-          sessionLocalDate
+      (cycleMember) => {
+
+        // EXISTING MEMBER
+        // Ya pertenecía a CAFLA durante el ciclo,
+        // aunque se haya agregado al sistema después.
+        if (
+          cycleMember.enrollment_type ===
+          "existing_member"
+        ) {
+          return (
+            !cycleMember.effective_until ||
+            cycleMember.effective_until >=
+              sessionLocalDate
+          )
+        }
+
+        // NEW MEMBER
+        // Solo cuenta desde su fecha real de ingreso.
+        return (
+          cycleMember.effective_from <=
+            sessionLocalDate &&
+          (
+            !cycleMember.effective_until ||
+            cycleMember.effective_until >=
+              sessionLocalDate
+          )
+        )
+      }
     )
 
   const memberIds = eligibleMembers.map(
