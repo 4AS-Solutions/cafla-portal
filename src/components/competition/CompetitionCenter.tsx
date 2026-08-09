@@ -111,7 +111,7 @@ export default function CompetitionCenter() {
 
       try {
         const response = await fetch(
-          "/api/admin/tournaments/division-seasons"
+          "/api/competition/division-seasons"
         )
 
         const data =
