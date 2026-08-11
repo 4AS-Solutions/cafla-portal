@@ -256,8 +256,27 @@ export async function POST(req: Request) {
     }
 
     // =========================================
+    // 🕒 CAFLA LOCAL DATE
+    // =========================================
+
+    const now = new Date()
+
+    const losAngelesDate =
+      new Intl.DateTimeFormat(
+        "en-CA",
+        {
+          timeZone:
+            "America/Los_Angeles",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }
+      ).format(now)
+
+    // =========================================
     // 🧠 DEVELOPMENT ENROLLMENT
     // =========================================
+
     if (!existingEnrollment) {
       const {
         error: enrollmentError,
@@ -272,9 +291,7 @@ export async function POST(req: Request) {
             invitedUserId,
 
           effective_from:
-            new Date()
-              .toISOString()
-              .slice(0, 10),
+            losAngelesDate,
 
           effective_until:
             null,
@@ -292,7 +309,7 @@ export async function POST(req: Request) {
             `Added through Member Invitation - ${activeCycle.name}`,
 
           updated_at:
-            new Date().toISOString(),
+            now.toISOString(),
         })
 
       if (enrollmentError) {
