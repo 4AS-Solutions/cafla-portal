@@ -195,7 +195,11 @@ export default function InviteMemberDialog() {
       {/* MODAL */}
       <DialogContent
         className="
+          flex
+          max-h-[90dvh]
+          w-[calc(100%-2rem)]
           max-w-md
+          flex-col
           overflow-hidden
           rounded-2xl
           border border-white/10
@@ -206,7 +210,16 @@ export default function InviteMemberDialog() {
         "
       >
         {/* HEADER */}
-        <div className="border-b border-white/10 bg-emerald-500/[0.035] px-6 py-5">
+        <div className="
+          shrink-0
+          border-b
+          border-white/10
+          bg-emerald-500/[0.035]
+          px-5
+          py-4
+          sm:px-6
+          sm:py-5
+        ">
 
           <DialogHeader>
 
@@ -250,7 +263,15 @@ export default function InviteMemberDialog() {
         {/* FORM */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-5 p-6"
+          className="
+            min-h-0
+            flex-1
+            space-y-5
+            overflow-y-auto
+            overscroll-contain
+            p-5
+            sm:p-6
+          "
         >
           {/* FULL NAME */}
           <div className="space-y-2">
