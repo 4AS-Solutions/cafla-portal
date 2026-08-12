@@ -225,7 +225,7 @@ export function getUniformSet(
               LOS_ANGELES_TIME_ZONE,
             weekday: "short",
           }
-        ).format(date) === "Wed"
+        ).format(date) === "Thu"
         ? 3
         : new Intl.DateTimeFormat(
             "en-US",

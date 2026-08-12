@@ -11,6 +11,9 @@ import { Macron2 } from "@/src/components/landing/Macron2";
 import { Navbar } from "@/src/components/landing/Navbar";
 import { Values } from "@/src/components/landing/Values";
 
+export const dynamic = "force-dynamic"
+
+
 // import { BoardSection } from "../components/landing/Board"
 
 // import { Resources } from "../components/landing/Resources"
