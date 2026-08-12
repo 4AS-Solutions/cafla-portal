@@ -324,7 +324,6 @@ export async function PATCH(
         comments: comments?.trim() || "",
         status: "submitted",
         revision_notes: null,
-        submitted_at: new Date().toISOString(),
       })
       .eq("id", reportId)
       .select("id, match_id, status")
