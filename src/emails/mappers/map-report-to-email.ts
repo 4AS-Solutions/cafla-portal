@@ -142,22 +142,83 @@ function getAttachmentFilename(
   }
 }
 
-function formatMatchDate(kickoffAt: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(kickoffAt))
+function formatMatchDate(
+  kickoffAt: string
+): string {
+  const normalized = kickoffAt
+    .trim()
+    .replace(" ", "T")
+
+  const [datePart] =
+    normalized.split("T")
+
+  const [year, month, day] =
+    datePart.split("-").map(Number)
+
+  if (!year || !month || !day) {
+    return "Date not provided"
+  }
+
+  return new Intl.DateTimeFormat(
+    "en-US",
+    {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }
+  ).format(
+    new Date(
+      Date.UTC(
+        year,
+        month - 1,
+        day
+      )
+    )
+  )
 }
 
-function formatKickoffTime(kickoffAt: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(kickoffAt))
+function formatKickoffTime(
+  kickoffAt: string
+): string {
+  const normalized = kickoffAt
+    .trim()
+    .replace(" ", "T")
+
+  const [, timePart] =
+    normalized.split("T")
+
+  if (!timePart) {
+    return "Time not provided"
+  }
+
+  const [hourString, minuteString] =
+    timePart.split(":")
+
+  const hour =
+    Number(hourString)
+
+  const minute =
+    Number(minuteString)
+
+  if (
+    Number.isNaN(hour) ||
+    Number.isNaN(minute)
+  ) {
+    return "Time not provided"
+  }
+
+  const period =
+    hour >= 12
+      ? "PM"
+      : "AM"
+
+  const displayHour =
+    hour % 12 || 12
+
+  return `${displayHour}:${String(
+    minute
+  ).padStart(2, "0")} ${period}`
 }
 
 export function mapReportToEmail({
