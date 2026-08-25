@@ -18,7 +18,8 @@ import { UpcomingMatchesTable } from "@/src/components/dashboard/UpcomingMatches
 import { RefereeDevelopmentCard } from "@/src/components/development/DevelopmentSummaryCard"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireUser } from "@/src/lib/auth/require-user"
-import { getMyDevelopment, getPendingReports, getUpcomingMatches } from "@/src/lib/queries/dashboard"
+import { getPendingReports, getUpcomingMatches } from "@/src/lib/queries/dashboard"
+import { getUserCurrentDevelopmentRanking } from "@/src/lib/queries/get-development-ranking-v2"
 import { getProfile } from "@/src/lib/queries/get-profile"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
 import { getUserEvaluationObligations } from "@/src/lib/queries/get-user-evaluation-obligations"
@@ -33,13 +34,12 @@ function formatPercentage(value: number | null | undefined): string {
 export default async function PortalDashboard() {
   const user = await requireUser()
   const profileData = await getProfile()
-  const memberId = profileData?.profile?.id
 
   const [
     upcomingMatches,
     pendingReports,
     obligations,
-    myDevelopment,
+    currentDevelopment,
     attendance,
     quizScore,
     reportScore,
@@ -48,7 +48,7 @@ export default async function PortalDashboard() {
     getUpcomingMatches(),
     getPendingReports(),
     getUserEvaluationObligations(),
-    memberId ? getMyDevelopment(memberId) : Promise.resolve(null),
+    getUserCurrentDevelopmentRanking(),
     getUserAttendance(user.id),
     getUserQuizScore(),
     getUserReportScore(),
@@ -113,13 +113,11 @@ export default async function PortalDashboard() {
           </DashboardCard>
         </div>
 
-        {myDevelopment && (
+        {currentDevelopment && (
           <div className="xl:col-span-2">
             <DashboardCard title="Your Development" icon={<ChartLine size={18} />}>
               <RefereeDevelopmentCard
-                ranking_position={myDevelopment.ranking_position}
-                development_score={myDevelopment.development_score}
-                referee_level={myDevelopment.referee_level}
+                current={currentDevelopment}
               />
             </DashboardCard>
           </div>
