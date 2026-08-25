@@ -3,6 +3,16 @@ import { NextResponse } from "next/server"
 import { requireUser } from "@/src/lib/auth/require-user"
 import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
+const ALLOWED_DIVISIONS = new Set([
+  "First AM",
+  "Minor AM",
+  "Minor PM",
+  "Major AM",
+  "Metro AM",
+  "Metro PM",
+  "Super Metro",
+])
+
 type DivisionSeasonRow = {
   id: string
   active: boolean
@@ -142,6 +152,11 @@ export async function GET() {
           typeof item
         > =>
           item !== null
+      )
+      .filter((item) =>
+        ALLOWED_DIVISIONS.has(
+          item.divisionName
+        )
       )
       .sort((a, b) => {
         if (
