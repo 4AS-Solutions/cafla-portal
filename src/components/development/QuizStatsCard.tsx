@@ -1,38 +1,31 @@
 type Props = {
-  quizzes_taken: number
-  avg_quiz_score: string
-  max_score?: string
-  min_score?: string
+  assessments_counted: number
+  assessments_not_attempted: number
+  quiz_score: number
 }
 
 export function QuizStatsCard({
-  quizzes_taken,
-  avg_quiz_score,
-  max_score,
-  min_score
+  assessments_counted,
+  assessments_not_attempted,
+  quiz_score,
 }: Props) {
 
   return (
     <div className="space-y-2 text-sm">
 
       <div className="flex justify-between">
-        <span>Quizzes Taken</span>
-        <span className="font-semibold">{quizzes_taken}</span>
+        <span>Quiz Score</span>
+        <span className="font-semibold text-white">{quiz_score.toFixed(0)}%</span>
       </div>
 
       <div className="flex justify-between">
-        <span>Average Score</span>
-        <span className="font-semibold">{avg_quiz_score}</span>
+        <span>Assessments Counted</span>
+        <span className="font-semibold">{assessments_counted}</span>
       </div>
 
       <div className="flex justify-between">
-        <span>Max Score</span>
-        <span>{max_score ?? "-"}</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span>Min Score</span>
-        <span>{min_score ?? "-"}</span>
+        <span>Not Attempted</span>
+        <span>{assessments_not_attempted}</span>
       </div>
 
     </div>

@@ -1,98 +1,59 @@
 import { DashboardCard } from "@/src/components/dashboard/DashboardCard"
-import { QuizStatsCard } from "@/src/components/development/QuizStatsCard"
 import { AttendanceStatsCard } from "@/src/components/development/AttendanceStatsCard"
-import { DevelopmentProgressChart } from "@/src/components/development/DevelopmentProgressChart"
-
-import {
-  getMyQuizStats,
-  getMyAttendanceStats,
-  getMyPeerFeedback,
-  getMyReportScore
-} from "@/src/lib/queries/development"
-
-import { getProfile } from "@/src/lib/queries/get-profile"
-import { getMyDevelopment } from "@/src/lib/queries/dashboard"
-import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
 import { DevelopmentOverview } from "@/src/components/development/DevelopmentOverview"
+import { DevelopmentProgressChart } from "@/src/components/development/DevelopmentProgressChart"
+import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
+import { EvaluationStatsCard } from "@/src/components/development/EvaluationStatsCard"
+import { QuizStatsCard } from "@/src/components/development/QuizStatsCard"
+import { ReportStatsCard } from "@/src/components/development/ReportStatsCard"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireUser } from "@/src/lib/auth/require-user"
+import { getMyDevelopment } from "@/src/lib/queries/dashboard"
+import { getProfile } from "@/src/lib/queries/get-profile"
+import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
+import { getUserEvaluationScore } from "@/src/lib/queries/get-user-evaluation-score"
+import { getUserQuizScore } from "@/src/lib/queries/get-user-quiz-score"
+import { getUserReportScore } from "@/src/lib/queries/get-user-report-score"
 
 export default async function DevelopmentPage() {
-
-  await requireUser();
-
+  const user = await requireUser()
   const profile = await getProfile()
-
   const memberId = profile?.profile?.id
 
-  const developmentSummary = memberId
-    ? await getMyDevelopment(memberId)
-    : null
-
-  const quizStats = memberId
-    ? await getMyQuizStats(memberId)
-    : null
-
-  const attendanceStats = memberId
-    ? await getMyAttendanceStats(memberId)
-    : null
-
-  const feedbackStats = memberId
-    ? await getMyPeerFeedback(memberId)
-    : null
-
-  const reportStats = memberId
-    ? await getMyReportScore(memberId)
-    : null
-
+  const [developmentSummary, attendance, quizScore, evaluationScore, reportScore] =
+    await Promise.all([
+      memberId ? getMyDevelopment(memberId) : Promise.resolve(null),
+      getUserAttendance(user.id),
+      getUserQuizScore(),
+      getUserEvaluationScore(),
+      getUserReportScore(),
+    ])
 
   const radarData = [
-    {
-      skill: "Attendance",
-      score: Number(attendanceStats?.attendance_percentage ?? 0)
-    },
-    {
-      skill: "Reports",
-      score: Number(reportStats?.report_score ?? 0)
-    },
-    {
-      skill: "Peer Feedback",
-      score: Number(feedbackStats?.peer_feedback_score ?? 0)
-    },
-    {
-      skill: "Quizzes",
-      score: Number(quizStats?.avg_quiz_score ?? 0)
-    }
+    { skill: "Attendance", score: attendance.cycle ? attendance.stats.percentage : null },
+    { skill: "Reports", score: reportScore?.report_percentage ?? null },
+    { skill: "Peer Feedback", score: evaluationScore?.evaluation_score ?? null },
+    { skill: "Quizzes", score: quizScore?.quiz_score ?? null },
   ]
 
-
-  // mock monthly progress (future DB)
-
+  // This chart remains on the legacy Development source until a V2 history exists.
   const monthlyProgress = [
     { month: "Jan", score: 42 },
     { month: "Feb", score: 48 },
-    { month: "Mar", score: Number(developmentSummary?.development_score ?? 50) }
+    { month: "Mar", score: Number(developmentSummary?.development_score ?? 50) },
   ]
-
 
   const lastUpdated = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
   })
-
 
   return (
     <div className="space-y-8">
       <div>
-        <PortalPageHeader
-          title="Development"
-          subtitle="Track your referee growth and performance metrics."
-        />
-
-        <p className="text-xs text-gray-500 mt-1">
-          Data last updated: {lastUpdated}
-        </p>
+        <PortalPageHeader title="Development" subtitle="Track your referee growth and performance metrics." />
+        <p className="mt-1 text-xs text-gray-500">Data last updated: {lastUpdated}</p>
       </div>
 
       {developmentSummary && (
@@ -109,62 +70,41 @@ export default async function DevelopmentPage() {
         <DashboardCard title="Performance Breakdown">
           <DevelopmentRadar data={radarData} />
         </DashboardCard>
-
         <DashboardCard title="Development Progress">
           <DevelopmentProgressChart data={monthlyProgress} />
         </DashboardCard>
       </div>
 
-
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {quizStats && (
-          <DashboardCard title="Quiz Performance">
-            <QuizStatsCard {...quizStats} />
-          </DashboardCard>
-        )}
+        <DashboardCard title="Quiz Performance">
+          {quizScore ? (
+            <QuizStatsCard {...quizScore} />
+          ) : (
+            <p className="text-sm text-gray-500">No quiz score is available for the active cycle.</p>
+          )}
+        </DashboardCard>
 
-        {attendanceStats && (
-          <DashboardCard title="Attendance">
-            <AttendanceStatsCard {...attendanceStats} />
-          </DashboardCard>
-        )}
+        <DashboardCard title="Attendance">
+          {attendance.cycle ? (
+            <AttendanceStatsCard
+              attendance_percentage={attendance.stats.percentage}
+              sessions_present={attendance.stats.present}
+              sessions_excused={attendance.stats.excused}
+              sessions_late={attendance.stats.late}
+              sessions_total={attendance.stats.total}
+            />
+          ) : (
+            <p className="text-sm text-gray-500">No attendance data is available for the active cycle.</p>
+          )}
+        </DashboardCard>
 
-        {feedbackStats && (
-          <DashboardCard title="Peer Feedback">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Communication</span>
-                <span>{Number(feedbackStats.avg_communication).toFixed(1)}</span>
-              </div>
+        <DashboardCard title="Peer Feedback">
+          <EvaluationStatsCard score={evaluationScore} />
+        </DashboardCard>
 
-              <div className="flex justify-between">
-                <span>Teamwork</span>
-                <span>{Number(feedbackStats.avg_teamwork).toFixed(1)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Fitness</span>
-                <span>{Number(feedbackStats.avg_fitness).toFixed(1)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Professionalism</span>
-                <span>{Number(feedbackStats.avg_professionalism).toFixed(1)}</span>
-              </div>
-            </div>
-          </DashboardCard>
-        )}
-
-        {reportStats && (
-          <DashboardCard title="Report Discipline">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Report Score</span>
-                <span>{Number(reportStats.report_score).toFixed(0)}%</span>
-              </div>
-            </div>
-          </DashboardCard>
-        )}
+        <DashboardCard title="Report Discipline">
+          <ReportStatsCard score={reportScore} />
+        </DashboardCard>
       </div>
     </div>
   )

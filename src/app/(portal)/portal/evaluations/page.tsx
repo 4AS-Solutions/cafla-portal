@@ -1,30 +1,24 @@
-import { getProfile } from "@/src/lib/queries/get-profile"
-import { getPendingEvaluations } from "@/src/lib/queries/evaluations"
-import { EvaluationList } from "@/src/components/evaluations/EvaluationList"
+import { EvaluationObligationsView } from "@/src/components/evaluations/EvaluationObligationsView"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireUser } from "@/src/lib/auth/require-user"
+import { getUserEvaluationObligations } from "@/src/lib/queries/get-user-evaluation-obligations"
 
 export default async function EvaluationsPage() {
 
-  await requireUser();
+  await requireUser()
 
-  const profile = await getProfile()
-  const memberId = profile?.profile?.id
-
-  const evaluations = memberId
-    ? await getPendingEvaluations(memberId)
-    : []
+  const obligations = await getUserEvaluationObligations()
 
   return (
 
-    <div className="space-y-6 max-w-6xl">
+    <div className="max-w-6xl space-y-6">
 
       <PortalPageHeader
         title="Evaluations"
-        subtitle="View and manage your pending evaluations."
+        subtitle="Complete match-crew evaluations and review your recent activity."
       />
 
-      <EvaluationList evaluations={evaluations ?? []} />
+      <EvaluationObligationsView obligations={obligations} />
 
     </div>
 
