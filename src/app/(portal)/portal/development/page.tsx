@@ -16,6 +16,9 @@ import { DevelopmentRadar } from "@/src/components/development/DevelopmentRadar"
 import { DevelopmentOverview } from "@/src/components/development/DevelopmentOverview"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireUser } from "@/src/lib/auth/require-user"
+import { ReportsV2Section } from "@/src/components/development/ReportsV2Section"
+import { getUserReportDetail } from "@/src/lib/queries/get-user-report-detail"
+import { getUserReportScore } from "@/src/lib/queries/get-user-report-score"
 
 export default async function DevelopmentPage() {
 
@@ -44,6 +47,11 @@ export default async function DevelopmentPage() {
   const reportStats = memberId
     ? await getMyReportScore(memberId)
     : null
+
+  const [reportScoreV2, reportDetailV2] = await Promise.all([
+    getUserReportScore(),
+    getUserReportDetail(),
+  ])
 
 
   const radarData = [
@@ -166,6 +174,11 @@ export default async function DevelopmentPage() {
           </DashboardCard>
         )}
       </div>
+
+      <ReportsV2Section
+        score={reportScoreV2}
+        reports={reportDetailV2}
+      />
     </div>
   )
 }
