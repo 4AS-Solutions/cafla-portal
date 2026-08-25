@@ -14,7 +14,7 @@ import { getScoreLabel } from "./DevelopmentScoreLabel"
 type Props = {
   data: {
     skill: string
-    score: number
+    score: number | null
   }[]
 }
 
@@ -63,7 +63,9 @@ export function DevelopmentRadar({ data }: Props) {
 
         {data.map((item) => {
 
-          const interpretation = getScoreLabel(item.score)
+          const interpretation = item.score === null
+            ? null
+            : getScoreLabel(item.score)
 
           return (
             <div
@@ -75,11 +77,11 @@ export function DevelopmentRadar({ data }: Props) {
               </span>
 
               <span className="text-sm font-semibold text-white">
-                {item.score.toFixed(0)}%
+                {item.score === null ? "—" : `${item.score.toFixed(0)}%`}
               </span>
 
-              <span className={`text-xs ${interpretation.color}`}>
-                {interpretation.label}
+              <span className={`text-xs ${interpretation?.color ?? "text-gray-500"}`}>
+                {interpretation?.label ?? "Not enough data"}
               </span>
             </div>
           )
