@@ -1,85 +1,59 @@
-import { RefereeRankingRow } from "@/src/types/ranking"
 import Link from "next/link"
 
-type Props = Pick<
-  RefereeRankingRow,
-  "ranking_position" | "development_score" | "referee_level"
->
+import { getEvidenceStatusLabel } from "@/src/lib/development/evidence-status"
+import type { CurrentDevelopmentRanking } from "@/src/lib/queries/get-development-ranking-v2"
 
 export function RefereeDevelopmentCard({
-  ranking_position,
-  development_score,
-  referee_level
-}: Props) {
-
-  const score = Number(development_score)
-
-  const progress = Math.max(0, Math.min(score, 100))
+  current,
+}: {
+  current: CurrentDevelopmentRanking
+}) {
+  const progress = Math.max(0, Math.min(current.development_score ?? 0, 100))
+  const rank = current.ranking_eligible && current.ranking_position !== null
+    ? `#${current.ranking_position}`
+    : "Not Ranked"
 
   return (
     <div className="space-y-5">
-
-      {/* Top Info */}
       <div className="grid grid-cols-3 gap-4 text-sm">
-
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-gray-400">
-            Rank
-          </p>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Rank</p>
+          <p className="text-lg font-semibold text-white">{rank}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-wide text-gray-400">Development</p>
           <p className="text-lg font-semibold text-white">
-            #{ranking_position}
+            {current.development_score === null ? "—" : current.development_score.toFixed(1)}
           </p>
         </div>
-
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-gray-400">
-            Score
-          </p>
-          <p className="text-lg font-semibold text-white">
-            {score.toFixed(1)}
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-gray-400">
-            Level
-          </p>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Evidence</p>
           <p className="text-lg font-semibold text-yellow-400">
-            {referee_level}
+            {current.evidence_percentage === null
+              ? "—"
+              : `${current.evidence_percentage.toFixed(0)}%`}
           </p>
         </div>
-
       </div>
 
-      {/* Progress */}
       <div className="space-y-2">
-
         <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>Progress to next level</span>
-          <span>{progress.toFixed(0)}%</span>
+          <span>Development performance</span>
+          <span>{current.development_score === null ? "—" : `${current.development_score.toFixed(0)}%`}</span>
         </div>
-
         <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-2 rounded-full bg-emerald-500 transition-all duration-700"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-2 rounded-full bg-emerald-500 transition-all duration-700" style={{ width: `${progress}%` }} />
         </div>
-
+        <p className="text-xs text-gray-500">
+          {getEvidenceStatusLabel(current.evidence_status)}
+        </p>
       </div>
 
-      {/* Footer */}
       <div className="flex justify-end">
-
-        <Link
-          href="/portal/development"
-          className="text-xs font-medium text-yellow-400 transition hover:text-yellow-300"
-        >
+        <Link href="/portal/development" className="text-xs font-medium text-yellow-400 transition hover:text-yellow-300">
           View full development
         </Link>
-
       </div>
-
     </div>
   )
 }

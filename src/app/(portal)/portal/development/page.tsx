@@ -8,8 +8,7 @@ import { QuizStatsCard } from "@/src/components/development/QuizStatsCard"
 import { ReportStatsCard } from "@/src/components/development/ReportStatsCard"
 import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { requireUser } from "@/src/lib/auth/require-user"
-import { getMyDevelopment } from "@/src/lib/queries/dashboard"
-import { getProfile } from "@/src/lib/queries/get-profile"
+import { getDevelopmentPageRankingData } from "@/src/lib/queries/get-development-ranking-v2"
 import { getUserAttendance } from "@/src/lib/queries/get-user-attendance"
 import { getUserEvaluationScore } from "@/src/lib/queries/get-user-evaluation-score"
 import { getUserQuizScore } from "@/src/lib/queries/get-user-quiz-score"
@@ -17,12 +16,10 @@ import { getUserReportScore } from "@/src/lib/queries/get-user-report-score"
 
 export default async function DevelopmentPage() {
   const user = await requireUser()
-  const profile = await getProfile()
-  const memberId = profile?.profile?.id
 
-  const [developmentSummary, attendance, quizScore, evaluationScore, reportScore] =
+  const [rankingData, attendance, quizScore, evaluationScore, reportScore] =
     await Promise.all([
-      memberId ? getMyDevelopment(memberId) : Promise.resolve(null),
+      getDevelopmentPageRankingData(),
       getUserAttendance(user.id),
       getUserQuizScore(),
       getUserEvaluationScore(),
@@ -36,18 +33,14 @@ export default async function DevelopmentPage() {
     { skill: "Quizzes", score: quizScore?.quiz_score ?? null },
   ]
 
-  // This chart remains on the legacy Development source until a V2 history exists.
-  const monthlyProgress = [
-    { month: "Jan", score: 42 },
-    { month: "Feb", score: 48 },
-    { month: "Mar", score: Number(developmentSummary?.development_score ?? 50) },
-  ]
-
-  const lastUpdated = new Date().toLocaleDateString("en-US", {
+  const lastUpdated = rankingData.current?.snapshot_date
+    ? new Date(`${rankingData.current.snapshot_date}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   })
+    : "Unavailable"
 
   return (
     <div className="space-y-8">
@@ -56,12 +49,14 @@ export default async function DevelopmentPage() {
         <p className="mt-1 text-xs text-gray-500">Data last updated: {lastUpdated}</p>
       </div>
 
-      {developmentSummary && (
+      {rankingData.current && (
         <DashboardCard title="Development Overview">
           <DevelopmentOverview
-            ranking_position={developmentSummary.ranking_position}
-            development_score={developmentSummary.development_score}
-            referee_level={developmentSummary.referee_level}
+            development_score={rankingData.current.development_score}
+            evidence_percentage={rankingData.current.evidence_percentage}
+            evidence_status={rankingData.current.evidence_status}
+            ranking_eligible={rankingData.current.ranking_eligible}
+            ranking_position={rankingData.current.ranking_position}
           />
         </DashboardCard>
       )}
@@ -71,7 +66,7 @@ export default async function DevelopmentPage() {
           <DevelopmentRadar data={radarData} />
         </DashboardCard>
         <DashboardCard title="Development Progress">
-          <DevelopmentProgressChart data={monthlyProgress} />
+          <DevelopmentProgressChart data={rankingData.history} />
         </DashboardCard>
       </div>
 
