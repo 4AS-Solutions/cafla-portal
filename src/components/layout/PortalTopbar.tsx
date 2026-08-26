@@ -14,13 +14,10 @@ export function PortalTopbar({
 
   const router = useRouter()
 
-  async function handleLogoClick() {
+  function handleLogoClick() {
     
     // 🔥 NAVIGATE DASHBOARD
     router.push("/portal")
-
-    // 🔥 REFRESH SERVER COMPONENTS
-    router.refresh()
 
   }
 
@@ -34,7 +31,7 @@ export function PortalTopbar({
           type="button"
           onClick={handleLogoClick}
           className="transition hover:scale-[1.02] cursor-pointer"
-          aria-label="Refresh session and go to dashboard"
+          aria-label="Go to dashboard"
         >
 
           <Image

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { PortalSidebar } from "./PortalSidebar"
 import { PortalTopbar } from "./PortalTopbar"
 
@@ -9,7 +10,9 @@ export function PortalShell({
 }: {
   children: React.ReactNode
 }) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const pathname = usePathname()
+  const [mobileSidebarPathname, setMobileSidebarPathname] = useState<string | null>(null)
+  const mobileSidebarOpen = mobileSidebarPathname === pathname
 
   return (
     <div className="portal-layout flex min-h-screen text-white relative overflow-hidden">
@@ -23,42 +26,28 @@ export function PortalShell({
       <PortalSidebar />
 
       {/* Mobile Sidebar */}
-      <div
-        className={`
-          fixed inset-0 z-50 md:hidden
-          transition-opacity duration-300
-          ${mobileSidebarOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"}
-        `}
-      >
-        <button
-          aria-label="Close sidebar overlay"
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-
-        <div
-          className={`
-            absolute right-0 top-0 h-full w-[84vw] max-w-[340px]
-            transition-transform duration-300 ease-out
-            ${mobileSidebarOpen
-              ? "translate-x-0"
-              : "translate-x-full"}
-          `}
-        >
-          <PortalSidebar
-            mobile
-            onNavigate={() => setMobileSidebarOpen(false)}
-            onClose={() => setMobileSidebarOpen(false)}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 animate-in fade-in duration-300 md:hidden">
+          <button
+            aria-label="Close sidebar overlay"
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setMobileSidebarPathname(null)}
           />
+
+          <div className="absolute right-0 top-0 h-full w-[84vw] max-w-[340px] animate-in slide-in-from-right duration-300 ease-out">
+            <PortalSidebar
+              mobile
+              onNavigate={() => setMobileSidebarPathname(null)}
+              onClose={() => setMobileSidebarPathname(null)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col">
 
-        <PortalTopbar onOpenMenu={() => setMobileSidebarOpen(true)} />
+        <PortalTopbar onOpenMenu={() => setMobileSidebarPathname(pathname)} />
 
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           {children}
