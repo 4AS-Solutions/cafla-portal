@@ -76,7 +76,7 @@ export function PortalSidebar({
   const isBoard = profile?.role === "board"
 
   const containerClass = mobile
-    ? "flex h-full flex-col bg-[#0B0F0F] border-l border-white/10 shadow-2xl animate-slideInLeft"
+    ? "flex h-full flex-col bg-[#0B0F0F] border-l border-white/10 shadow-2xl"
     : "hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0B0F0F] md:flex"
 
   const linkBase =
@@ -92,15 +92,12 @@ export function PortalSidebar({
   }
 
   // =========================================
-  // 🔥 REFRESH SESSION + DASHBOARD
+  // 🔥 NAVIGATE TO DASHBOARD
   // =========================================
-  async function handleLogoClick() {
+  function handleLogoClick() {
     
     // 🔥 NAVIGATE DASHBOARD
     router.push("/portal")
-
-    // 🔥 REFRESH SERVER COMPONENTS
-    router.refresh()
   }
 
   // =========================================
@@ -126,7 +123,7 @@ export function PortalSidebar({
                 type="button"
                 onClick={handleLogoClick}
                 className="transition hover:scale-[1.02]"
-                aria-label="Refresh session and go to dashboard"
+                aria-label="Go to dashboard"
               >
 
                 <Image
@@ -166,7 +163,7 @@ export function PortalSidebar({
               type="button"
               onClick={handleLogoClick}
               className="transition hover:scale-[1.02] cursor-pointer"
-              aria-label="Refresh session and go to dashboard"
+              aria-label="Go to dashboard"
             >
 
               <Image
