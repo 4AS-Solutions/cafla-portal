@@ -1,61 +1,144 @@
-import { supabaseServer } from "@/src/lib/supabase/server"
+import "server-only"
 
-export async function getMemberDashboard(member_id: string) {
+import { getSupabaseAdmin } from "@/src/lib/supabase/admin"
 
-  const supabase = await supabaseServer()
+type NullableNumeric = number | string | null
 
-  const [
+function toNullableNumber(value: NullableNumeric): number | null {
+  return value === null ? null : Number(value)
+}
+
+export async function getMemberDashboard(memberId: string) {
+  const supabaseAdmin = getSupabaseAdmin()
+  const { data: activeCycle, error: activeCycleError } = await supabaseAdmin
+    .schema("development")
+    .from("cycles")
+    .select("id")
+    .eq("status", "active")
+    .maybeSingle()
+
+  if (activeCycleError) {
+    console.error(
+      "[ADMIN MEMBER DETAIL V2] Unable to load the active development cycle:",
+      activeCycleError
+    )
+    throw new Error("Unable to load the active development cycle.")
+  }
+
+  const activityPromise = supabaseAdmin
+    .from("dashboard_referee_activity")
+    .select("*")
+    .eq("member_id", memberId)
+    .maybeSingle()
+
+  if (!activeCycle) {
+    const activity = await activityPromise
+
+    if (activity.error) {
+      console.error(
+        "[ADMIN MEMBER DETAIL V2] Unable to load member activity:",
+        activity.error
+      )
+    }
+
+    return {
+      development: null,
+      attendance: null,
+      quiz: null,
+      evaluations: null,
+      reports: null,
+      activity: activity.data,
+    }
+  }
+
+  const [development, attendance, quiz, evaluations, reports, activity] =
+    await Promise.all([
+      supabaseAdmin
+        .schema("development")
+        .from("current_ranking_snapshot")
+        .select("development_score")
+        .eq("cycle_id", activeCycle.id)
+        .eq("member_id", memberId)
+        .maybeSingle(),
+      supabaseAdmin
+        .schema("development")
+        .from("referee_attendance")
+        .select("attendance_percentage")
+        .eq("cycle_id", activeCycle.id)
+        .eq("member_id", memberId)
+        .maybeSingle(),
+      supabaseAdmin
+        .schema("development")
+        .from("referee_quiz_score")
+        .select("quiz_score")
+        .eq("cycle_id", activeCycle.id)
+        .eq("member_id", memberId)
+        .maybeSingle(),
+      supabaseAdmin
+        .schema("development")
+        .from("referee_evaluation_score")
+        .select("evaluation_score")
+        .eq("cycle_id", activeCycle.id)
+        .eq("member_id", memberId)
+        .maybeSingle(),
+      supabaseAdmin
+        .schema("development")
+        .from("referee_report_score")
+        .select("report_percentage")
+        .eq("cycle_id", activeCycle.id)
+        .eq("member_id", memberId)
+        .maybeSingle(),
+      activityPromise,
+    ])
+
+  const results = {
     development,
     attendance,
     quiz,
+    evaluations,
     reports,
-    matches,
-    activity
-  ] = await Promise.all([
+    activity,
+  }
 
-    supabase
-      .from("dashboard_referee_development_score")
-      .select("*")
-      .eq("member_id", member_id)
-      .single(),
+  for (const [metric, result] of Object.entries(results)) {
+    if (result.error) {
+      console.error(
+        `[ADMIN MEMBER DETAIL V2] Unable to load ${metric}:`,
+        result.error
+      )
+    }
+  }
 
-    supabase
-      .from("dashboard_referee_attendance")
-      .select("*")
-      .eq("member_id", member_id)
-      .single(),
-
-    supabase
-      .from("dashboard_quiz_scores")
-      .select("*")
-      .eq("member_id", member_id)
-      .single(),
-
-    supabase
-      .from("dashboard_referee_report_score")
-      .select("*")
-      .eq("member_id", member_id)
-      .single(),
-
-    supabase
-      .from("dashboard_referee_matches")
-      .select("*")
-      .eq("id", member_id)
-      .single(),
-
-    supabase
-      .from("dashboard_referee_activity")
-      .select("*")
-      .eq("member_id", member_id)
-      .single(),
-  ])
+  const developmentRow = development.data as {
+    development_score: NullableNumeric
+  } | null
+  const attendanceRow = attendance.data as {
+    attendance_percentage: NullableNumeric
+  } | null
+  const quizRow = quiz.data as { quiz_score: NullableNumeric } | null
+  const evaluationRow = evaluations.data as {
+    evaluation_score: NullableNumeric
+  } | null
+  const reportRow = reports.data as {
+    report_percentage: NullableNumeric
+  } | null
 
   return {
-    development: development.data,
-    attendance: attendance.data,
-    quiz: quiz.data,
-    reports: reports.data,
-    matches: matches.data,
+    development: developmentRow
+      ? { development_score: toNullableNumber(developmentRow.development_score) }
+      : null,
+    attendance: attendanceRow
+      ? { attendance_percentage: toNullableNumber(attendanceRow.attendance_percentage) }
+      : null,
+    quiz: quizRow
+      ? { quiz_score: toNullableNumber(quizRow.quiz_score) }
+      : null,
+    evaluations: evaluationRow
+      ? { evaluation_score: toNullableNumber(evaluationRow.evaluation_score) }
+      : null,
+    reports: reportRow
+      ? { report_percentage: toNullableNumber(reportRow.report_percentage) }
+      : null,
     activity: activity.data,
   }
 }

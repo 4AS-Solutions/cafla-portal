@@ -1,10 +1,10 @@
 import { getMemberById } from "@/src/lib/queries/get-member-by-id"
-import PortalPageHeader from "@/src/components/layout/PortalPageHeader"
 import { Badge } from "@/src/components/ui/badge"
 import { formatMatchDate } from "@/src/lib/utils/format-date"
 import { getMemberDashboard } from "@/src/lib/queries/get-member-dashboard"
 import MemberActivityCard from "@/src/components/members/MemberActivityCard"
 import { requireBoard } from "@/src/lib/auth/require-board"
+import type { ReactNode } from "react"
 
 export default async function MemberPage({
   params,
@@ -17,7 +17,7 @@ export default async function MemberPage({
   const { member_id } = await params
   const member = await getMemberById(member_id)
   const dashboard = await getMemberDashboard(member_id);
-  const score = dashboard.development.development_score ?? 0
+  const score = dashboard.development?.development_score ?? null
 
   if (!member) {
     return <div>Member not found</div>
@@ -138,12 +138,15 @@ export default async function MemberPage({
             </h2>
 
             <div className="text-3xl font-bold">
-              {score} %
+              {formatMetric(score)}
             </div>
 
             {/* BAR */}
             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500" style={{ width: `${score}%` }} />
+              <div
+                className="h-full bg-emerald-500"
+                style={{ width: `${score ?? 0}%` }}
+              />
             </div>
 
             <div className="text-xs text-muted-foreground">
@@ -155,10 +158,22 @@ export default async function MemberPage({
           {/* METRICS */}
           <div className="card-pro p-5 space-y-4">
 
-            <Metric label="Attendance" value={`${dashboard.development?.attendance_score ?? 0}%`} />
-            <Metric label="Quiz Avg" value={`${dashboard.quiz?.avg_quiz_score ?? 0}%`} />
-            <Metric label="Feedback" value={dashboard.development?.peer_feedback_score ?? 0} />
-            <Metric label="Reports" value={dashboard.reports?.report_score ?? 0} />
+            <Metric
+              label="Attendance"
+              value={formatMetric(dashboard.attendance?.attendance_percentage)}
+            />
+            <Metric
+              label="Quiz Avg"
+              value={formatMetric(dashboard.quiz?.quiz_score)}
+            />
+            <Metric
+              label="Feedback"
+              value={formatMetric(dashboard.evaluations?.evaluation_score)}
+            />
+            <Metric
+              label="Reports"
+              value={formatMetric(dashboard.reports?.report_percentage)}
+            />
 
           </div>
 
@@ -180,7 +195,7 @@ export default async function MemberPage({
 
 /* ================= COMPONENTS ================= */
 
-function Info({ label, value }: { label: string, value: any }) {
+function Info({ label, value }: { label: string, value: ReactNode }) {
   return (
     <div>
       <div className="text-xs text-muted-foreground mb-1">
@@ -193,11 +208,15 @@ function Info({ label, value }: { label: string, value: any }) {
   )
 }
 
-function Metric({ label, value }: { label: string, value: any }) {
+function Metric({ label, value }: { label: string, value: ReactNode }) {
   return (
     <div className="flex justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold">{value}</span>
     </div>
   )
+}
+
+function formatMetric(value: number | null | undefined) {
+  return value === null || value === undefined ? "—" : `${value}%`
 }
