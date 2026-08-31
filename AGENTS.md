@@ -36,9 +36,21 @@ The application includes functionality related to:
 - Teams and rosters
 - Administrative tools
 
-The application is currently undergoing a progressive migration from legacy/V1 functionality toward a cycle-based V2 architecture.
+The application contains current cycle-based V2 architecture alongside other
+modules and historical residue that must be classified individually.
 
-Do not assume that every module has already been migrated.
+Attendance, Quiz, Evaluations, Development, and Ranking use their confirmed
+current architectures described by the guardrails below. Do not infer the
+status of any other module without inspecting current runtime code and current
+database evidence.
+
+`AGENTS.md` contains agent working rules, safety constraints, architecture
+guardrails, and repository conventions. Detailed module architecture, database
+mappings, business rules, formulas, lifecycle/state models, data flows, and
+CURRENT / LEGACY / RETIRED / PLANNED classifications belong in the future CAFLA
+Source of Truth. Until that document is completed, verify architectural
+assumptions against current runtime code and current database evidence rather
+than inferring them from names or historical documentation.
 
 ---
 
@@ -151,6 +163,18 @@ Known Quiz V2 objects include tables/views related to:
 - `quiz_member_best_results`
 - `referee_quiz_score`
 
+## Evaluations, Reports, and Ranking V2
+
+- `public.evaluations` is a CURRENT base table used by the Development-derived
+  evaluation architecture.
+- `development.referee_evaluation_detail` and
+  `development.referee_evaluation_score` are CURRENT.
+- `development.referee_report_detail` and
+  `development.referee_report_score` are CURRENT.
+- `development.current_ranking_snapshot` and
+  `development.monthly_ranking_snapshots` are the CURRENT Ranking serving
+  sources.
+
 Do not assume columns or relationships solely from these names.
 
 Inspect repository usage or request database information before making database-dependent decisions.
@@ -181,11 +205,12 @@ Inspect existing queries and API routes first.
 
 ---
 
-# 8. V1 vs V2 Architecture
+# 8. Current and Retired Architecture
 
-CAFLA is being migrated incrementally.
+CAFLA architecture must be classified from current runtime and database
+evidence, not from schema location, naming, or historical documentation.
 
-## V2 / New Architecture
+## Current Architecture
 
 Attendance V2 is based on:
 
@@ -196,33 +221,44 @@ Attendance V2 is based on:
 
 Quiz V2 also belongs to the cycle-based `development` architecture.
 
-Reports V2 is functionally advanced but its Development scoring integration may still require formalization.
+Reports currently feed Development through:
 
-Evaluations V2 and Development V2 are still being defined/migrated.
+- `development.referee_report_detail`
+- `development.referee_report_score`
 
-## Legacy / V1
+Evaluations currently use `public.evaluations` as a critical base table and:
 
-The existing `/portal/development` implementation is considered Development V1 unless explicitly stated otherwise.
+- `development.referee_evaluation_detail`
+- `development.referee_evaluation_score`
 
-Views and logic using names such as:
+Evaluations currently feed Development V2.
 
-- `dashboard_referee_*`
-- `dashboard_quiz_scores`
-- `dashboard_peer_feedback_score`
-- `dashboard_referee_ranking`
-- `dashboard_referee_ranking_v2`
+`/portal/development` is the CURRENT Development V2 member experience. It
+consumes authoritative Attendance, Quiz, Reports, Evaluations, and Ranking V2
+sources.
 
-may belong to legacy or transitional architecture.
+Ranking V2 is CURRENT. Its serving sources are:
 
-Do not automatically build new V2 functionality on top of legacy dashboard views.
+- `development.current_ranking_snapshot`
+- `development.monthly_ranking_snapshots`
 
-If legacy code must be reused, explain why before doing so.
+## Intentionally Retired Architecture
+
+Attendance V1, Quiz V1, and Ranking V1 public database architecture were
+intentionally retired. Do not reintroduce those architectures.
+
+Do not classify all `dashboard_*` objects as legacy. Database objects must be
+classified individually. Known CURRENT examples include:
+
+- `public.dashboard_referee_activity`
+- `public.dashboard_upcoming_matches`
+- `public.dashboard_pending_reports`
 
 ---
 
-# 9. Target Development V2 Architecture
+# 9. Current Development and Ranking V2 Architecture
 
-The intended long-term conceptual architecture is:
+The current conceptual architecture is:
 
 Attendance V2
 +
@@ -236,9 +272,10 @@ Development V2
 ↓
 Ranking V2
 
-The exact weighting and business rules must NOT be invented by Codex.
-
-These rules will be defined by the developer before implementation.
+The exact weighting, formulas, eligibility rules, and business rules must NOT
+be invented or independently recalculated by Codex. Verify them against the
+CAFLA Source of Truth when available, or against current runtime and database
+evidence, and obtain developer approval before changing them.
 
 ---
 
@@ -276,6 +313,26 @@ Codex must NEVER execute a database command whose purpose is to remove existing 
 This restriction applies even if Codex believes deletion would fix a bug.
 
 There are NO automatic exceptions.
+
+## Database Retirement Guardrails
+
+Database object classification must be evidence-based.
+
+- Schema location does not determine CURRENT vs LEGACY. An object in `public`
+  may be CURRENT. In particular, `public.evaluations` is CURRENT and feeds the
+  Development-derived evaluation and ranking architecture.
+- Naming, zero rows, absence of an obvious application caller, or existence of
+  a newer-looking replacement do not independently prove safe retirement.
+- Before database retirement, trace both application references and internal
+  database dependencies. Review relevant views, functions and function bodies,
+  triggers, foreign keys, RLS policies, grants, cron jobs, and function callers.
+- Never use `DROP ... CASCADE` as a cleanup shortcut. Every dependent object
+  must be identified and classified before destructive database work is even
+  considered.
+- Database retirement requires explicit developer approval and a documented
+  backup/rollback plan.
+- Historical database audit snapshots are evidence from a point in time. They
+  are not automatic authorization to restore or remove objects.
 
 ---
 
@@ -430,7 +487,7 @@ Before coding, identify:
 - legacy dependencies
 - reusable utilities
 
-For large V2 migrations, provide a short implementation plan before making changes.
+For large architecture migrations, provide a short implementation plan before making changes.
 
 For small and obvious changes, implementation may proceed directly unless the developer requested analysis first.
 
@@ -457,7 +514,8 @@ If technical debt is discovered outside the requested scope, report it separatel
 
 # 18. Technical Debt Strategy
 
-CAFLA intentionally prioritizes completing the V2 migration while controlling technical debt.
+CAFLA intentionally prioritizes controlled architecture evolution while
+controlling technical debt.
 
 Do not attempt a repository-wide rewrite.
 
@@ -480,15 +538,14 @@ Technical debt should not silently expand.
 
 Known or suspected technical debt includes:
 
-- legacy `dashboard_*` views
-- Development V1
-- transitional ranking logic
-- coexistence of V1 and V2 modules
 - incomplete Supabase TypeScript database types
 - possible `Database = any`
 - database definitions not fully versioned inside the repository
 - potentially duplicated queries/helpers
 - historical code that may no longer be used
+- pre-existing repository-wide lint debt
+- architecture documentation that must remain aligned with current runtime and
+  database evidence
 
 Do not fix all of these automatically.
 
@@ -588,6 +645,9 @@ For responsive interfaces, consider both desktop and mobile behavior.
 
 Attendance V2 is considered an important reference implementation for the cycle-based architecture.
 
+Attendance V1 public database objects were intentionally retired and must not
+be reintroduced.
+
 Important concepts include:
 
 - active development cycle
@@ -611,6 +671,9 @@ If another module needs attendance data, prefer consuming established Attendance
 
 Quiz V2 belongs to the `development` architecture.
 
+Quiz V1 public database objects were intentionally retired and must not be
+reintroduced.
+
 It includes concepts such as:
 
 - assessments
@@ -628,9 +691,9 @@ It includes concepts such as:
 - member access
 - best results
 
-Quiz V2 may still have unfinished functionality.
-
-Do not assume unfinished behavior represents the final business rule.
+Static repository evidence does not prove that the entire Quiz product is
+functionally complete. Verify the relevant current workflow before changing
+its lifecycle or scoring behavior.
 
 Ask before making architectural decisions that affect quiz scoring or Development V2.
 
@@ -638,7 +701,9 @@ Ask before making architectural decisions that affect quiz scoring or Developmen
 
 # 27. Reports V2
 
-Reports V2 should eventually provide a reliable metric to Development V2.
+Reports currently feed Development V2 through
+`development.referee_report_detail` and
+`development.referee_report_score`.
 
 Do not invent Report Score rules.
 
@@ -661,13 +726,15 @@ Do not alter existing report email behavior unless requested.
 
 # 28. Evaluations V2
 
-Evaluations / peer feedback will eventually feed Development V2.
+Evaluations V2 is CURRENT. `public.evaluations` is the current base table, and
+`development.referee_evaluation_detail` and
+`development.referee_evaluation_score` provide the current Development-derived
+evaluation sources.
 
-The V2 evaluation model is not assumed complete.
+Do not rebuild evaluation scoring from retired peer-feedback views or duplicate
+the current calculation independently.
 
-Do not build Development V2 evaluation scoring from legacy peer-feedback views unless explicitly approved.
-
-Before implementing Evaluations V2, inspect:
+Before changing Evaluations V2, inspect:
 
 - evaluator
 - evaluated referee
@@ -685,16 +752,16 @@ Business rules must be approved before implementation.
 
 # 29. Development V2
 
-Do not implement Development V2 until its business rules and data sources have been explicitly defined.
+Development V2 is CURRENT, including `/portal/development`.
 
 Development V2 should consume authoritative V2 sources rather than duplicate their calculations.
 
-For example:
+Its authoritative metric sources include:
 
-- Attendance score should come from Attendance V2.
-- Quiz score should come from Quiz V2.
-- Report score should come from Reports V2.
-- Evaluation score should come from Evaluations V2.
+- Attendance score from Attendance V2.
+- Quiz score from Quiz V2.
+- Report score from Reports V2.
+- Evaluation score from Evaluations V2.
 
 Development should primarily aggregate these established metrics.
 
@@ -704,11 +771,16 @@ Avoid calculating the same business rule independently in multiple places.
 
 # 30. Ranking V2
 
-Ranking V2 should eventually consume Development V2 rather than independently recreating Development calculations.
+Ranking V2 is CURRENT and consumes Development V2 rather than independently
+recreating Development calculations.
 
-Do not migrate Ranking until the Development V2 model is sufficiently stable.
+Current frontend serving sources are:
 
-Legacy ranking functionality may remain operational during migration.
+- `development.current_ranking_snapshot`
+- `development.monthly_ranking_snapshots`
+
+Ranking V1 was intentionally retired. Do not reintroduce Ranking V1 objects,
+queries, types, or calculations.
 
 ---
 
@@ -830,9 +902,9 @@ Removal requires explicit developer approval.
 
 ---
 
-# 37. Analysis Before V2 Migration
+# 37. Analysis Before Architecture Migration
 
-When asked to migrate a module to V2, first determine:
+When asked to migrate a module or replace an architecture, first determine:
 
 1. Current V1 behavior.
 2. Current data sources.

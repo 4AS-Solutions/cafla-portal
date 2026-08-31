@@ -22,19 +22,3 @@ export type AdminRankingReferee = {
   evaluations_received: number | null
   refreshed_at: string
 }
-
-// Legacy ranking helpers still reference this contract. Keep it until the
-// remaining legacy utilities are retired in a separate cleanup.
-export type Referee = {
-  id?: string
-  ranking_position: number
-  full_name: string
-  referee_level: string
-  development_score: number
-  attendance_score: number
-  quiz_score: number
-  peer_feedback_score: number
-  report_score: number
-  trend?: string | null
-  trendDiff?: number | null
-}
