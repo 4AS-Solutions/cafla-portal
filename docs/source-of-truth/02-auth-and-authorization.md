@@ -179,6 +179,20 @@ Service-role bypasses normal RLS and is constructed only in server code. A
 service-role handler must not rely on RLS to supply missing ownership or role
 checks.
 
+The effective authorization model has four distinct layers:
+
+1. `proxy()` performs early page-route session handling and redirects.
+2. Portal/Admin server layouts and helpers enforce page access and Board role.
+3. Every API route must enforce its own authorization; an `/api/admin` pathname
+   is only a convention and grants no protection.
+4. PostgreSQL grants/RLS constrain user-scoped clients, while service-role
+   bypasses those controls and therefore requires explicit server-side checks.
+
+The repository baseline proves the application checks above. Historical audit
+evidence supports, but does not prove, the live post-recovery RLS, grants,
+policies, Auth trigger, or Production environment topology. Those items require
+external read-only verification.
+
 ## 10. Time & Timezone Rules
 
 Auth tokens and recovery/invitation expiry are delegated to Supabase Auth.
@@ -231,6 +245,8 @@ cycle semantics belong to Members/Development.
 - Is the implicit-token callback branch still required by active Supabase Auth
   configuration?
 - Is the client password shape an approved CAFLA rule or only UI validation?
+- Which Git revision, Vercel deployment, Supabase project/branch, and environment
+  variable set constitute the authoritative Production topology?
 
 ## 15. Evidence
 
@@ -259,4 +275,3 @@ Before changing Auth, review browser/server client behavior, cookie refresh,
 proxy matching, page layouts, every affected API handler, member role/status,
 RLS and grants, service-role callers, invitation/recovery callback variants,
 Development enrollment, and rollback for partial onboarding.
-

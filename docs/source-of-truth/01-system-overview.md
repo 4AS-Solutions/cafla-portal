@@ -22,6 +22,13 @@ Evidence:
 - `src/app/(portal)/portal/layout.tsx` — Portal layout
 - `src/app/(admin)/admin/layout.tsx` — Admin layout
 
+This document uses the repository AS-IS baseline
+`develop@5b47f15d8580687e66b0f9b6eeaccbe3bf3e19f4` dated 2026-08-31.
+The exact Production deployment revision is **UNCERTAIN / EXTERNAL VERIFICATION
+REQUIRED**; repository history and the owner-supplied Vercel deployment evidence
+do not currently reconcile. Untracked Development seed fixtures are outside this
+Production architecture baseline.
+
 ## 3. User-Facing Surfaces
 
 ### Public
@@ -89,6 +96,8 @@ Dashboard and Development page.
 ### External services
 
 - Supabase supplies Auth, PostgreSQL APIs, and Storage.
+- The private `match-rosters` Supabase Storage bucket is CURRENT and is accessed
+  only through server-side roster upload/download helpers and handlers.
 - Resend is actively used for approved-report notification email.
 
 Evidence:
@@ -208,6 +217,12 @@ particular, `public.members`, `public.evaluations`, and selected
 `public.dashboard_*` sources remain CURRENT where runtime/dependency evidence
 confirms them.
 
+**PLANNED DECISION:** `development.cycle_member_population` is the approved
+future canonical participant-population layer. It does not exist in the current
+baseline and must not be documented or consumed as CURRENT. Current participant
+selection is distributed across Attendance, Quiz, Reports, Evaluations,
+Development, and Ranking database objects.
+
 ## 13. Known Limitations / Technical Debt
 
 - **KNOWN LIMITATION / TECHNICAL DEBT:** generated/maintained Supabase typing is
@@ -222,6 +237,12 @@ confirms them.
   out.
 - Module-level completeness, empty/error behavior, and complete ownership maps
   remain outside this phase.
+- **KNOWN LIMITATION / TECHNICAL DEBT:** participant-population conditions are
+  duplicated across current Development-related database objects rather than
+  enforced by one canonical source.
+- **KNOWN LIMITATION:** the current ranking snapshot refresh is upsert-based;
+  evidence reviewed for this pass does not show removal of rows that cease to
+  belong to the current population, so stale serving rows are possible.
 
 ## 14. Open Questions
 
@@ -231,6 +252,8 @@ confirms them.
   post-recovery catalog rather than the historical snapshot?
 - Detailed module status and ownership remain NOT YET DOCUMENTED outside Auth
   and Members.
+- What exact behavior should `manual_adjustment` enrollment have in the planned
+  canonical participant population? This remains **UNCERTAIN**.
 
 ## 15. Evidence
 

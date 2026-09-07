@@ -22,6 +22,26 @@ open questions.
 This initial framework does not document the complete architecture. Files
 marked `NOT YET DOCUMENTED` must be audited before substantive content is added.
 
+## Document Control
+
+- **Repository AS-IS baseline:** `develop@5b47f15d8580687e66b0f9b6eeaccbe3bf3e19f4`.
+- **Baseline date:** 2026-08-31.
+- **Git relationship at review:** local and tracked `main` at `fd705240` is an
+  ancestor of `develop`; `develop` contains 40 additional commits, including
+  substantial V2 application work absent from that `main` revision.
+- **Production deployment revision:** **UNCERTAIN / EXTERNAL VERIFICATION
+  REQUIRED**. Owner-supplied Vercel evidence associates a Production deployment
+  with merge commit `904d950` on 2026-08-30, but the available Git refs do not
+  reconcile that commit with current `main@fd705240`.
+- **Database evidence:**
+  `supabase/migrations/20260831185011_remote_schema.sql` is the repository
+  Production schema baseline for this pass. `docs/audit/supabase/` remains
+  point-in-time supporting evidence, not guaranteed live post-recovery state.
+
+The untracked `supabase/seed.sql` and `supabase/seeds/` files are Development
+fixtures outside this repository baseline. They are not Production architecture
+and must not be used to infer Production behavior.
+
 ## How to Use This Source of Truth
 
 Before changing a module:
@@ -188,20 +208,21 @@ intentionally retired or restored after the snapshot.
 
 | Document | Scope | Documentation Status |
 |---|---|---|
-| `01-system-overview.md` | System boundaries and principal runtime flows | NOT YET DOCUMENTED |
-| `02-auth-and-authorization.md` | Authentication, roles, authorization, and privileged access | NOT YET DOCUMENTED |
-| `03-members.md` | Member identity, profile, lifecycle, and membership data | NOT YET DOCUMENTED |
-| `04-matches.md` | Match records, assignments, and match-facing workflows | NOT YET DOCUMENTED |
-| `05-match-reports.md` | Report obligations, submission, review, and scoring integration | NOT YET DOCUMENTED |
-| `06-attendance.md` | Attendance lifecycle and Development integration | NOT YET DOCUMENTED |
+| `01-system-overview.md` | System boundaries and principal runtime flows | SUBSTANTIVELY DOCUMENTED; MODULE REVIEW CONTINUES |
+| `02-auth-and-authorization.md` | Authentication, roles, authorization, and privileged access | SUBSTANTIVELY DOCUMENTED; LIVE SECURITY VERIFICATION PENDING |
+| `03-members.md` | Member identity, profile, lifecycle, and membership data | SUBSTANTIVELY DOCUMENTED; PARTICIPATION REFACTOR PLANNED |
+| `03a-development-cycles-and-participation.md` | Development cycles, enrollment, participation, applicability, and ranking eligibility | SUBSTANTIVELY DOCUMENTED; IMPLEMENTATION TRANSITIONAL |
+| `04-matches.md` | Match records, assignments, import, tournament context, and match-facing workflows | SUBSTANTIVELY DOCUMENTED; SECURITY/TIME QUESTIONS OPEN |
+| `05-match-reports.md` | Report ownership, events, review, timing, email, Development and Competition integration | CURRENT documented; population and consistency gaps recorded |
+| `06-attendance.md` | Attendance lifecycle and Development integration | SUBSTANTIVELY DOCUMENTED; POPULATION/SECURITY GAPS RECORDED |
 | `07-quiz.md` | Quiz lifecycle, attempts, results, and Development integration | NOT YET DOCUMENTED |
 | `08-evaluations.md` | Evaluation obligations, submission, scoring, and dependencies | NOT YET DOCUMENTED |
 | `09-development.md` | Development aggregation and member progress surfaces | NOT YET DOCUMENTED |
 | `10-ranking.md` | Ranking calculation, eligibility, snapshots, and serving | NOT YET DOCUMENTED |
 | `11-dashboard.md` | Member/admin dashboard composition and data sources | NOT YET DOCUMENTED |
-| `12-tournaments.md` | Tournament and competition domain | NOT YET DOCUMENTED |
+| `12-tournaments.md` | Tournament ownership, competition context, standings, rosters, and player statistics | SUBSTANTIVELY DOCUMENTED; SECURITY/STATUS GAPS RECORDED |
+| `12a-storage-and-rosters.md` | Database match rosters, uploaded files, report asset references, and Storage access | SUBSTANTIVELY DOCUMENTED; LIVE STORAGE VERIFICATION PENDING |
 | `13-admin.md` | Cross-module administrative surfaces and controls | NOT YET DOCUMENTED |
 | `14-data-ownership-and-dependencies.md` | Cross-module ownership and dependency map | NOT YET DOCUMENTED |
-| `15-status-matrix.md` | Central capability/object classification matrix | FOUNDATION CREATED |
-| `16-open-questions-and-known-gaps.md` | Unresolved evidence, rules, and verified gaps | FOUNDATION CREATED |
-
+| `15-status-matrix.md` | Central capability/object classification matrix | SUBSTANTIVELY POPULATED; MODULE REVIEWS CONTINUE |
+| `16-open-questions-and-known-gaps.md` | Unresolved evidence, rules, and verified gaps | SUBSTANTIVELY POPULATED; MAINTAIN CONTINUOUSLY |

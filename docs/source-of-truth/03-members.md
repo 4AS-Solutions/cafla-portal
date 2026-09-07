@@ -116,8 +116,30 @@ operational tables. Exact lifecycle behavior belongs to the owning modules.
 
 ## 7. Business Rules
 
-No member role limit or status-transition policy is independently confirmed as
-a BUSINESS RULE in this phase.
+The following participation semantics are confirmed **BUSINESS RULES**:
+
+- Current Development participation requires both
+  `public.members.status = 'active'` and
+  `development.cycle_members.status = 'active'`.
+- `eligible_for_ranking` is an independent ranking gate. Setting it to false
+  does not, by itself, exclude otherwise applicable Development evidence.
+- For `existing_member`, the applicable start is the cycle start date; for
+  `new_member`, it is `cycle_members.effective_from`.
+- Applicability ends at `cycle_members.effective_until` when present and is
+  always bounded by the cycle dates.
+- An `invited` member does not currently participate. If an invited
+  `existing_member` later becomes active, the approved semantics may make the
+  cycle start historically applicable; the current model has no `activated_at`
+  and does not require rewriting `effective_from` on activation.
+- A withdrawn member keeps legitimate historical evidence inside their
+  applicable interval but is not a current participant.
+
+The exact temporal boundary for `suspended` members and the meaning of
+`manual_adjustment` enrollment remain **UNCERTAIN**. No global rule should be
+inferred for them.
+
+No member role limit or general status-transition policy is independently
+confirmed as a BUSINESS RULE in this phase.
 
 The following are IMPLEMENTATION FACTS:
 
@@ -131,6 +153,20 @@ The following are IMPLEMENTATION FACTS:
 
 These behaviors must not be promoted to approved business policy without CAFLA
 confirmation.
+
+### Current implementation versus approved population rule
+
+**IMPLEMENTATION FACT:** current Development-related objects establish their
+populations independently. They do not all consume one canonical relation, so
+the confirmed rules above are not guaranteed uniformly at every Attendance,
+Quiz, Report, Evaluation, Development, Ranking-evidence, current-snapshot, and
+monthly-history layer.
+
+**PLANNED DECISION:** introduce `development.cycle_member_population` as the
+canonical applicability/current-participation source, then migrate consumers
+in dependency order. This object is not implemented in the current baseline.
+The deferred implementation does not block completion of this documentation
+pass.
 
 ## 8. Runtime Flow
 
@@ -235,6 +271,13 @@ path, but naming alone is not a separate status classification.
   contracts because generated Supabase typing is incomplete.
 - **KNOWN LIMITATION:** there is no general self-service profile editor in
   current routes; only invitation completion is implemented.
+- **KNOWN LIMITATION / TECHNICAL DEBT:** participant eligibility and applicable
+  intervals are independently expressed by multiple Development-related views.
+- **KNOWN LIMITATION:** current Report detail logic excludes withdrawn members
+  instead of preserving otherwise applicable historical evidence within their
+  effective interval.
+- **UNCERTAIN:** current data cannot represent the precise start/end of a
+  suspension independently from member/cycle effective dates.
 
 ## 14. Open Questions
 
@@ -244,8 +287,9 @@ path, but naming alone is not a separate status classification.
   the expected live trigger?
 - Should all member profile edits require an active Development cycle?
 - Are member-status-to-cycle-status mappings approved business policy?
-- Should an invited user's cycle enrollment become active/ranking-eligible
-  before profile completion?
+- What are the approved `manual_adjustment` applicability semantics?
+- What temporal boundaries should a suspension apply to, and what historical
+  evidence must remain visible after suspension ends?
 - Are self-update RLS policies column-restricted in the live database?
 - Are the two unguarded member-list API endpoints intentionally reusable outside
   Board UI?
@@ -279,4 +323,3 @@ partial states, Portal status gating, Board-role authorization, RLS/grants,
 active-cycle assumptions, cycle-member mapping and eligibility, Los Angeles
 date boundaries, match/report/evaluation foreign keys, Development/Ranking
 consumers, and Admin list/detail/edit behavior.
-
