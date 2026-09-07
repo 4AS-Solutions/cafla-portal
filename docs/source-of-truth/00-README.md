@@ -215,10 +215,10 @@ intentionally retired or restored after the snapshot.
 | `04-matches.md` | Match records, assignments, import, tournament context, and match-facing workflows | SUBSTANTIVELY DOCUMENTED; SECURITY/TIME QUESTIONS OPEN |
 | `05-match-reports.md` | Report ownership, events, review, timing, email, Development and Competition integration | CURRENT documented; population and consistency gaps recorded |
 | `06-attendance.md` | Attendance lifecycle and Development integration | SUBSTANTIVELY DOCUMENTED; POPULATION/SECURITY GAPS RECORDED |
-| `07-quiz.md` | Quiz lifecycle, attempts, results, and Development integration | NOT YET DOCUMENTED |
-| `08-evaluations.md` | Evaluation obligations, submission, scoring, and dependencies | NOT YET DOCUMENTED |
-| `09-development.md` | Development aggregation and member progress surfaces | NOT YET DOCUMENTED |
-| `10-ranking.md` | Ranking calculation, eligibility, snapshots, and serving | NOT YET DOCUMENTED |
+| `07-quiz.md` | Quiz lifecycle, attempts, results, and Development integration | SUBSTANTIVELY DOCUMENTED; POPULATION/IMMUTABILITY GAPS RECORDED |
+| `08-evaluations.md` | Evaluation obligations, submission, scoring, and dependencies | SUBSTANTIVELY DOCUMENTED; POPULATION/HISTORY/SECURITY GAPS RECORDED |
+| `09-development.md` | Development aggregation and member progress surfaces | SUBSTANTIVELY DOCUMENTED; POPULATION/QUIZ/TIME GAPS RECORDED |
+| `10-ranking.md` | Ranking calculation, evidence, eligibility, position, snapshots, and serving | SUBSTANTIVELY DOCUMENTED; POPULATION/SNAPSHOT/SECURITY GAPS RECORDED |
 | `11-dashboard.md` | Member/admin dashboard composition and data sources | NOT YET DOCUMENTED |
 | `12-tournaments.md` | Tournament ownership, competition context, standings, rosters, and player statistics | SUBSTANTIVELY DOCUMENTED; SECURITY/STATUS GAPS RECORDED |
 | `12a-storage-and-rosters.md` | Database match rosters, uploaded files, report asset references, and Storage access | SUBSTANTIVELY DOCUMENTED; LIVE STORAGE VERIFICATION PENDING |
