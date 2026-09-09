@@ -19,6 +19,9 @@ import {
   SquareStar,
   X,
   Trophy,
+  WalletCards,
+  Landmark,
+  type LucideIcon,
 } from "lucide-react"
 
 import {
@@ -33,12 +36,13 @@ import { UserMenu } from "./UserMenu"
 type NavItem = {
   name: string
   href: string
-  icon: any
+  icon: LucideIcon
 }
 
 const memberItems: NavItem[] = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
   { name: "Matches", href: "/portal/matches", icon: CalendarDays },
+  { name: "Finances", href: "/portal/finances", icon: WalletCards },
   { name: "Competition", href: "/portal/competition", icon: Trophy},
   { name: "Reports", href: "/portal/reports", icon: FileText },
   { name: "Attendance", href: "/portal/attendance", icon: ClipboardList },
@@ -55,6 +59,7 @@ const boardItems: NavItem[] = [
   { name: "Attendance Management", href: "/admin/attendance", icon: FolderClock },
   { name: "Quiz Management", href: "/admin/quizzes", icon: ClipboardType },
   { name: "Ranking Referees", href: "/admin/ranking", icon: SquareStar },
+  { name: "Finance Management", href: "/admin/finance", icon: Landmark },
 ]
 
 export function PortalSidebar({
