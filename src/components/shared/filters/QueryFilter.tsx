@@ -31,10 +31,12 @@ type FilterConfig =
 
 type QueryFiltersProps = {
   filters: FilterConfig[]
+  preserveOnReset?: string[]
 }
 
 export default function QueryFilters({
   filters,
+  preserveOnReset = [],
 }: QueryFiltersProps) {
 
   const router = useRouter()
@@ -135,7 +137,14 @@ export default function QueryFilters({
 
       <button
         onClick={() => {
-          router.replace("?", {
+          const params = new URLSearchParams()
+
+          for (const key of preserveOnReset) {
+            const value = searchParams.get(key)
+            if (value) params.set(key, value)
+          }
+
+          router.replace(`?${params.toString()}`, {
             scroll: false,
           })
         }}

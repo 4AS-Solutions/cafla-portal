@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Menu } from "lucide-react"
 import { UserMenu } from "./UserMenu"
 import { useRouter } from "next/navigation"
+import { FinanceBalanceIndicator } from "@/src/components/finance/FinanceBalanceIndicator"
 
 
 export function PortalTopbar({
@@ -50,6 +51,8 @@ export function PortalTopbar({
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+
+        <FinanceBalanceIndicator />
 
         <UserMenu className="hidden md:flex" />
 
