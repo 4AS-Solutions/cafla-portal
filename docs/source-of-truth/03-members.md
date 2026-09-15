@@ -118,28 +118,44 @@ operational tables. Exact lifecycle behavior belongs to the owning modules.
 
 The following participation semantics are confirmed **BUSINESS RULES**:
 
-- Current Development participation requires both
-  `public.members.status = 'active'` and
-  `development.cycle_members.status = 'active'`.
-- `eligible_for_ranking` is an independent ranking gate. Setting it to false
-  does not, by itself, exclude otherwise applicable Development evidence.
-- For `existing_member`, the applicable start is the cycle start date; for
-  `new_member`, it is `cycle_members.effective_from`.
-- Applicability ends at `cycle_members.effective_until` when present and is
-  always bounded by the cycle dates.
-- An `invited` member does not currently participate. If an invited
-  `existing_member` later becomes active, the approved semantics may make the
-  cycle start historically applicable; the current model has no `activated_at`
-  and does not require rewriting `effective_from` on activation.
-- A withdrawn member keeps legitimate historical evidence inside their
-  applicable interval but is not a current participant.
+- Membership in a Development cycle is independent from whether the member has
+  completed account activation. A member may belong to the cycle while
+  `public.members.status = 'invited'`.
+- Current cycle participation is governed by
+  `development.cycle_members.status` and the member's applicable date interval,
+  not by requiring `public.members.status = 'active'`.
+- `public.members.status` describes the member/account state and controls Portal
+  access where applicable; it does not determine the historical start of cycle
+  participation.
+- `eligible_for_ranking` is an independent Ranking gate. Setting it to false
+  must not exclude otherwise applicable Attendance, Quiz, Reports,
+  Evaluations, or Development evidence. It only prevents the member from
+  qualifying for Ranking.
+- For `existing_member`, the applicable start is
+  `development.cycles.start_date`, regardless of when the cycle-member row or
+  Portal account was technically created.
+- For `new_member`, the applicable start is
+  `development.cycle_members.effective_from`.
+- Applicability ends at `development.cycle_members.effective_until` when
+  present and is always bounded by the cycle dates.
+- A member who becomes `inactive` should stop current cycle participation from
+  that effective date. The cycle membership becomes `withdrawn`,
+  `effective_until` records the end of participation, and legitimate historical
+  evidence inside the applicable interval must be preserved.
+- Account invitation/activation does not introduce a separate participation
+  boundary such as `activated_at` and does not redefine the applicable start
+  for an `existing_member`.
 
 The exact temporal boundary for `suspended` members and the meaning of
 `manual_adjustment` enrollment remain **UNCERTAIN**. No global rule should be
 inferred for them.
 
-No member role limit or general status-transition policy is independently
-confirmed as a BUSINESS RULE in this phase.
+There is no CAFLA BUSINESS RULE limiting the Board to five members. The current
+application restriction that refuses Board promotion when five other Board rows
+exist is an IMPLEMENTATION MISMATCH, not approved business policy.
+
+No general member status-transition policy beyond the confirmed rules above is
+established in this module.
 
 The following are IMPLEMENTATION FACTS:
 
@@ -211,6 +227,17 @@ Current implementation mapping:
 `invited` skips cycle-state synchronization in the update route. This table is
 an IMPLEMENTATION FACT, not a confirmed BUSINESS RULE.
 
+**CONFIRMED BUSINESS RULE:** changing a member to `inactive` ends current cycle
+participation from the applicable effective date. The cycle membership should
+be `withdrawn`, `effective_until` should preserve that participation boundary,
+and evidence generated within the legitimate historical interval must remain
+available.
+
+**KNOWN IMPLEMENTATION MISMATCH:** changing a member to `active` currently also
+forces `eligible_for_ranking = true`. Ranking eligibility is an independent
+Board decision and should not be automatically enabled merely because the
+member is active.
+
 ## 9. Authorization & Security
 
 - Admin member pages use `requireBoard()` and also inherit the Admin layout.
@@ -264,6 +291,16 @@ path, but naming alone is not a separate status classification.
   state partially synchronized.
 - **KNOWN LIMITATION:** any Admin member edit requires an active Development
   cycle, including edits to profile fields, role, or status.
+- **KNOWN LIMITATION / IMPLEMENTATION MISMATCH:** profile-only member edits
+  such as name, phone, USSF ID, grade, or role are unnecessarily coupled to the
+  existence of an active Development cycle. Profile/account maintenance should
+  be separable from cycle-participation changes.
+- **KNOWN LIMITATION / IMPLEMENTATION MISMATCH:** setting a member to `active`
+  currently forces `eligible_for_ranking = true`, even though Ranking
+  eligibility is an independent Board-controlled decision.
+- **KNOWN LIMITATION / IMPLEMENTATION MISMATCH:** the Admin update endpoint
+  enforces a maximum of five Board members even though CAFLA has no such
+  BUSINESS RULE.
 - **KNOWN LIMITATION:** the current directory UI omits `suspended` from its
   rendered filter options and `MembersTable` has no suspended-status badge,
   although the edit route/runtime enum supports it.
@@ -281,12 +318,10 @@ path, but naming alone is not a separate status classification.
 
 ## 14. Open Questions
 
-- Is five Board members an approved CAFLA BUSINESS RULE or only current endpoint
-  behavior? No matching DB constraint was identified in the historical evidence.
 - Is automatic `public.members` creation from `auth.users` currently backed by
   the expected live trigger?
-- Should all member profile edits require an active Development cycle?
-- Are member-status-to-cycle-status mappings approved business policy?
+- Beyond the confirmed `inactive -> withdrawn` participation-ending behavior,
+  what exact cycle-membership semantics should apply to `suspended` members?
 - What are the approved `manual_adjustment` applicability semantics?
 - What temporal boundaries should a suspension apply to, and what historical
   evidence must remain visible after suspension ends?
