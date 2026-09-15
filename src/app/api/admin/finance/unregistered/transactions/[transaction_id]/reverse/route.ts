@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { requireBoardApi } from "@/src/lib/auth/require-board-api"
+import { authorizationOrUnexpectedFinanceError, safeFinanceError } from "@/src/lib/finance/api-responses"
+import { supabaseServer } from "@/src/lib/supabase/server"
+const schema=z.object({transaction_date:z.iso.date(),description:z.string().trim().min(1).max(500),reversal_reason:z.string().trim().min(1).max(1000),idempotency_key:z.string().uuid()})
+export async function POST(request:Request,{params}:{params:Promise<{transaction_id:string}>}){try{await requireBoardApi();const id=(await params).transaction_id;const p=schema.safeParse(await request.json().catch(()=>null));if(!z.string().uuid().safeParse(id).success||!p.success)return safeFinanceError("Check the reversal details.",400);const db=await supabaseServer();const{data,error}=await db.schema("finance").rpc("reverse_unregistered_transaction",{p_original_transaction_id:id,p_transaction_date:p.data.transaction_date,p_description:p.data.description,p_reversal_reason:p.data.reversal_reason,p_idempotency_key:p.data.idempotency_key,p_internal_notes:null});if(error)return safeFinanceError(error.code==="23505"?"This transaction was already reversed.":"Unable to reverse the pending transaction.",error.code==="23505"?409:500);return NextResponse.json({success:true,transaction:data},{status:201})}catch(error){return authorizationOrUnexpectedFinanceError(error,"reverse unregistered transaction")}}

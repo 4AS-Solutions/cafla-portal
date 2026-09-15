@@ -5,7 +5,7 @@ import * as XLSX from "xlsx"
 import { matchArbiterRefereeName, normalizeArbiterName } from "../../src/lib/finance/arbiter-fees/matching"
 import { parseArbiterFeeFile } from "../../src/lib/finance/arbiter-fees/parser"
 import { buildArbiterFeeAssignmentKey, getArbiterFeeAmounts, summarizeArbiterFees } from "../../src/lib/finance/arbiter-fees/rules"
-import { isArbiterFeeBatchPostable, prepareArbiterFeeItems } from "../../src/lib/finance/arbiter-fees/workflow"
+import { findPendingUnregisteredAlias, isArbiterFeeBatchPostable, prepareArbiterFeeItems } from "../../src/lib/finance/arbiter-fees/workflow"
 
 function workbookBuffer(bookType: "xls" | "xlsx", rows: unknown[][]) {
   const workbook = XLSX.utils.book_new()
@@ -124,6 +124,11 @@ test("classifies in-file and previously posted assignments authoritatively", () 
 
 test("blocks posting until every new assignment is resolved", () => {
   assert.equal(isArbiterFeeBatchPostable([{itemStatus:"new",resolutionConfirmed:false,memberId:null}]), false)
+  assert.equal(isArbiterFeeBatchPostable([{itemStatus:"new",resolutionConfirmed:false,memberId:"suggested-member"}]), false)
   assert.equal(isArbiterFeeBatchPostable([{itemStatus:"new",resolutionConfirmed:true,memberId:"member"},{itemStatus:"duplicate_in_file",resolutionConfirmed:false,memberId:null}]), true)
   assert.equal(isArbiterFeeBatchPostable([{itemStatus:"already_imported",resolutionConfirmed:false,memberId:null}]), false)
+  assert.equal(isArbiterFeeBatchPostable([{itemStatus:"new",resolutionConfirmed:true,memberId:null,unregisteredRefereeId:"pending"}]), true)
+  assert.equal(isArbiterFeeBatchPostable([{itemStatus:"new",resolutionConfirmed:true,memberId:"member",unregisteredRefereeId:"pending"}]), false)
 })
+
+test("reuses a confirmed provisional alias but rejects it after linking",()=>{const aliases=[{normalizedArbiterName:"manuel osorio",unregisteredRefereeId:"pending"}];assert.equal(findPendingUnregisteredAlias(" Manuel  Osorio ",aliases,new Set()),"pending");assert.equal(findPendingUnregisteredAlias("Manuel Osorio",aliases,new Set(["pending"])),null)})
