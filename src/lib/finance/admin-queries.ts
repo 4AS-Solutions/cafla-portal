@@ -286,6 +286,9 @@ export async function getAdminFinanceClosings(
       if (page.length < DATABASE_PAGE_SIZE) break
     }
 
+    const { data: unregisteredSnapshots, error: unregisteredSnapshotError } = await supabase.schema("finance").from("monthly_unregistered_balance_snapshots").select("id,closing_id,unregistered_referee_id,balance_cents,currency,created_at")
+    if (unregisteredSnapshotError) throw unregisteredSnapshotError
+    for(const row of unregisteredSnapshots??[]) snapshotCounts.set(row.closing_id,(snapshotCounts.get(row.closing_id)??0)+1)
     const closings = rawClosings.map((row) => ({ ...row, snapshot_count: snapshotCounts.get(row.id) ?? 0 }))
     const selectedClosing = selectedClosingId
       ? closings.find((row) => row.id === selectedClosingId) ?? null
@@ -298,6 +301,7 @@ export async function getAdminFinanceClosings(
       const member = members.get(row.member_id)
       return member ? [{ ...row, member }] : []
     })
+    if(selectedClosing){const pending=(unregisteredSnapshots??[]).filter(row=>row.closing_id===selectedClosing.id);if(pending.length){const{data:identities,error}=await supabase.schema("finance").from("unregistered_referees").select("id,display_name").in("id",pending.map(row=>row.unregistered_referee_id));if(error)throw error;const names=new Map((identities??[]).map(row=>[row.id,row.display_name]));for(const row of pending)snapshots.push({id:row.id,closing_id:row.closing_id,member_id:`unregistered:${row.unregistered_referee_id}`,balance_cents:row.balance_cents,currency:"USD",created_at:row.created_at,member:{id:`unregistered:${row.unregistered_referee_id}`,full_name:names.get(row.unregistered_referee_id)??"Pending financial account",email:"Board-only holding ledger",status:"unregistered"}})}}
 
     return { status: "success", data: { closings, selectedClosing, snapshots } }
   } catch (error) {
@@ -321,7 +325,9 @@ export async function getAdminClosingPreview(periodEnd: string, cutoff: string):
     const rows = [...aggregates.values()].flatMap((value) => {
       const member = members.get(value.memberId)
       return member ? [{ ...member, currency: value.currency, balance_cents: value.balance.toString(), last_transaction_at: value.last }] : []
-    }).sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id.localeCompare(b.id))
+    })
+    const db=getSupabaseAdmin();const [{data:pendingTx,error:pendingError},{data:pendingIdentities,error:identityError},{data:pendingLinks,error:linkError}]=await Promise.all([db.schema("finance").from("unregistered_transactions").select("unregistered_referee_id,amount_cents,currency,transaction_date,created_at").lte("transaction_date",periodEnd).lte("created_at",cutoff),db.schema("finance").from("unregistered_referees").select("id,display_name"),db.schema("finance").from("unregistered_referee_links").select("unregistered_referee_id,linked_at").lte("linked_at",cutoff)]);if(pendingError||identityError||linkError)throw pendingError??identityError??linkError;const linked=new Set((pendingLinks??[]).map(link=>link.unregistered_referee_id));const names=new Map((pendingIdentities??[]).map(identity=>[identity.id,identity.display_name]));const pendingTotals=new Map<string,{balance:bigint;last:string}>();for(const tx of pendingTx??[]){if(linked.has(tx.unregistered_referee_id))continue;const current=pendingTotals.get(tx.unregistered_referee_id);pendingTotals.set(tx.unregistered_referee_id,{balance:(current?.balance??BigInt(0))+BigInt(tx.amount_cents),last:!current||tx.created_at>current.last?tx.created_at:current.last})}for(const[id,value]of pendingTotals)rows.push({id:`unregistered:${id}`,full_name:names.get(id)??"Pending financial account",email:"Board-only holding ledger",status:"unregistered",currency:"USD",balance_cents:value.balance.toString(),last_transaction_at:value.last})
+    rows.sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id.localeCompare(b.id))
     return { status: "success", data: { period_end: periodEnd, preview_cutoff: cutoff, rows } }
   } catch (error) {
     console.error("[FINANCE ADMIN] Closing preview failed:", error)

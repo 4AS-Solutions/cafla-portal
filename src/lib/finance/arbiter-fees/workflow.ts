@@ -31,9 +31,11 @@ export function prepareArbiterFeeItems(params: {
   })
 }
 
-export function isArbiterFeeBatchPostable(items: Array<{ itemStatus: string; resolutionConfirmed: boolean; memberId: string | null }>) {
-  return items.some((item) => item.itemStatus === "new") && !items.some((item) => item.itemStatus === "new" && (!item.resolutionConfirmed || !item.memberId))
+export function isArbiterFeeBatchPostable(items: Array<{ itemStatus: string; resolutionConfirmed: boolean; memberId: string | null; unregisteredRefereeId?: string | null }>) {
+  return items.some((item) => item.itemStatus === "new") && !items.some((item) => item.itemStatus === "new" && (!item.resolutionConfirmed || Number(Boolean(item.memberId)) + Number(Boolean(item.unregisteredRefereeId)) !== 1))
 }
+
+export function findPendingUnregisteredAlias(name:string,aliases:Array<{normalizedArbiterName:string;unregisteredRefereeId:string}>,linkedIds:Set<string>){const normalized=normalizeArbiterName(name);return aliases.find(alias=>alias.normalizedArbiterName===normalized&&!linkedIds.has(alias.unregisteredRefereeId))?.unregisteredRefereeId??null}
 
 export function normalizedRefereeName(value: string) {
   return normalizeArbiterName(value)
