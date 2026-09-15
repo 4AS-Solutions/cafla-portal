@@ -76,15 +76,79 @@ Assignment FKs use the default restrictive delete behavior.
 
 ## 5. Data Ownership
 
-`public.matches` owns match identity, kickoff, assignments, source/display team
-and venue fields, report-status signal, and selected division-season input.
-`tournaments.match_context` owns resolved competition context and registered
-home/away teams. `tournaments.match_rosters` owns the player snapshot.
+### CURRENT ownership
 
-Text and relational fields coexist because import preserves Arbiter values
-while the trigger resolves them against internal registrations. No approved
-alternative “Match Core” ownership contract was found. Reports own scores,
-incidents, assets, and review state; Evaluations own peer submissions.
+`public.matches` is the CURRENT CAFLA match record and canonical internal match
+identity.
+
+The CURRENT CAFLA Matches implementation is operationally focused on matches
+from Los Angeles Municipal Soccer League that are covered by CAFLA. The fact
+that the schema can technically persist a match without complete relational
+Competition context does not establish a general CAFLA business rule for
+managing unrelated competitions.
+
+`public.matches` currently owns or stores:
+
+- canonical internal match identity;
+- imported external Arbiter identity;
+- kickoff;
+- current referee assignment slots;
+- source/display team information;
+- source/display venue information;
+- report-status signal; and
+- selected division-season input used to build Competition context.
+
+`tournaments.match_context` owns the CURRENT resolved relational Competition
+context and registered home/away team relationships.
+
+`tournaments.match_rosters` owns the CURRENT database player roster associated
+with the resolved Competition context.
+
+Reports own match results, incidents, report assets, submission/review state,
+and related Report workflow data.
+
+Evaluations own referee peer-evaluation submissions.
+
+### Referee-assignment ownership
+
+**CONFIRMED BUSINESS RULE:** CAFLA owns the referee-assignment domain for the
+matches it covers.
+
+Arbiter is the CURRENT external operational tool used to create and distribute
+those assignments, but Arbiter is not the conceptual owner of CAFLA referee
+assignment history.
+
+The CURRENT implementation imports Arbiter assignment data into mutable referee
+slots on `public.matches`.
+
+CAFLA intends to remain responsible for referee assignments even if the
+external assignment mechanism changes in the future.
+
+### Competition ownership direction
+
+**ARCHITECTURAL DIRECTION:** a future Match Core integration may become the
+authoritative owner of Los Angeles Municipal Soccer League Competition data,
+including match identity/schedule, teams, players, rosters, results, and
+competition rules.
+
+If that architecture is approved and implemented, CAFLA may consume the
+Competition Match rather than remain its authoritative Competition owner, while
+CAFLA continues to own referee-assignment and referee-development concerns.
+
+This future ownership boundary is not implemented in CURRENT runtime and must
+not be treated as an existing Match Core integration contract.
+
+Until that transition is explicitly implemented, `public.matches` remains the
+CURRENT canonical application/FK match identity inside CAFLA.
+
+### External source fields
+
+Text and relational fields currently coexist because the Arbiter import
+preserves source/display values while the Tournament context builder resolves
+them against internal Competition registrations.
+
+`arbiter_match_id` remains an external reconciliation identifier and must not
+replace `public.matches.id` as CAFLA's CURRENT internal relational identity.
 
 ## 6. Runtime Flows
 
@@ -103,6 +167,27 @@ Board /admin/import-arbiter
 This is a manual file import. No live Arbiter API, webhook, polling job, or
 two-way synchronization was found. Re-import overwrites current imported match
 and assignment fields; it is not assignment/event history.
+
+### Confirmed Arbiter operational boundary
+
+**CONFIRMED BUSINESS RULE:** Arbiter is the CURRENT operational source used by
+CAFLA to prepare and update referee assignments before a match.
+
+Before the match is played, re-imported Arbiter information may legitimately
+update the expected referee crew and other imported scheduling information.
+
+After the match is played, CAFLA must preserve the referee crew that actually
+worked the match as historical truth for Reports, Evaluations, Development, and
+other referee-history consumers.
+
+A later Arbiter import must not silently rewrite that historical actual crew.
+
+Operationally, last-minute assignment changes may be recorded in CAFLA after
+the match has already occurred. Therefore, kickoff time alone cannot be used as
+an automatic irreversible assignment-freeze boundary.
+
+The CURRENT implementation does not distinguish scheduled assignments from the
+actual historical crew and does not yet enforce this business rule.
 
 ```text
 requireUser()
@@ -141,6 +226,58 @@ match. Report submission also updates the match to `submitted`, duplicating
 synchronization. No report-delete synchronization trigger is present. A unique
 constraint limits a match to one report.
 
+### Match lifecycle versus Report lifecycle
+
+**CONFIRMED BUSINESS RULE:** Match lifecycle and Report lifecycle are separate
+domain concepts.
+
+`public.matches.report_status` and `public.match_reports.status` describe the
+Match Report workflow. They do not establish whether the Match itself was
+played normally, postponed, cancelled, abandoned, or resolved through a
+forfeit.
+
+The CURRENT assumption that a Match becomes effectively played/past merely
+because `kickoff_at` has passed is insufficient.
+
+CAFLA needs a Match-level lifecycle/outcome distinction capable of representing
+at least the following business situations:
+
+- scheduled;
+- completed;
+- postponed;
+- cancelled;
+- abandoned;
+- forfeit.
+
+The exact database enum, transition matrix, and distinction between lifecycle
+status and Match outcome are **PLANNED** and must be approved before
+implementation.
+
+At minimum:
+
+- a postponed Match must not be treated as completed merely because the
+  original kickoff passed;
+- a cancelled Match must not generate ordinary completed-Match obligations;
+- a Match that was actually played must be distinguishable from one that did
+  not occur;
+- an abandoned Match must be distinguishable from a normally completed Match;
+- a forfeit must be representable without forcing CAFLA to invent a normal
+  played-match Report.
+
+### Competition consequences
+
+**ARCHITECTURAL DIRECTION:** CAFLA needs enough Match state to know that a Match
+was resolved through a forfeit or other non-normal outcome, but
+Competition-specific consequences should not be redesigned as a full rules
+engine inside CAFLA.
+
+Rules such as awarded score, standings-point deductions, sanctions, or
+division-specific forfeit consequences belong to the Competition domain and
+are expected to be owned eventually by Match Core.
+
+Until that ownership transition exists, CURRENT Competition behavior remains
+documented as-is and non-normal Match outcomes remain a known functional gap.
+
 ## 8. Tournament Context Boundary
 
 The selected `tournament_division_season_id` drives the builder. It verifies an
@@ -158,31 +295,158 @@ still use it.
 
 ## 9. Referee Assignments
 
-The three fields are nullable member FKs. Portal list/dashboard visibility
-recognize every slot. Only the center may submit a report; the API revalidates
-ownership. Evaluations derive up to six directed pairs, discard null/self
-pairs, then apply Development applicability.
+### CURRENT assignment model
 
-Re-import can overwrite any slot. No assignment audit record, effective
-timestamp, or crew snapshot was found. Historical views read latest assignment
-values, potentially differing from the crew at kickoff.
+The three CURRENT assignment fields are nullable member FKs:
+
+- `center_referee_id`;
+- `assistant_referee_1_id`;
+- `assistant_referee_2_id`.
+
+Portal list/dashboard visibility recognizes every slot.
+
+Only the CURRENT assigned Center may create the Match Report, and the create API
+revalidates that ownership.
+
+Evaluations derive directed peer-evaluation relationships from the CURRENT
+assignment columns.
+
+Arbiter re-import can overwrite any assignment slot.
+
+No assignment audit record, assignment event history, effective timestamp,
+scheduled-versus-actual distinction, or historical crew snapshot was found.
+
+Therefore CURRENT historical consumers can observe the latest assignment values
+instead of the crew that actually worked the Match (`MATCH-HIST-001`).
+
+### Scheduled assignment versus actual crew
+
+**CONFIRMED BUSINESS RULE:** scheduled referee assignment and actual Match crew
+are separate concepts.
+
+The scheduled assignment represents who was expected to work the Match.
+
+The actual crew represents who actually performed the referee roles.
+
+For example:
+
+Scheduled:
+
+- Center: Luis
+- AR1: Roberto
+- AR2: Elena
+
+Actual:
+
+- Center: Pedro
+- AR1: Roberto
+- AR2: Elena
+
+If Pedro replaced Luis at the last minute, the historical Match must recognize
+Pedro as the actual Center even when Arbiter still contained Luis at kickoff.
+
+Reports, Evaluations, and Development evidence must ultimately use the actual
+crew rather than an obsolete scheduled assignment.
+
+### Timing of actual-crew confirmation
+
+The actual crew does not need to be finalized automatically at the exact
+kickoff time.
+
+CAFLA operational staff may be officiating other matches and may record a
+last-minute replacement after the Match has already occurred.
+
+The future workflow must therefore permit authorized post-Match correction or
+confirmation of the actual crew.
+
+Once actual crew has been established as historical Match truth, later Arbiter
+re-imports must not silently replace it.
+
+### Historical preservation
+
+**PLANNED:** CAFLA requires a historical assignment/crew model that can preserve
+scheduled assignment information while establishing the actual crew used by
+historical consumers.
+
+The exact table structure, audit model, confirmation workflow, correction
+permissions, and locking rules are not defined in this document.
+
+Any implementation must consider existing Reports and Evaluations before
+allowing a historical actual-crew correction, because those records may already
+depend on the prior crew.
+
+This requirement resolves the business semantics of `MATCH-HIST-001`; the
+technical preservation model remains PLANNED.
 
 ## 10. Time and Timezone Rules
 
-`kickoff_at` is timezone-less. Import produces bare `YYYY-MM-DD HH:mm:ss`,
-suggesting Los Angeles wall-clock intent without encoding it.
+### CURRENT implementation
 
-- Development views compare with `now() AT TIME ZONE 'America/Los_Angeles'`
-  and cast kickoff directly to `date`.
-- Dashboard views compare with `now()`, subject to database session timezone.
-- Node/browser helpers construct `new Date(kickoff_at)`.
-- Date filters send UTC ISO boundaries to a timezone-less column.
-- Evaluation deadlines add 48 hours to the timezone-less kickoff.
-- UTC ISO report timestamps enter timezone-less columns and Development later
-  treats them as UTC.
+`public.matches.kickoff_at` is CURRENTLY a nullable
+`timestamp without time zone`.
 
-Los Angeles intent is not enforced end-to-end. DST and runtime/session timezone
-can change boundary results (`MATCH-TIME-001`).
+The Arbiter import produces a bare `YYYY-MM-DD HH:mm:ss` value, reflecting Los
+Angeles wall-clock intent without encoding a timezone.
+
+CURRENT consumers interpret that value inconsistently:
+
+- Development views compare with
+  `now() AT TIME ZONE 'America/Los_Angeles'` and may cast kickoff directly to
+  `date`;
+- Dashboard views may compare against `now()`, making behavior dependent on
+  database/session timezone;
+- Node/browser helpers may construct `new Date(kickoff_at)`;
+- date filters may send UTC ISO boundaries to a timezone-less column;
+- Evaluation deadlines add 48 hours to the timezone-less kickoff;
+- Report timestamps and Match timestamps are not interpreted under one
+  consistent end-to-end contract.
+
+This is the CURRENT `MATCH-TIME-001` limitation.
+
+### Confirmed timezone contract
+
+**CONFIRMED BUSINESS RULE / ARCHITECTURAL DECISION:** Los Angeles Municipal
+Soccer League Match times entered or imported into CAFLA represent
+`America/Los_Angeles` local wall-clock time.
+
+The canonical future time model must treat a Match kickoff as one real instant,
+not as unrelated date and time fields.
+
+The preferred TO-BE storage model is a timezone-aware timestamp representing
+the absolute instant, such as PostgreSQL `timestamptz`.
+
+The boundary is:
+
+`Los Angeles wall-clock input -> interpret in America/Los_Angeles -> store absolute instant -> display in America/Los_Angeles`
+
+Business rules that depend on a calendar date must explicitly derive the
+`America/Los_Angeles` calendar date rather than relying on database server,
+session, Node runtime, browser, or UTC date defaults.
+
+This applies to, among other consumers:
+
+- upcoming/past Match state;
+- Match filtering;
+- Report timing;
+- Evaluation windows;
+- Development month attribution;
+- Ranking/scoring-period attribution.
+
+Daylight Saving Time must be handled through the named
+`America/Los_Angeles` timezone rather than manual fixed UTC offsets.
+
+### Planned remediation
+
+Changing `kickoff_at` from its CURRENT timezone-less representation requires a
+separately approved migration and consumer review.
+
+The migration must verify existing stored values before conversion so that
+historical wall-clock values are not shifted incorrectly.
+
+Splitting kickoff into independent date and time columns is not the approved
+primary remediation.
+
+No time-model migration is performed by this documentation decision.
 
 ## 11. Authorization and Security
 
@@ -215,18 +479,44 @@ can change boundary results (`MATCH-TIME-001`).
 | Competition | Division-season builds context/rosters; approved reports plus context feed results. |
 | Admin Member Detail | `dashboard_referee_activity` counts all assignment slots. |
 
+### Historical crew dependency
+
+Reports, Evaluations, and Development currently depend directly or indirectly
+on mutable Match assignment columns.
+
+Under the confirmed business rules, these consumers must ultimately depend on
+the actual historical crew once that crew has been established.
+
+The exact downstream migration belongs to the owning Report, Evaluation, and
+Development module reviews.
+
+### Future Match Core boundary
+
+The CURRENT dependencies above remain authoritative for this repository.
+
+A future Match Core integration may replace CAFLA ownership of Competition
+Match data, but it must preserve a stable Match identity/integration contract
+for CAFLA referee assignments, Reports, Evaluations, Development, and historical
+records.
+
+That integration is PLANNED and is not defined by the CURRENT database model.
+
 ## 13. Representative Cases
 
-| Case | CURRENT behavior |
+| Case | Confirmed / CURRENT behavior |
 |---|---|
-| Tournament match with context | Match persists; trigger upserts context/roster and appends success log. |
-| Tournament match without report | `pending`; roster may rebuild on relevant updates; center reports after kickoff. |
-| Submitted/approved report | Trigger mirrors state; Competition consumes only approved scored reports. |
-| Revision-required report | Match signal mirrors it and UI can display it. |
-| Three-referee crew | All see it; center reports; applicable crew may produce six obligations. |
-| Missing assignments | Match remains valid; null-related evaluation pairs disappear. |
-| Legacy/non-tournament match | Works without context outside relational Competition/automatic rosters. |
-| Assignment change | Current slots overwrite; visibility and derived history can change. |
+| Normal Municipal League Match with context | CURRENT Match persists; tournament context/roster may be built; scheduled assignments come from Arbiter; normal downstream Report/Evaluation flows apply. |
+| Municipal League Match without valid context | CURRENT Match can persist even when Competition context fails. This is CURRENT-compatible behavior, not approval of CAFLA as a universal external-competition Match registry. |
+| Three-referee scheduled crew | CURRENT all assigned referees can see the Match; Center owns Report submission; Evaluation obligations derive from current slots. |
+| Last-minute referee replacement | Confirmed business rule requires eventual actual-crew correction. The referee who actually worked the role must become historical crew truth for Reports, Evaluations, and Development. CURRENT has no separate actual-crew model. |
+| Arbiter re-import before Match | CURRENT operational reconciliation may update scheduled Match/assignment information. |
+| Arbiter re-import after actual crew is established | Future behavior must not silently overwrite historical actual crew or dependent evidence. CURRENT does not provide this protection. |
+| Normal completed Match | Must be distinguishable from merely having a kickoff in the past. CURRENT has no canonical completed Match state. |
+| Postponed Match | Must not become completed merely because the original kickoff passed. Exact lifecycle implementation is PLANNED. |
+| Cancelled Match | Must not generate ordinary completed-Match obligations. Exact lifecycle implementation is PLANNED. |
+| Abandoned Match | Must be distinguishable from a normal completion; Competition consequences remain outside the approved CAFLA redesign scope. |
+| Forfeit | CAFLA needs to represent the non-normal Match outcome. Awarded score, standings deductions, sanctions, and Competition-specific consequences belong to the Competition domain / future Match Core. |
+| Submitted/approved Report | CURRENT Report trigger mirrors Report state into `matches.report_status`; this remains Report workflow state, not Match lifecycle. |
 
 ## 14. Classification
 
@@ -236,24 +526,97 @@ can change boundary results (`MATCH-TIME-001`).
 | Manual Arbiter import, ID, and mapping | CURRENT | Active route/API/parser/matcher and Storage dependency. |
 | Denormalized source/display fields | CURRENT | Display, search, preservation, and context resolution. |
 | Tournament context/roster trigger | CURRENT | Current import and Competition flows. |
-| Context-less matches | CURRENT-compatible | Schema permits them and non-Competition consumers use them. |
+| Context-less matches | CURRENT-compatible | Schema permits them and non-Competition consumers can use them; this does not establish a business rule that CAFLA is a universal registry for unrelated competitions. |
 | `public.dashboard_referee_matches` | UNCERTAIN | No repository caller found; external/database callers are not disproven. |
-| Separate future Match Core | Not established | No approved CAFLA contract was found. |
+| Future Match Core Competition ownership | PLANNED / ARCHITECTURAL DIRECTION | Match Core may eventually own Municipal League Competition data while CAFLA remains authoritative for referee operations; no integration or ownership transfer is CURRENT. |
+| Scheduled assignment versus actual crew | PLANNED | Confirmed business distinction; CURRENT stores only mutable assignment columns. |
+| Historical actual-crew preservation | PLANNED | Required so Reports, Evaluations, and Development reflect who actually worked the Match. |
+| Canonical Match lifecycle | PLANNED | CURRENT kickoff/report signals cannot represent completed, postponed, cancelled, abandoned, or forfeit semantics correctly. |
+| Competition-specific forfeit consequences | PLANNED OUTSIDE CAFLA MATCHES | Expected future Match Core / Competition responsibility; no CAFLA rules engine is approved here. |
+| Canonical `timestamptz` kickoff model | PLANNED | Confirmed Los Angeles input/display/business-date contract; CURRENT remains timezone-less. |
 
 ## 15. Known Limitations and Open Questions
 
-- Detail authorization is broader than list assignment scope.
-- Admin list/preview endpoints lack handler-local Board authorization.
-- Kickoff timezone interpretation is inconsistent.
-- Mutable assignments lack historical crew (`MATCH-HIST-001`).
-- Report-status synchronization is duplicated and lacks delete semantics.
-- Filters run after pagination, so filtered counts/pages can be inaccurate;
+### Confirmed limitations / implementation mismatches
+
+- Detail authorization is broader than list assignment scope
+  (`MATCH-SEC-001`).
+
+- Admin list and Arbiter-preview endpoints lack complete handler-local Board
+  authorization (`MATCH-SEC-002`, `MATCH-SEC-003`).
+
+- `kickoff_at` is timezone-less and CURRENT consumers do not share one
+  Los Angeles time contract (`MATCH-TIME-001`).
+
+- Referee assignments are mutable columns with no scheduled-versus-actual crew
+  distinction, assignment history, or historical crew snapshot
+  (`MATCH-HIST-001`).
+
+- A later Arbiter re-import can overwrite assignment fields that historical
+  Report/Evaluation/Development consumers may still read.
+
+- CURRENT Match state is inferred primarily from kickoff and Report workflow;
+  no canonical Match lifecycle represents completed, postponed, cancelled,
+  abandoned, or forfeit behavior.
+
+- CURRENT CAFLA Competition behavior does not provide an approved general model
+  for forfeit result consequences or standings-point deductions.
+
+- Report-status synchronization is duplicated and lacks Report-delete
+  synchronization semantics.
+
+- Filters run after pagination, so filtered counts/pages can be inaccurate and
   summary counts cover only the current page.
+
 - Match detail performs sequential member/report-child queries.
-- Import is sequential, non-atomic, and may partially succeed.
-- Context failures do not fail match writes (`MATCH-CTX-001`).
-- `match_number` purpose and any external caller for
-  `dashboard_referee_matches` remain unresolved.
+
+- Arbiter import is sequential, non-atomic, and may partially succeed.
+
+- Tournament-context failures do not fail the originating Match write
+  (`MATCH-CTX-001`).
+
+### Confirmed architectural direction
+
+- Arbiter remains the CURRENT pre-Match operational import mechanism but is not
+  the conceptual owner of CAFLA referee assignments.
+
+- CAFLA must eventually preserve actual historical Match crew independently
+  from scheduled assignment.
+
+- Los Angeles Match wall-clock values must use an explicit
+  `America/Los_Angeles` interpretation and a future timezone-aware absolute
+  timestamp model.
+
+- Match Core may eventually become the Competition authority for Municipal
+  League Match/result/standings data, while CAFLA remains authoritative for
+  referee operations.
+
+- CAFLA should not build a new full Competition rules engine merely to duplicate
+  functionality expected to move to Match Core.
+
+### Remaining open questions
+
+- What exact schema and workflow should preserve scheduled assignments and
+  actual historical crew?
+
+- At what point, and by which authorized actor, is actual crew considered
+  confirmed?
+
+- What correction rules apply when actual crew is changed after a Report or
+  Evaluations already exist?
+
+- What exact Match lifecycle enum and transition matrix should implement
+  scheduled/completed/postponed/cancelled/abandoned/forfeit semantics?
+
+- Should `forfeit` ultimately be represented as Match lifecycle state, Match
+  outcome, result type, or a combination? This belongs to the future
+  Competition/Match Core contract.
+
+- What is the intended purpose of `match_number`, and are there external callers
+  of `public.dashboard_referee_matches`?
+
+- What exact stable identity/integration contract will connect future Match Core
+  Matches to CAFLA referee-operation records?
 
 ## 16. Evidence
 
@@ -274,7 +637,15 @@ repository baseline. `docs/audit/supabase/17-view-definitions.md`,
 ## 17. Change Impact Checklist
 
 Before changing Matches, verify Portal/Dashboard/Admin surfaces; API guards;
-external IDs and Storage paths; current/historical assignments; report status;
-evaluation obligations; Development metrics; tournament context, rosters,
-logs, and Competition consumers; Los Angeles/DST interpretation; RLS/grants
-and service role; partial import/retry; and affected Source of Truth modules.
+internal and external Match identities; `arbiter_match_id` Storage-path
+dependencies; scheduled assignments; actual/historical crew; Report ownership
+and status; Evaluation obligations; Development evidence; Match lifecycle and
+non-normal outcomes; tournament context, rosters, logs, and Competition
+consumers; Los Angeles/DST interpretation; RLS/grants and service-role usage;
+partial import/retry behavior; future Match Core integration boundaries; and
+affected Source of Truth modules.
+
+Changes to historical crew, Match lifecycle, or kickoff timestamp semantics must
+not be implemented as isolated column changes because Reports, Evaluations,
+Development, Dashboard, Competition, and historical snapshots depend on these
+boundaries.

@@ -60,7 +60,7 @@ rules. It is not implemented and must not be queried or described as CURRENT.
 |---|---|
 | Development cycle | Bounded period that groups member participation, activities, scoring periods, and ranking snapshots. |
 | Cycle membership | One member's enrollment and effective interval in one cycle. |
-| Current participation | Whether a member may participate now; at minimum both member and cycle-member statuses must be active. |
+| Current participation | Whether a member belongs to and may participate in the current Development cycle according to cycle-member status and the applicable date interval. `public.members.status` may control account/Portal access but does not redefine cycle membership or historical applicability. |
 | Historical applicability | Which dated activities belong to a member despite later status changes. |
 | Ranking eligibility | Independent permission to receive ranking treatment; it is not permission to generate Development evidence. |
 | Enrollment type | Context used to derive the beginning of historical applicability. |
@@ -118,6 +118,31 @@ Examples:
 How Production operators create, activate, close, or archive cycles is
 **UNCERTAIN / EXTERNAL VERIFICATION REQUIRED**.
 
+### Confirmed Lifecycle Business Rules
+
+**CONFIRMED BUSINESS RULE:** the intended Development-cycle lifecycle is
+`draft -> active -> closed -> archived`.
+
+At most one cycle may be `active` at a time.
+
+An active cycle must not be closed unless a valid subsequent Development cycle
+has already been created in `draft` status and is prepared to succeed it. The
+successor must represent a chronologically later cycle with coherent dates; the
+mere existence of an unrelated or obsolete draft does not satisfy this rule.
+
+Closing or archiving a cycle must never delete, invalidate, reset, or detach
+legitimate historical Attendance, Quiz, Report, Evaluation, Development,
+Ranking, or snapshot data belonging to that cycle.
+
+`closed` means the cycle no longer accepts new ordinary cycle activity.
+
+`archived` is a historical lifecycle state and must not alter or erase the
+cycle's preserved records.
+
+The CURRENT repository does not yet enforce this complete lifecycle contract in
+an application workflow. These are **BUSINESS RULES**, not claims about current
+runtime enforcement.
+
 ## 8. Cycle Membership Lifecycle and Application Writes
 
 ### Invitation
@@ -130,8 +155,21 @@ row when one does not already exist. It permits only `existing_member` or
 `effective_until = NULL`.
 
 This means an invited profile can have an active/ranking-eligible cycle row
-before profile completion. That is a CURRENT implementation fact, not the rule
-for current participation.
+before profile completion. This is both a CURRENT implementation fact and a
+valid cycle-membership state under the confirmed business rules.
+
+Account activation is independent from Development-cycle membership. A member
+does not need to complete Portal account activation in order to belong to the
+cycle.
+
+The member's `enrollment_type` and applicable date interval determine when
+Development participation and evidence begin:
+
+- `existing_member`: applicability begins at `development.cycles.start_date`.
+- `new_member`: applicability begins at `development.cycle_members.effective_from`.
+
+Portal/account access remains a separate concern from cycle membership and
+historical applicability.
 
 ### Admin member update
 
@@ -147,6 +185,54 @@ row for non-invited members. Its current mapping is:
 
 The cycle row is updated before `public.members`; the operations are not one
 transaction. No general application path creates `manual_adjustment`.
+### Confirmed update semantics
+
+**CONFIRMED BUSINESS RULE:** changing a member to `inactive` ends that member's
+current participation in the cycle. The corresponding cycle membership becomes
+`withdrawn`, and `effective_until` records the end of the applicable
+participation interval.
+
+Changing a member to `inactive` must not delete, invalidate, or exclude
+legitimate historical evidence generated before or on the applicable
+participation end date.
+
+**CONFIRMED BUSINESS RULE:** `eligible_for_ranking` is an independent
+Board-controlled setting. A member's ordinary active participation does not
+imply that Ranking eligibility must be true.
+
+**KNOWN IMPLEMENTATION MISMATCH:** the CURRENT Admin update behavior forces
+`eligible_for_ranking = true` when the member is changed to `active`. This does
+not match the confirmed business rule and must eventually be separated from
+ordinary member/cycle activation.
+
+The precise historical semantics of `suspended` remain **UNCERTAIN** in this
+phase. No additional suspension interval or restoration behavior is defined
+here.
+
+The precise semantics of `manual_adjustment` also remain **UNCERTAIN** and are
+left unchanged in this phase.
+
+### Transition to a new cycle
+
+**CONFIRMED BUSINESS RULE:** when a new Development cycle becomes active,
+members who continue participating with CAFLA must be enrolled automatically
+into that cycle as `existing_member`.
+
+Their applicability in the new cycle begins at the new cycle's `start_date`.
+
+Members who ended participation as inactive/withdrawn are not automatically
+re-enrolled into the new cycle.
+
+For each continuing member, the previous cycle's `eligible_for_ranking` setting
+is inherited into the new cycle. Ranking eligibility remains a Board-controlled
+administrative decision and may subsequently be changed by Board.
+
+Development and Ranking calculation values are not inherited into the new
+cycle. Development Score, Ranking Score, position, percentile, and
+current-cycle evidence are calculated again from the new cycle's own evidence.
+
+Historical monthly snapshots and other legitimate records from previous cycles
+must remain preserved and associated with their original cycles.
 
 ## 9. Enrollment Types
 
@@ -237,42 +323,169 @@ same participant rules.
 
 ## 12. Confirmed Business Rules
 
-### Current participation
+### Cycle membership and current participation
 
-A member may currently participate only when, at minimum:
+Development-cycle membership is independent from Portal account activation.
 
-```text
-public.members.status = active
-AND development.cycle_members.status = active
-```
+A member may belong to and participate in a Development cycle while
+`public.members.status = 'invited'`, provided the cycle-member state and
+applicable date interval permit participation.
 
-`eligible_for_ranking` is independent. False ranking eligibility does not
-prevent legitimate Development participation or evidence.
+`development.cycle_members.status` represents the member's participation state
+within that specific Development cycle. A cycle member with `status = 'active'`
+is a current Development participant within the member's applicable date
+interval.
+
+`public.members.status` describes the member/account state and may control
+Portal access, but it does not redefine cycle membership or the historical
+beginning of Development applicability.
 
 ### Historical applicability
 
-- `existing_member`: `applicable_from = development.cycles.start_date`.
-- `new_member`: `applicable_from = development.cycle_members.effective_from`.
-- `applicable_until`: `cycle_members.effective_until` when present, bounded by
-  the cycle end; applicability is also bounded by the cycle start.
+The confirmed applicability rules are:
 
-### Invited
+- For `existing_member`, `applicable_from` is
+  `development.cycles.start_date`.
+- For `new_member`, `applicable_from` is
+  `development.cycle_members.effective_from`.
+- `applicable_until` is `development.cycle_members.effective_until` when
+  present and is always bounded by the cycle end date.
+- All applicability is bounded by the Development cycle's own date range.
 
-While `public.members.status = invited`, the member does not currently
-participate. If an invited `existing_member` later becomes active, legitimate
-historical applicability may extend to cycle start. Do not introduce
-`activated_at` and do not rewrite `effective_from` during activation.
+Account invitation acceptance or profile completion does not create a new
+Development applicability boundary and does not redefine the applicable start
+date.
 
-### Withdrawn
+An `activated_at` field is not required for these confirmed semantics.
 
-A withdrawn member does not currently participate. Legitimate evidence inside
-the applicable historical interval must remain available.
+### Invited members
 
-### Ranking
+An invited member may already belong to the active Development cycle.
 
-Development participation/evidence and ranking eligibility are different. A
-participant with `eligible_for_ranking = false` may still have Development
-scores and evidence but must not receive ranking eligibility or position.
+For an invited `existing_member`, legitimate cycle applicability begins at the
+cycle start even if Portal account activation or profile completion occurs
+later.
+
+For an invited `new_member`, legitimate cycle applicability begins at the
+stored `effective_from`.
+
+Portal/account access and Development-cycle participation are separate
+concerns.
+
+### Withdrawn and inactive members
+
+When a member becomes `inactive`, current participation in the Development
+cycle ends.
+
+The corresponding cycle membership becomes `withdrawn`, and
+`effective_until` records the end of the applicable participation interval.
+
+A withdrawn member does not generate new ordinary Development obligations or
+evidence after the applicable end date.
+
+All legitimate Attendance, Quiz, Report, Evaluation, Development, Ranking, and
+snapshot history generated inside the member's applicable interval must remain
+preserved.
+
+A later current-status change must not erase or invalidate legitimate
+historical evidence.
+
+### Ranking eligibility
+
+Development participation and Ranking eligibility are independent.
+
+A Development participant with `eligible_for_ranking = false` may still
+generate and retain all otherwise applicable:
+
+- Attendance evidence;
+- Quiz evidence;
+- Report evidence;
+- Evaluation evidence; and
+- Development Score.
+
+`eligible_for_ranking = false` prevents Ranking qualification and Ranking
+position only. It must not exclude the member from Development or from the
+underlying Development metrics.
+
+Ranking eligibility is a Board-controlled administrative setting. Ordinary
+active participation does not imply `eligible_for_ranking = true`.
+
+### Cycle lifecycle
+
+The intended Development-cycle lifecycle is:
+
+`draft -> active -> closed -> archived`
+
+At most one Development cycle may be `active` at a time.
+
+An active cycle must not be closed unless a valid chronologically subsequent
+Development cycle has already been created in `draft` status and is prepared
+to succeed it.
+
+Closing or archiving a cycle must never delete, invalidate, reset, or detach
+legitimate historical Attendance, Quiz, Report, Evaluation, Development,
+Ranking, or snapshot data belonging to that cycle.
+
+A `closed` cycle no longer accepts new ordinary cycle activity.
+
+An `archived` cycle remains historical and must preserve its records.
+
+### Transition to a new cycle
+
+When a new Development cycle becomes active, members who continue participating
+with CAFLA must be enrolled automatically into the new cycle as
+`existing_member`.
+
+Their applicability in the new cycle begins at the new cycle's `start_date`.
+
+Members who ended participation as inactive/withdrawn are not automatically
+re-enrolled into the new cycle.
+
+Each continuing member inherits the previous cycle's
+`eligible_for_ranking` setting. Ranking eligibility remains Board-controlled
+and may subsequently be changed by Board.
+
+### Development and Ranking reset between cycles
+
+Each Development cycle starts a new Development and Ranking calculation.
+
+The following calculation values are not carried forward from the preceding
+cycle:
+
+- Development Score;
+- Ranking Score;
+- Ranking position;
+- percentile; and
+- current-cycle evidence quantities.
+
+The new cycle builds these values from evidence belonging to that new cycle.
+
+Historical monthly snapshots from prior cycles must remain preserved and
+associated with their original cycle. Starting a new cycle must not delete,
+overwrite, or repurpose prior-cycle snapshots.
+
+Current-cycle Ranking and historical Ranking are therefore separate concepts:
+the current calculation restarts with each cycle, while historical snapshots
+preserve prior-cycle performance.
+
+### Suspended members
+
+Precise historical participation semantics for `suspended` members remain
+**UNCERTAIN**.
+
+The CURRENT data model does not establish a reliable suspension interval, and
+CAFLA does not require a more complex suspension-history model as part of this
+phase.
+
+No additional suspension semantics are introduced here.
+
+### Manual adjustment
+
+The precise applicability semantics of `manual_adjustment` remain
+**UNCERTAIN**.
+
+The existing behavior is left unchanged in this phase. No new
+`manual_adjustment` business semantics are introduced here.
 
 ## 13. Representative Regression Cases
 
@@ -280,12 +493,47 @@ These names are test personas, not Production identities.
 
 | Persona | Confirmed expected behavior | Current implementation difference |
 |---|---|---|
-| Elena — active existing member | Participates now; history begins at cycle start; may rank when eligible. | Most paths include her, but Reports/Evaluations/monthly Development use stored `effective_from` rather than deriving cycle start. |
-| Nora — active new member | Participates from her later `effective_from`; no earlier evidence. | Most date-aware paths align; Quiz scoring grid does not independently enforce the effective interval. |
-| Wendy — withdrawn historical existing member | No current participation; preserve evidence through `effective_until`; ranking eligibility remains a separate question. | Attendance/Quiz/Evaluations can retain some history; Reports excludes withdrawn; monthly Development also excludes her when the update route sets ranking eligibility false. |
-| Ivan — invited existing member | No current obligations/evidence/ranking; if activated, applicable history may begin at cycle start. | Database consumers ignore `m.status`; an active cycle row can generate Attendance, Quiz, Report, Evaluation, Development, and Ranking-derived data despite Portal access being blocked. |
-| Iris — active, ranking-ineligible | Participates and keeps Development evidence; no ranking position. | Attendance/Quiz base data can exist, but Reports, Evaluations, and monthly Development require the ranking flag and remove her too early. |
-| Sam — suspended/ineligible | No current participation; preserve only history supported by an approved temporal boundary. | Status synchronization makes the cycle row ineligible, but the model cannot derive the precise suspension start; existing snapshot rows may remain stale. |
+| Elena — active existing member | Participates in the cycle; applicability begins at cycle start; may receive a Development Score and may rank when `eligible_for_ranking = true`. | Most paths include her, but Reports, Evaluations, and monthly Development currently use stored `effective_from` instead of consistently deriving cycle start for `existing_member`. |
+| Nora — active new member | Participates beginning at her later `effective_from`; no Development obligations or evidence before that applicable start. | Most date-aware paths align, but Quiz scoring does not independently enforce the complete effective interval. |
+| Wendy — withdrawn historical existing member | Does not generate new ordinary obligations/evidence after `effective_until`; all legitimate history through that date remains preserved. Historical Ranking/snapshots from applicable periods also remain preserved. | Some CURRENT consumers preserve bounded history, while Reports can exclude withdrawn members and upstream Ranking-eligibility behavior can remove legitimate Development history. |
+| Ivan — invited existing member | Belongs to the cycle even while the Portal account remains invited. Applicability begins at cycle start. He may generate otherwise-applicable Development obligations/evidence; Ranking depends independently on `eligible_for_ranking`. | Several CURRENT database consumers already include him because they ignore `public.members.status`. This inclusion is not itself an error under the confirmed participation rule; however, individual consumers still apply inconsistent enrollment, date, status, and Ranking-eligibility predicates. Portal access remains a separate account concern. |
+| Iris — active, ranking-ineligible | Fully participates in Attendance, Quiz, Reports, Evaluations, and Development. She receives applicable Development scores/evidence but no Ranking qualification or position while `eligible_for_ranking = false`. | CURRENT monthly Development requires `eligible_for_ranking = true`, so legitimate Development evidence can disappear before Ranking is evaluated. |
+| Sam — suspended / cycle ineligible | Precise current and historical behavior remains UNCERTAIN until CAFLA defines suspension semantics. Existing legitimate historical data must not be deleted merely because current status changes. | CURRENT synchronized `ineligible` status excludes Sam from several calculations, but no reliable suspension interval exists to determine complete historical applicability. |
+| Synthetic manual adjustment | No additional business semantics are defined in this phase; behavior remains UNCERTAIN. | CURRENT consumers interpret `manual_adjustment` inconsistently, including exclusion in some Attendance SQL and effective-from treatment in other paths. |
+
+### Cross-cycle regression case
+
+Assume Elena continues participating with CAFLA when one Development cycle ends
+and the next cycle becomes active.
+
+Elena must be enrolled automatically into the new cycle as `existing_member`,
+with applicability beginning at the new cycle's `start_date`.
+
+Her previous cycle's `eligible_for_ranking` value is inherited into the new
+cycle unless Board explicitly changes it.
+
+Development Score, Ranking Score, Ranking position, percentile, and
+current-cycle evidence are not carried forward. They are calculated again from
+the new cycle's own evidence.
+
+All legitimate prior-cycle records and monthly snapshots remain preserved and
+associated with the preceding cycle.
+
+A member who ended the preceding cycle as inactive/withdrawn is not
+automatically enrolled into the new cycle.
+
+### Cycle-close regression case
+
+An active Development cycle must not be closed unless a valid,
+chronologically subsequent cycle already exists in `draft` status and is
+prepared to succeed it.
+
+Closing or later archiving the prior cycle must not delete, invalidate, reset,
+or detach its historical Attendance, Quiz, Report, Evaluation, Development,
+Ranking, or snapshot data.
+
+The successor cycle begins its own Development and Ranking calculations while
+the preceding cycle remains available as historical data.
 
 ## 14. Suspended Limitation
 
@@ -301,13 +549,21 @@ past dates were suspended. Precise historical applicability is therefore
 
 ## 15. CURRENT Implementation Inconsistencies
 
-1. No shared calculation/population source combines active member status with
-   active cycle-member status as one canonical current-participation check;
-   Portal layout gating does not protect database calculations or every API.
-2. Multiple DB calculations ignore `public.members.status`, so an invited member
-   with an active cycle row can accumulate derived obligations/evidence.
-3. Ranking eligibility is incorrectly used upstream by Reports, Evaluations,
-   and monthly Development, excluding legitimate non-ranking participants.
+1. No shared calculation/population source consistently applies the confirmed
+   cycle-participation contract across all Development consumers. The canonical
+   rules must account for cycle-member status, enrollment type, derived
+   `applicable_from`, derived `applicable_until`, and the cycle's own date
+   boundaries.
+2. Some CURRENT implementation and documentation assumptions conflate
+   `public.members.status` with Development-cycle participation. Under the
+   confirmed business rules, an invited member may legitimately belong to and
+   participate in a Development cycle. Portal/account access and
+   Development-cycle applicability are separate concerns.
+3. `eligible_for_ranking` is incorrectly used as an upstream Development
+   population filter by CURRENT Reports, Evaluations, and monthly Development
+   calculations. Under the confirmed business rules, Ranking eligibility must
+   not determine whether otherwise-applicable Attendance, Quiz, Report,
+   Evaluation, or Development evidence exists. It must affect Ranking only.
 4. Existing-member cycle-start semantics are present in Attendance but absent
    from Reports, Evaluations, Quiz start, and monthly Development.
 5. Withdrawn historical preservation differs by module; Reports drops it.
@@ -318,51 +574,153 @@ past dates were suspended. Precise historical applicability is therefore
 8. Attendance roster and write authorization apply different status checks.
 9. Current snapshot refresh upserts but does not reconcile removed population
    rows.
+10. The CURRENT cycle lifecycle does not enforce the confirmed requirement that
+a valid chronologically subsequent `draft` cycle exist before the active
+cycle may be closed.
+11. No CURRENT automated cycle-transition workflow enrolls continuing CAFLA
+    members into the successor cycle as `existing_member` while inheriting
+    their prior `eligible_for_ranking` setting. This behavior is a confirmed
+    business rule but is not yet implemented.
+12. CURRENT Development and Ranking architecture is cycle-scoped, but the
+    complete member-facing contract for browsing preserved historical snapshots
+    across closed or archived cycles is not yet established. Historical
+    snapshots must remain preserved even though each new cycle begins new
+    Development and Ranking calculations.
 
 ## 16. PLANNED Canonical Population
 
 `development.cycle_member_population` is an approved **PLANNED** relation whose
-purpose is to centralize, without duplicating domain scoring:
+purpose is to centralize Development-cycle participation and historical
+applicability without duplicating domain scoring.
 
-- public member status;
-- cycle-member status;
+The planned population must expose or derive, at minimum:
+
+- public member/account status as contextual identity and access information;
+- cycle-member status as the Development-cycle participation state;
 - enrollment type;
 - derived `applicable_from`;
 - derived `applicable_until`;
 - `currently_participating`;
-- `eligible_for_ranking` as an independent attribute.
+- `eligible_for_ranking` as an independent Board-controlled attribute.
+
+The canonical population must preserve the confirmed separation between account
+state, Development participation, and Ranking eligibility.
+
+`public.members.status = 'active'` must not be required merely to establish
+Development-cycle membership or historical applicability. An invited member may
+already belong to the cycle.
+
+For `existing_member`, the canonical `applicable_from` is the Development
+cycle's `start_date`.
+
+For `new_member`, the canonical `applicable_from` is
+`development.cycle_members.effective_from`.
+
+A present `effective_until` establishes the end of historical applicability,
+always bounded by the Development cycle's own date range.
+
+`eligible_for_ranking` must remain available to Ranking as an independent
+attribute. It must not be used by the canonical population to remove otherwise
+legitimate Attendance, Quiz, Report, Evaluation, or Development evidence.
 
 Expected future consumers are Attendance, Reports, Evaluations, Quiz,
-Development Score, Ranking calculations, and snapshot synchronization. Exact
-SQL, security mode, columns beyond the approved concepts, and migration order
-belong to a separately authorized implementation task.
+Development Score, Ranking calculations, and snapshot synchronization.
+
+Future cycle-transition architecture must also support:
+
+- automatic enrollment of continuing CAFLA members into the successor cycle as
+  `existing_member`;
+- applicability from the successor cycle's `start_date`;
+- inheritance of the preceding cycle's `eligible_for_ranking` setting;
+- exclusion from automatic re-enrollment for members who ended participation as
+  inactive/withdrawn;
+- preservation of all legitimate prior-cycle historical data and snapshots;
+- a new Development and Ranking calculation for the successor cycle without
+  carrying forward prior Development Score, Ranking Score, position,
+  percentile, or current-cycle evidence.
+
+The exact SQL definition, security mode, additional columns, migration order,
+cycle-transition procedure, and consumer migration sequence belong to a
+separately authorized implementation task.
+
+This section defines PLANNED architecture only. No
+`development.cycle_member_population` relation or automatic cycle-transition
+workflow is claimed to exist in CURRENT runtime.
 
 ## 17. Known Limitations and Technical Debt
 
-- Population rules are duplicated and contradictory.
+- Population rules are duplicated and contradictory across Attendance, Quiz,
+  Reports, Evaluations, Development, and Ranking.
+
+- No CURRENT canonical population relation consistently applies cycle-member
+  status, enrollment type, historical applicability, withdrawal boundaries,
+  and independent Ranking eligibility.
+
+- Some CURRENT implementation assumptions conflate member/account status with
+  Development-cycle participation even though these are separate business
+  concepts.
+
+- Ranking eligibility is used too early by some CURRENT Development consumers,
+  causing otherwise legitimate Development evidence to be excluded before
+  Ranking.
+
 - Member/cycle updates are not transactional.
-- Member profile edits unnecessarily require an active cycle in the current
-  endpoint.
+
+- Member profile edits unnecessarily require an active Development cycle in the
+  current Admin endpoint.
+
+- Changing a member to `active` currently forces
+  `eligible_for_ranking = true`, even though Ranking eligibility is an
+  independent Board-controlled decision.
+
 - Cycle lifecycle management is not established by current application code.
+
+- The CURRENT lifecycle does not enforce the confirmed requirement that a valid
+  chronologically subsequent `draft` cycle exist before the active cycle may be
+  closed.
+
+- No CURRENT automated cycle-transition workflow enrolls continuing CAFLA
+  members into the successor cycle as `existing_member` while inheriting their
+  previous `eligible_for_ranking` setting.
+
+- The complete member-facing workflow for browsing preserved historical
+  Development and Ranking snapshots across closed or archived cycles is not yet
+  established.
+
 - `manual_adjustment` lacks approved semantics and consistent typing.
-- Suspension lacks a historical temporal boundary.
+
+- Suspension lacks a confirmed historical temporal boundary.
+
 - Several date comparisons cast timestamps directly to dates instead of
   consistently deriving the Los Angeles calendar date.
-- Upsert-only current snapshot refresh can preserve stale population rows.
+
+- Upsert-only current Ranking snapshot refresh can preserve stale population
+  rows after a member leaves the calculated current population.
+
 - Generated Supabase TypeScript types are not authoritative.
 
 ## 18. External Verification Requirements
 
 Before claiming live Production equivalence, verify read-only:
 
-- live definitions of cycles, cycle members, dependent views, and ranking
+- live definitions of `development.cycles`,
+  `development.cycle_members`, dependent views, and Ranking
   refresh/capture functions;
-- live RLS policies and grants for these tables/views/functions;
-- live cron definitions for current/monthly snapshot functions;
-- actual cycle lifecycle operator/workflow;
+- live RLS policies and grants for these tables, views, and functions;
+- live cron definitions for current and monthly Ranking snapshot functions;
+- the actual Production operator/workflow currently used to create, activate,
+  close, or archive Development cycles;
+- whether any external/manual process currently enrolls members into a successor
+  Development cycle;
+- whether any external/manual process currently carries
+  `eligible_for_ranking` between cycles;
 - deployed Git revision and Supabase project/branch topology.
 
-These checks do not block completion of this AS-IS repository document.
+These checks verify CURRENT Production behavior only. They do not override the
+CONFIRMED BUSINESS RULES in this document and do not imply that the PLANNED
+canonical population or automatic cycle-transition workflow already exists.
+
+These checks do not block completion of this Source of Truth document.
 
 ## 19. Evidence and Traceability
 
