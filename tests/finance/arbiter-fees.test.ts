@@ -13,10 +13,33 @@ function workbookBuffer(bookType: "xls" | "xlsx", rows: unknown[][]) {
   return XLSX.write(workbook, { type: "array", bookType }) as ArrayBuffer
 }
 
-test("uses fixed integer-cent fee rules and canonical keys", () => {
-  assert.deepEqual(getArbiterFeeAmounts("center"), { grossEarningsCents: 8000, feeCents: 800 })
+test("uses integer-cent fee rules and canonical keys", () => {
+  assert.deepEqual(getArbiterFeeAmounts("center", "Metro AM"), { grossEarningsCents: 8000, feeCents: 800 })
   assert.deepEqual(getArbiterFeeAmounts("ar1"), { grossEarningsCents: 6000, feeCents: 600 })
   assert.equal(buildArbiterFeeAssignmentKey(" 31707 ", "ar2"), "arbiter-match-fee:31707:ar2")
+})
+
+test("applies the approved 7 V 7 Center rate from normalized division", () => {
+  assert.deepEqual(getArbiterFeeAmounts("center", "7 V 7 Premier"), { grossEarningsCents: 7000, feeCents: 700 })
+  assert.deepEqual(getArbiterFeeAmounts("center", " 7 V 7 Premier "), { grossEarningsCents: 7000, feeCents: 700 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "7 v 7 Premier"), { grossEarningsCents: 7000, feeCents: 700 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "Metro AM"), { grossEarningsCents: 8000, feeCents: 800 })
+  assert.deepEqual(getArbiterFeeAmounts("ar1", "7 V 7 Premier"), { grossEarningsCents: 6000, feeCents: 600 })
+  assert.deepEqual(getArbiterFeeAmounts("ar2", "7 V 7 Premier"), { grossEarningsCents: 6000, feeCents: 600 })
+})
+
+test("derives the 7 V 7 Center rate while parsing column F", () => {
+  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["77", "03/09/2026", "", "17:00", "Soccer", "7 V 7 First AM", "", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
+  const result = parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx")
+  assert.equal(result.assignments[0].grossEarningsCents, 7000)
+  assert.equal(result.assignments[0].feeCents, 700)
+})
+
+test("aggregates mixed normal Center, 7 V 7 Center and AR rates", () => {
+  const make = (role: "center"|"ar1", division: string, gameId: string) => ({ sourceRowNumber:2, gameId, matchDate:"2026-09-01", matchDateRaw:"01/09/2026", kickoffTime:"17:00", kickoffTimeRaw:"17:00", sport:"Soccer", division, league:"CAFLA", site:"Park", homeTeam:"Home", awayTeam:"Away", comments:"", role, arbiterRefereeName:"Ref One", canonicalAssignmentKey:buildArbiterFeeAssignmentKey(gameId,role), ...getArbiterFeeAmounts(role,division) })
+  const summary = summarizeArbiterFees([make("center","Metro AM","1"),make("center","7 V 7 Premier","2"),make("ar1","7 V 7 Premier","3")])
+  assert.equal(summary.grossEarningsCents, 21_000)
+  assert.equal(summary.feeCents, 2_100)
 })
 
 test("accepts both .xls and .xlsx workbooks", () => {

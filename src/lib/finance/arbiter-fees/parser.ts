@@ -146,7 +146,7 @@ export function parseArbiterFeeFile(fileBuffer: ArrayBuffer, originalFilename: s
     for (const [role, column] of officials) {
       const arbiterRefereeName = cellText(cellAt(sheet, row, column))
       if (!arbiterRefereeName) continue
-      const amounts = getArbiterFeeAmounts(role)
+      const amounts = getArbiterFeeAmounts(role, match.division)
       assignments.push({
         ...match,
         role,

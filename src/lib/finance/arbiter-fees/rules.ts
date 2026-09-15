@@ -6,7 +6,14 @@ const ROLE_AMOUNTS = {
   ar2: { grossEarningsCents: 6_000, feeCents: 600 },
 } as const satisfies Record<ArbiterFeeRole, { grossEarningsCents: number; feeCents: number }>
 
-export function getArbiterFeeAmounts(role: ArbiterFeeRole) {
+export function isSevenVSevenDivision(division: string) {
+  return division.trim().toLocaleUpperCase("en-US").startsWith("7 V 7")
+}
+
+export function getArbiterFeeAmounts(role: ArbiterFeeRole, division = "") {
+  if (role === "center" && isSevenVSevenDivision(division)) {
+    return { grossEarningsCents: 7_000, feeCents: 700 } as const
+  }
   return ROLE_AMOUNTS[role]
 }
 
