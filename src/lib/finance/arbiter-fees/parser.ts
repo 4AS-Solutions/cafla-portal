@@ -20,6 +20,7 @@ const COLUMNS = {
   time: 3,
   sport: 4,
   division: 5,
+  billTo: 6,
   league: 7,
   site: 8,
   home: 9,
@@ -134,6 +135,7 @@ export function parseArbiterFeeFile(fileBuffer: ArrayBuffer, originalFilename: s
       kickoffTimeRaw,
       sport: cellText(cellAt(sheet, row, COLUMNS.sport)),
       division: cellText(cellAt(sheet, row, COLUMNS.division)),
+      billTo: cellText(cellAt(sheet, row, COLUMNS.billTo)),
       league: cellText(cellAt(sheet, row, COLUMNS.league)),
       site: cellText(cellAt(sheet, row, COLUMNS.site)),
       homeTeam: cellText(cellAt(sheet, row, COLUMNS.home)),
@@ -146,7 +148,7 @@ export function parseArbiterFeeFile(fileBuffer: ArrayBuffer, originalFilename: s
     for (const [role, column] of officials) {
       const arbiterRefereeName = cellText(cellAt(sheet, row, column))
       if (!arbiterRefereeName) continue
-      const amounts = getArbiterFeeAmounts(role, match.division)
+      const amounts = getArbiterFeeAmounts(role, match.division, match.billTo)
       assignments.push({
         ...match,
         role,

@@ -98,15 +98,14 @@ both the source match and submitted evaluations through cascade.
 ## 6. Activation Boundary
 
 The CURRENT detail view only considers matches whose timezone-less kickoff
-date is on or after `2026-09-18`, with one hard-coded exception:
+date is on or after `2026-09-25`, with one hard-coded exception:
 
 `cb5cb563-d55d-4c74-a91f-e28b9e486e55`
 
 The date is a technical Evaluations V2 activation boundary embedded in the
-baseline view; it is not a scoring-period date. The UUID exception is
-**DEVELOPMENT/TEST EVIDENCE** embedded in the current database definition. Its
-purpose and suitability in Production require external confirmation; it must
-not be generalized into a business rule.
+current view; it is not a scoring-period date. The UUID exception is embedded
+in the current Production definition and remains an explicit exception. Its
+purpose must not be generalized into a business rule.
 
 Only past matches inside the active Development cycle enter the view.
 
