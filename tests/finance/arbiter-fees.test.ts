@@ -40,17 +40,18 @@ test("applies the WHSC Soccer 8 V 8 Center rate without broad matching", () => {
 })
 
 test("derives the 7 V 7 Center rate while parsing column F", () => {
-  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["77", "03/09/2026", "", "17:00", "Soccer", "7 V 7 First AM", "", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
+  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "Bill-To", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["77", "03/09/2026", "", "17:00", "Soccer", "7 V 7 First AM", "", "", "Park", "Home", "Away", "", "Ref One", "", ""]]
   const result = parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx")
   assert.equal(result.matches[0].billTo, "")
   assert.equal(result.assignments[0].grossEarningsCents, 7000)
   assert.equal(result.assignments[0].feeCents, 700)
 })
 
-test("reads Bill-To from column G and derives the WHSC 8 V 8 Center rate", () => {
-  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "Bill-To", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["78", "03/09/2026", "", "17:00", "Soccer", "8 v 8 Coed", "WHSC Soccer", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
+test("reads Bill-To from column H and derives the WHSC 8 V 8 Center rate", () => {
+  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "Bill-To", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["78", "03/09/2026", "", "17:00", "Soccer", "8 v 8 Coed", "", "WHSC Soccer", "Park", "Home", "Away", "", "Ref One", "", ""]]
   const result = parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx")
   assert.equal(result.matches[0].billTo, "WHSC Soccer")
+  assert.equal(result.matches[0].league, "")
   assert.equal(result.assignments[0].grossEarningsCents, 6000)
   assert.equal(result.assignments[0].feeCents, 600)
 })
@@ -63,7 +64,7 @@ test("aggregates mixed normal Center, 7 V 7 Center, WHSC 8 V 8 Center and AR rat
 })
 
 test("accepts both .xls and .xlsx workbooks", () => {
-  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["1", "03/09/2026", "", "17:00", "Soccer", "A", "", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
+  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "Bill-To", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["1", "03/09/2026", "", "17:00", "Soccer", "A", "", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
   assert.equal(parseArbiterFeeFile(workbookBuffer("xls", rows), "fees.xls").assignments.length, 1)
   assert.equal(parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx").assignments.length, 1)
 })
@@ -80,7 +81,7 @@ test("rejects invalid, oversized and formula-bearing files", () => {
   assert.equal(parsed.issues[0]?.code, "formula_not_allowed")
 
   const billToSheet = XLSX.utils.aoa_to_sheet([["Game", "Date"], ["2", "03/09/2026"]])
-  billToSheet.G2 = { t: "s", v: "WHSC Soccer", f: 'CONCAT("WHSC"," Soccer")' }
+  billToSheet.H2 = { t: "s", v: "WHSC Soccer", f: 'CONCAT("WHSC"," Soccer")' }
   billToSheet.M2 = { t: "s", v: "Ref One" }
   billToSheet["!ref"] = "A1:O2"
   const billToWorkbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(billToWorkbook, billToSheet, "Schedule")
@@ -89,10 +90,10 @@ test("rejects invalid, oversized and formula-bearing files", () => {
   assert.equal(billToParsed.issues[0]?.code, "formula_not_allowed")
 })
 
-test("parses M/N/O positionally and ignores blank official cells", () => {
+test("parses H through O positionally without shifting assignment columns", () => {
   const rows = [
-    ["Game", "Date", "Day", "Time", "Sport", "Division", "Unused", "League", "Site", "Home", "Away", "Comments", "Officials", "", ""],
-    ["31707", "03/09/2026", "Thu", "17:15", "Soccer", "First AM", "LA Municipal Soccer League", "CAFLA", "Park, Field 1", "Team A", "Team B", "", "Luis Referee", "", "Cesar Referee"],
+    ["Game", "Date", "Day", "Time", "Sport", "Division", "", "Bill-To", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"],
+    ["31707", "03/09/2026", "Thu", "17:15", "Soccer", "First AM", "", "LA Municipal Soccer League", "Park, Field 1", "Team A", "Team B", "Match note", "Luis Referee", "Ana Referee", "Cesar Referee"],
   ]
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), "Schedule")
@@ -102,13 +103,18 @@ test("parses M/N/O positionally and ignores blank official cells", () => {
   assert.equal(result.matches.length, 1)
   assert.equal(result.matches[0].matchDate, "2026-09-03")
   assert.equal(result.matches[0].billTo, "LA Municipal Soccer League")
-  assert.deepEqual(result.assignments.map((item) => item.role), ["center", "ar2"])
+  assert.equal(result.matches[0].league, "")
+  assert.equal(result.matches[0].site, "Park, Field 1")
+  assert.equal(result.matches[0].homeTeam, "Team A")
+  assert.equal(result.matches[0].awayTeam, "Team B")
+  assert.equal(result.matches[0].comments, "Match note")
+  assert.deepEqual(result.assignments.map((item) => [item.role, item.arbiterRefereeName]), [["center", "Luis Referee"], ["ar1", "Ana Referee"], ["ar2", "Cesar Referee"]])
   assert.deepEqual(summarizeArbiterFees(result.assignments), {
-    assignmentCount: 2,
+    assignmentCount: 3,
     centerCount: 1,
-    arCount: 1,
-    grossEarningsCents: 14000,
-    feeCents: 1400,
+    arCount: 2,
+    grossEarningsCents: 20000,
+    feeCents: 2000,
   })
 })
 
