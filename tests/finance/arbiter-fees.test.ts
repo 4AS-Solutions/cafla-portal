@@ -28,18 +28,38 @@ test("applies the approved 7 V 7 Center rate from normalized division", () => {
   assert.deepEqual(getArbiterFeeAmounts("ar2", "7 V 7 Premier"), { grossEarningsCents: 6000, feeCents: 600 })
 })
 
+test("applies the WHSC Soccer 8 V 8 Center rate without broad matching", () => {
+  assert.deepEqual(getArbiterFeeAmounts("center", "8 V 8 Coed", "WHSC Soccer"), { grossEarningsCents: 6000, feeCents: 600 })
+  assert.deepEqual(getArbiterFeeAmounts("center", " 8 v 8 Coed ", " whsc soccer "), { grossEarningsCents: 6000, feeCents: 600 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "8 V 8 Coed", "Another League"), { grossEarningsCents: 8000, feeCents: 800 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "8 V 8 Coed", "WHSC Soccer Club"), { grossEarningsCents: 8000, feeCents: 800 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "First AM", "WHSC Soccer"), { grossEarningsCents: 8000, feeCents: 800 })
+  assert.deepEqual(getArbiterFeeAmounts("center", "7 V 7 Premier", "WHSC Soccer"), { grossEarningsCents: 7000, feeCents: 700 })
+  assert.deepEqual(getArbiterFeeAmounts("ar1", "8 V 8 Coed", "WHSC Soccer"), { grossEarningsCents: 6000, feeCents: 600 })
+  assert.deepEqual(getArbiterFeeAmounts("ar2", "8 V 8 Coed", "WHSC Soccer"), { grossEarningsCents: 6000, feeCents: 600 })
+})
+
 test("derives the 7 V 7 Center rate while parsing column F", () => {
   const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["77", "03/09/2026", "", "17:00", "Soccer", "7 V 7 First AM", "", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
   const result = parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx")
+  assert.equal(result.matches[0].billTo, "")
   assert.equal(result.assignments[0].grossEarningsCents, 7000)
   assert.equal(result.assignments[0].feeCents, 700)
 })
 
-test("aggregates mixed normal Center, 7 V 7 Center and AR rates", () => {
-  const make = (role: "center"|"ar1", division: string, gameId: string) => ({ sourceRowNumber:2, gameId, matchDate:"2026-09-01", matchDateRaw:"01/09/2026", kickoffTime:"17:00", kickoffTimeRaw:"17:00", sport:"Soccer", division, league:"CAFLA", site:"Park", homeTeam:"Home", awayTeam:"Away", comments:"", role, arbiterRefereeName:"Ref One", canonicalAssignmentKey:buildArbiterFeeAssignmentKey(gameId,role), ...getArbiterFeeAmounts(role,division) })
-  const summary = summarizeArbiterFees([make("center","Metro AM","1"),make("center","7 V 7 Premier","2"),make("ar1","7 V 7 Premier","3")])
-  assert.equal(summary.grossEarningsCents, 21_000)
-  assert.equal(summary.feeCents, 2_100)
+test("reads Bill-To from column G and derives the WHSC 8 V 8 Center rate", () => {
+  const rows = [["Game", "Date", "Day", "Time", "Sport", "Division", "Bill-To", "League", "Site", "Home", "Away", "Comments", "Center", "AR1", "AR2"], ["78", "03/09/2026", "", "17:00", "Soccer", "8 v 8 Coed", "WHSC Soccer", "CAFLA", "Park", "Home", "Away", "", "Ref One", "", ""]]
+  const result = parseArbiterFeeFile(workbookBuffer("xlsx", rows), "fees.xlsx")
+  assert.equal(result.matches[0].billTo, "WHSC Soccer")
+  assert.equal(result.assignments[0].grossEarningsCents, 6000)
+  assert.equal(result.assignments[0].feeCents, 600)
+})
+
+test("aggregates mixed normal Center, 7 V 7 Center, WHSC 8 V 8 Center and AR rates", () => {
+  const make = (role: "center"|"ar1", division: string, billTo: string, gameId: string) => ({ sourceRowNumber:2, gameId, matchDate:"2026-09-01", matchDateRaw:"01/09/2026", kickoffTime:"17:00", kickoffTimeRaw:"17:00", sport:"Soccer", division, billTo, league:"CAFLA", site:"Park", homeTeam:"Home", awayTeam:"Away", comments:"", role, arbiterRefereeName:"Ref One", canonicalAssignmentKey:buildArbiterFeeAssignmentKey(gameId,role), ...getArbiterFeeAmounts(role,division,billTo) })
+  const summary = summarizeArbiterFees([make("center","Metro AM","LA Municipal Soccer League","1"),make("center","7 V 7 Premier","WHSC Soccer","2"),make("center","8 V 8 Coed","WHSC Soccer","3"),make("ar1","8 V 8 Coed","WHSC Soccer","4")])
+  assert.equal(summary.grossEarningsCents, 27_000)
+  assert.equal(summary.feeCents, 2_700)
 })
 
 test("accepts both .xls and .xlsx workbooks", () => {
@@ -58,12 +78,21 @@ test("rejects invalid, oversized and formula-bearing files", () => {
   const parsed = parseArbiterFeeFile(XLSX.write(workbook, { type: "array", bookType: "xlsx" }) as ArrayBuffer, "fees.xlsx")
   assert.equal(parsed.assignments.length, 0)
   assert.equal(parsed.issues[0]?.code, "formula_not_allowed")
+
+  const billToSheet = XLSX.utils.aoa_to_sheet([["Game", "Date"], ["2", "03/09/2026"]])
+  billToSheet.G2 = { t: "s", v: "WHSC Soccer", f: 'CONCAT("WHSC"," Soccer")' }
+  billToSheet.M2 = { t: "s", v: "Ref One" }
+  billToSheet["!ref"] = "A1:O2"
+  const billToWorkbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(billToWorkbook, billToSheet, "Schedule")
+  const billToParsed = parseArbiterFeeFile(XLSX.write(billToWorkbook, { type: "array", bookType: "xlsx" }) as ArrayBuffer, "fees.xlsx")
+  assert.equal(billToParsed.assignments.length, 0)
+  assert.equal(billToParsed.issues[0]?.code, "formula_not_allowed")
 })
 
 test("parses M/N/O positionally and ignores blank official cells", () => {
   const rows = [
     ["Game", "Date", "Day", "Time", "Sport", "Division", "Unused", "League", "Site", "Home", "Away", "Comments", "Officials", "", ""],
-    ["31707", "03/09/2026", "Thu", "17:15", "Soccer", "First AM", "", "CAFLA", "Park, Field 1", "Team A", "Team B", "", "Luis Referee", "", "Cesar Referee"],
+    ["31707", "03/09/2026", "Thu", "17:15", "Soccer", "First AM", "LA Municipal Soccer League", "CAFLA", "Park, Field 1", "Team A", "Team B", "", "Luis Referee", "", "Cesar Referee"],
   ]
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), "Schedule")
@@ -72,6 +101,7 @@ test("parses M/N/O positionally and ignores blank official cells", () => {
 
   assert.equal(result.matches.length, 1)
   assert.equal(result.matches[0].matchDate, "2026-09-03")
+  assert.equal(result.matches[0].billTo, "LA Municipal Soccer League")
   assert.deepEqual(result.assignments.map((item) => item.role), ["center", "ar2"])
   assert.deepEqual(summarizeArbiterFees(result.assignments), {
     assignmentCount: 2,
@@ -113,7 +143,7 @@ test("does not trust a historical alias until Board verification", () => {
 })
 
 test("classifies in-file and previously posted assignments authoritatively", () => {
-  const base = { sourceRowNumber: 2, gameId: "100", matchDate: "2026-09-01", matchDateRaw: "01/09/2026", kickoffTime: "17:00", kickoffTimeRaw: "17:00", sport: "Soccer", division: "A", league: "CAFLA", site: "Park", homeTeam: "Home", awayTeam: "Away", comments: "", role: "center" as const, arbiterRefereeName: "Ref One", canonicalAssignmentKey: "arbiter-match-fee:100:center", grossEarningsCents: 8000, feeCents: 800 }
+  const base = { sourceRowNumber: 2, gameId: "100", matchDate: "2026-09-01", matchDateRaw: "01/09/2026", kickoffTime: "17:00", kickoffTimeRaw: "17:00", sport: "Soccer", division: "A", billTo: "", league: "CAFLA", site: "Park", homeTeam: "Home", awayTeam: "Away", comments: "", role: "center" as const, arbiterRefereeName: "Ref One", canonicalAssignmentKey: "arbiter-match-fee:100:center", grossEarningsCents: 8000, feeCents: 800 }
   let id = 0
   const duplicate = prepareArbiterFeeItems({ assignments: [base, { ...base, sourceRowNumber: 3 }], members: [{id:"1",fullName:"Ref One"}], aliases: [], postedKeys: new Set(), createId:()=>`id-${++id}` })
   assert.deepEqual(duplicate.map((item)=>item.itemStatus), ["new", "duplicate_in_file"])

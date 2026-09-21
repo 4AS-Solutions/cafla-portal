@@ -11,6 +11,7 @@ export type ArbiterFeeParsedMatch = {
   kickoffTimeRaw: string
   sport: string
   division: string
+  billTo: string
   league: string
   site: string
   homeTeam: string

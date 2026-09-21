@@ -16,6 +16,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ import_id
     if (error) {
       console.error("[FINANCE] Arbiter fee posting failed:", error)
       if (error.message?.includes("posted concurrently")) return safeFinanceError("One or more assignments were posted concurrently. Refresh the preview.", 409)
+      if (error.message?.includes("predates Bill-To fee validation")) return safeFinanceError(error.message, 409)
       if (error.message?.match(/resolved|no new|period|available for posting|already/i)) return safeFinanceError(error.message, 409)
       if (error.code === "42501") return safeFinanceError("Board access is required.", 403)
       return safeFinanceError("Unable to post Arbiter fees.", 500)

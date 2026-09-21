@@ -1,11 +1,23 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/src/components/ui/button";
-import { formatUsdFromCents } from "@/src/lib/finance/money";
+
+import {
+  LinkPendingFinancialAccountDialog,
+  PendingRecordTransactionDialog,
+  PendingReverseTransactionDialog,
+} from "@/src/components/admin/finance/PendingFinanceDialogs";
+import { formatFinanceDate } from "@/src/lib/finance/dates";
+import {
+  formatUsdFromCents,
+  getTransactionTypeLabel,
+} from "@/src/lib/finance/money";
+import type { FinanceTransactionType } from "@/src/lib/finance/types";
 
 type Row = Record<string, unknown>;
+
 export function PendingFinancialAccounts({
   data,
 }: {
@@ -23,10 +35,11 @@ export function PendingFinancialAccounts({
     Record<string, string>
   >({});
   const links = new Map(
-    data.links.map((l) => [String(l.unregistered_referee_id), l]),
+    data.links.map((link) => [String(link.unregistered_referee_id), link]),
   );
-  async function command(url: string, body: object) {
-    if (pending) return;
+
+  async function command(url: string, body: object): Promise<boolean> {
+    if (pending) return false;
     setPending(true);
     try {
       const response = await fetch(url, {
@@ -39,26 +52,32 @@ export function PendingFinancialAccounts({
         throw new Error(payload?.error ?? "Finance command failed.");
       toast.success("Finance command completed.");
       router.refresh();
+      return true;
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Finance command failed.",
       );
+      return false;
     } finally {
       setPending(false);
     }
   }
+
   return (
     <div className="space-y-4">
       {data.identities.map((identity) => {
         const id = String(identity.id);
         const rows = data.transactions.filter(
-          (t) => t.unregistered_referee_id === id,
+          (transaction) => transaction.unregistered_referee_id === id,
         );
         const balance = rows.reduce(
-          (sum, t) => sum + BigInt(String(t.amount_cents)),
+          (sum, transaction) => sum + BigInt(String(transaction.amount_cents)),
           BigInt(0),
         );
         const linked = links.get(id);
+        const selectedMember = data.members.find(
+          (member) => String(member.id) === memberSelections[id],
+        );
         return (
           <article
             key={id}
@@ -81,39 +100,19 @@ export function PendingFinancialAccounts({
                 </p>
                 <p className="text-xs text-gray-500">
                   {data.aliases
-                    .filter((a) => a.unregistered_referee_id === id)
-                    .map((a) => String(a.arbiter_name))
+                    .filter((alias) => alias.unregistered_referee_id === id)
+                    .map((alias) => String(alias.arbiter_name))
                     .join(", ") || "No Arbiter alias"}
                 </p>
               </div>
               {!linked && (
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-80">
-                  <Button
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => {
-                      const amount = window.prompt(
-                        "Signed amount in cents (negative means owes CAFLA):",
-                      );
-                      const description = window.prompt("Description:");
-                      if (amount && description)
-                        void command(
-                          "/api/admin/finance/unregistered/transactions",
-                          {
-                            unregistered_referee_id: id,
-                            transaction_date: new Date()
-                              .toISOString()
-                              .slice(0, 10),
-                            transaction_type: "adjustment",
-                            amount_cents: amount,
-                            description,
-                            idempotency_key: crypto.randomUUID(),
-                          },
-                        );
-                    }}
-                  >
-                    Record Transaction
-                  </Button>
+                  <PendingRecordTransactionDialog
+                    account={identity}
+                    balance={balance}
+                    pending={pending}
+                    command={command}
+                  />
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <select
                       aria-label={`Destination member for ${String(identity.display_name)}`}
@@ -137,78 +136,59 @@ export function PendingFinancialAccounts({
                         </option>
                       ))}
                     </select>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={pending || !memberSelections[id]}
-                      onClick={() =>
-                        void command(
-                          `/api/admin/finance/unregistered/${id}/link`,
-                          {
-                            member_id: memberSelections[id],
-                            idempotency_key: crypto.randomUUID(),
-                          },
-                        )
-                      }
-                    >
-                      Link to Member
-                    </Button>
+                    {selectedMember && (
+                      <LinkPendingFinancialAccountDialog
+                        account={identity}
+                        balance={balance}
+                        member={selectedMember}
+                        pending={pending}
+                        command={command}
+                      />
+                    )}
                   </div>
                 </div>
               )}
             </div>
             <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-              {rows.map((t) => (
+              {rows.map((transaction) => (
                 <div
-                  key={String(t.id)}
+                  key={String(transaction.id)}
                   className="flex flex-col gap-2 rounded-xl bg-black/20 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <p className="text-sm text-white">
-                      {String(t.description)}
+                      {String(transaction.description)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {String(t.transaction_date)} ·{" "}
-                      {String(t.transaction_type)}
+                      {formatFinanceDate(String(transaction.transaction_date))}{" "}
+                      ·{" "}
+                      {getTransactionTypeLabel(
+                        String(
+                          transaction.transaction_type,
+                        ) as FinanceTransactionType,
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-medium text-white">
-                      {formatUsdFromCents(String(t.amount_cents), {
+                      {formatUsdFromCents(String(transaction.amount_cents), {
                         showPositiveSign: true,
                       })}
                     </span>
-                    {!linked && t.transaction_type !== "reversal" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending}
-                        onClick={() => {
-                          const reason = window.prompt("Reversal reason:");
-                          if (reason)
-                            void command(
-                              `/api/admin/finance/unregistered/transactions/${String(t.id)}/reverse`,
-                              {
-                                transaction_date: new Date()
-                                  .toISOString()
-                                  .slice(0, 10),
-                                description: `Reversal: ${String(t.description)}`,
-                                reversal_reason: reason,
-                                idempotency_key: crypto.randomUUID(),
-                              },
-                            );
-                        }}
-                      >
-                        Reverse
-                      </Button>
+                    {!linked && transaction.transaction_type !== "reversal" && (
+                      <PendingReverseTransactionDialog
+                        transaction={transaction}
+                        accountName={String(identity.display_name)}
+                        pending={pending}
+                        command={command}
+                      />
                     )}
                   </div>
                 </div>
               ))}
               {rows.length === 0 && (
                 <p className="text-sm text-gray-500">
-                  No financial activity. Empty identities should not be created
-                  during cutover.
+                  No financial activity yet.
                 </p>
               )}
             </div>

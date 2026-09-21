@@ -10,9 +10,20 @@ export function isSevenVSevenDivision(division: string) {
   return division.trim().toLocaleUpperCase("en-US").startsWith("7 V 7")
 }
 
-export function getArbiterFeeAmounts(role: ArbiterFeeRole, division = "") {
+export function isWhscEightVEightCenter(role: ArbiterFeeRole, division: string, billTo: string) {
+  return (
+    role === "center" &&
+    billTo.trim().toLocaleUpperCase("en-US") === "WHSC SOCCER" &&
+    division.trim().toLocaleUpperCase("en-US").startsWith("8 V 8")
+  )
+}
+
+export function getArbiterFeeAmounts(role: ArbiterFeeRole, division = "", billTo = "") {
   if (role === "center" && isSevenVSevenDivision(division)) {
     return { grossEarningsCents: 7_000, feeCents: 700 } as const
+  }
+  if (isWhscEightVEightCenter(role, division, billTo)) {
+    return { grossEarningsCents: 6_000, feeCents: 600 } as const
   }
   return ROLE_AMOUNTS[role]
 }

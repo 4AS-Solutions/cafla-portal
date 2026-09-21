@@ -48,7 +48,7 @@ export async function createArbiterFeeImport(file: File, actorId: string) {
       normalized_referee_name: normalizedRefereeName(item.arbiterRefereeName), member_id: provisionalId ? null : item.member?.id ?? null,
       unregistered_referee_id: provisionalId,
       match_date: item.matchDate, kickoff_time: item.kickoffTime, sport: item.sport || null,
-      division: item.division || null, league: item.league || null, site: item.site || null,
+      division: item.division || null, bill_to: item.billTo, league: item.league || null, site: item.site || null,
       home_team: item.homeTeam || null, away_team: item.awayTeam || null, arbiter_comments: item.comments || null,
       gross_earnings_cents: item.grossEarningsCents, fee_cents: item.feeCents,
       initial_match_state: item.state, match_reason: item.reason,
